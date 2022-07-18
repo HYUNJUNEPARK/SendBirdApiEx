@@ -1,22 +1,20 @@
 package com.konai.sendbirdapisampleapp
 
-import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
+import com.konai.sendbirdapisampleapp.Util.toast
 import com.konai.sendbirdapisampleapp.databinding.ActivityMainBinding
+import com.konai.sendbirdapisampleapp.model.ChatListModel
 import com.sendbird.android.SendbirdChat
 import com.sendbird.android.channel.GroupChannel
 import com.sendbird.android.channel.query.GroupChannelListQueryOrder
 import com.sendbird.android.channel.query.MyMemberStateFilter
-import com.sendbird.android.exception.SendbirdException
-import com.sendbird.android.handler.InitResultHandler
 import com.sendbird.android.params.GroupChannelCreateParams
 import com.sendbird.android.params.GroupChannelListQueryParams
-import com.sendbird.android.params.InitParams
 import com.sendbird.android.params.UserUpdateParams
 
 class MainActivity : AppCompatActivity() {
@@ -28,14 +26,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private lateinit var binding: ActivityMainBinding
+    private lateinit var chatChannelList: ChatListModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-
         binding.mainActivity = this@MainActivity
-        initializeChatSdk()
+
+        SendBirdInit().initializeChatSdk(this)
     }
+
+
 
     //read channel list
     fun initChannelList() {
@@ -45,14 +46,24 @@ class MainActivity : AppCompatActivity() {
                 includeEmpty = true
                 myMemberStateFilter = MyMemberStateFilter.JOINED
                 order = GroupChannelListQueryOrder.LATEST_LAST_MESSAGE //CHRONOLOGICAL, LATEST_LAST_MESSAGE, CHANNEL_NAME_ALPHABETICAL, and METADATA_VALUE_ALPHABETICAL.
-                limit = 15
             }
         )
         query.next { channels, e ->
-            Log.d(TAG, "${className()} channel List : $channels")
-            Log.e(TAG, "${className()} initChannelList Error : $e", )
+            if (e != null) {
+                toast("$e")
+            }
+
+            chatChannelList = ChatListModel(
+                name = channels!![0].name,
+                url = channels!![0].url
+            )
+
+            Log.d(TAG, "channel List : $chatChannelList")
+            Log.e(TAG, "initChannelList Error : $e", )
+
         }
     }
+
 
     //invite
     fun inviteButtonClicked() {
@@ -77,10 +88,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
+
     //LogIn
     fun logInButtonClicked() {
         //TODO ProgressBar
         val userId = binding.userIdEditText.text.toString()
+
         SendbirdChat.connect(userId) { user, e ->
             currentUserId = user?.userId.toString() //TODO Null safety
             currentUserNickname = binding.nickNameEditText.text.toString() //TODO Null safety
@@ -88,7 +102,7 @@ class MainActivity : AppCompatActivity() {
             if (e != null) {
                 toast("로그인 에러 : $e")
                 //400305 : User ID is too long.
-                Log.e(TAG, "${className()}: $e")
+                Log.e(TAG, ": $e")
                 return@connect
             }
 
@@ -97,49 +111,15 @@ class MainActivity : AppCompatActivity() {
                 nickname = currentUserNickname
             }
             SendbirdChat.updateCurrentUserInfo(params) { e ->
-                Log.e(TAG, "${className()}: updateCurrentUserInfo Error $e")
+                Log.e(TAG, ": updateCurrentUserInfo Error : $e")
             }
-            //[END]
+            //[END update profile]
 
             initChannelList()
+
+
             binding.logInLayout.visibility = View.INVISIBLE
-            binding.userIdTextView.text = "$currentUserNickname[${currentUserId}]"
+            binding.userIdTextView.text = "$currentUserNickname [ID : ${currentUserId}]"
         }
-    }
-
-
-
-
-    fun Context.toast(msg: String) {
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
-    }
-
-
-
-    fun className(): String {
-        return localClassName
-    }
-
-
-
-    //TODO ASYNC By Coroutine
-    private fun initializeChatSdk() {
-        SendbirdChat.init(
-            InitParams(APP_ID, applicationContext, useCaching = true),
-            object : InitResultHandler {
-                override fun onMigrationStarted() {
-                    Log.i(TAG, "${className()} : Called when there's an update in Sendbird server.")
-                }
-
-                override fun onInitFailed(e: SendbirdException) {
-                    Log.e(TAG,"${className()} : Called when initialize failed. $e \n SDK will still operate properly as if useLocalCaching is set to false.")
-                }
-
-                override fun onInitSucceed() {
-                    toast("Called when initialization is completed.")
-                    Log.i(TAG, "${className()} : Called when initialization is completed.")
-                }
-            }
-        )
     }
 }

@@ -17,10 +17,10 @@
         tools:context=".MainActivity">
 
         <LinearLayout
-            android:layout_marginTop="10dp"
             android:id="@+id/currentUserLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -41,8 +41,8 @@
         <View
             android:id="@+id/div"
             android:layout_width="0dp"
-            android:layout_marginTop="10dp"
             android:layout_height="2dp"
+            android:layout_marginTop="10dp"
             android:background="@color/black"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -53,9 +53,9 @@
         <LinearLayout
             android:id="@+id/inviteLayout"
             android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:gravity="center"
-            android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -73,13 +73,48 @@
                 android:layout_height="wrap_content"
                 android:hint="대화 상대 아이디 입력"
                 android:textSize="16sp" />
+
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/inviteButton"
                 android:layout_width="wrap_content"
-                android:text="초대"
+                android:layout_height="wrap_content"
                 android:onClick="@{()->mainActivity.inviteButtonClicked()}"
-                android:layout_height="wrap_content"/>
+                android:text="초대" />
         </LinearLayout>
+
+        <View
+            android:id="@+id/div2"
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:background="@color/black"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/inviteLayout" />
+
+<!--        -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/chatListRecyclerView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/div2" />
+
+        <TextView
+            android:id="@+id/chatListRecyclerViewCover"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@color/white"
+            android:text="채팅방 없음"
+            android:gravity="center"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/div2" />
+
 
         <!-- -->
         <ProgressBar
@@ -124,8 +159,6 @@
                 android:onClick="@{()->mainActivity.logInButtonClicked()}"
                 android:text="로그인" />
         </LinearLayout>
-
-
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>
