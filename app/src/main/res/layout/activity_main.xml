@@ -4,24 +4,129 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+
         <variable
             name="mainActivity"
             type="com.konai.sendbirdapisampleapp.MainActivity" />
     </data>
 
+    <!-- -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context=".MainActivity">
 
-        <TextView
+        <LinearLayout
+            android:layout_marginTop="10dp"
+            android:id="@+id/currentUserLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text=""
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="로그인 사용자 정보 : " />
+
+            <TextView
+                android:id="@+id/userIdTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="USER INFO" />
+        </LinearLayout>
+
+        <View
+            android:id="@+id/div"
+            android:layout_width="0dp"
+            android:layout_marginTop="10dp"
+            android:layout_height="2dp"
+            android:background="@color/black"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/currentUserLayout" />
+
+
+        <!-- -->
+        <LinearLayout
+            android:id="@+id/inviteLayout"
+            android:layout_width="0dp"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/div">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="대화상대 초대 : " />
+
+            <EditText
+                android:id="@+id/inviteEditText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="대화 상대 아이디 입력"
+                android:textSize="16sp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/inviteButton"
+                android:layout_width="wrap_content"
+                android:text="초대"
+                android:onClick="@{()->mainActivity.inviteButtonClicked()}"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+        <!-- -->
+        <ProgressBar
+            android:id="@+id/logInProgressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="invisible"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <LinearLayout
+            android:id="@+id/logInLayout"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="#DCDADA"
+            android:gravity="center"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="invisible">
+
+            <EditText
+                android:id="@+id/userIdEditText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="사용자 아이디 입력" />
+
+            <EditText
+                android:id="@+id/nickNameEditText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="사용자 닉네임 입력" />
+
+            <Button
+                android:id="@+id/logInButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="@{()->mainActivity.logInButtonClicked()}"
+                android:text="로그인" />
+        </LinearLayout>
+
+
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
