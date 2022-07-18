@@ -3,9 +3,11 @@ package com.konai.sendbirdapisampleapp
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.ListAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.konai.sendbirdapisampleapp.Util.toast
 import com.konai.sendbirdapisampleapp.databinding.ActivityMainBinding
 import com.konai.sendbirdapisampleapp.model.ChatListModel
@@ -26,7 +28,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private lateinit var binding: ActivityMainBinding
-    private lateinit var chatChannelList: ChatListModel
+    private var chatChannelList: ChatListModel? = null
+    private val dataList:MutableList<ChatListModel> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,9 +37,8 @@ class MainActivity : AppCompatActivity() {
         binding.mainActivity = this@MainActivity
 
         SendBirdInit().initializeChatSdk(this)
+        initChannelList()
     }
-
-
 
     //read channel list
     fun initChannelList() {
@@ -51,19 +53,38 @@ class MainActivity : AppCompatActivity() {
         query.next { channels, e ->
             if (e != null) {
                 toast("$e")
+                Log.e(TAG, "initChannelList Error : $e", )
+                return@next
             }
 
+            //TODO java.lang.IndexOutOfBoundsException: Index: 0, Size: 0
+            //user3 은 채널이 없는 상태임
+
+            Log.d(TAG, "initChannelList sfgdfsgsdfgdsfg: ${channels!![0].name} // ${channels!![0].url} // ${channels!![0].lastMessage.toString()}")
+
+            //TODO
             chatChannelList = ChatListModel(
                 name = channels!![0].name,
-                url = channels!![0].url
+                url = channels!![0].url,
+                lastMessage = channels!![0].lastMessage.toString()
             )
+            Log.d(TAG, "initChannelList : $chatChannelList")
 
-            Log.d(TAG, "channel List : $chatChannelList")
-            Log.e(TAG, "initChannelList Error : $e", )
+            if (chatChannelList == null) {
+                binding.chatListRecyclerViewCover.visibility = View.VISIBLE
+                return@next
+            }
 
+            dataList.add(chatChannelList!!)
         }
-    }
 
+//        if (chatChannelList != null) {
+//            Log.d(TAG, "initChannelList: aaaaaaaaaaaaaaaaaaaaa")
+//            val adapter = ChannelListAdapter()
+//            adapter.dataList = dataList
+//            binding.chatListRecyclerView.layoutManager = LinearLayoutManager(this)
+//        }
+    }
 
     //invite
     fun inviteButtonClicked() {
@@ -87,7 +108,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
 
 
     //LogIn
@@ -116,8 +136,6 @@ class MainActivity : AppCompatActivity() {
             //[END update profile]
 
             initChannelList()
-
-
             binding.logInLayout.visibility = View.INVISIBLE
             binding.userIdTextView.text = "$currentUserNickname [ID : ${currentUserId}]"
         }

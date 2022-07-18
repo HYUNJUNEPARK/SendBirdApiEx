@@ -1,8 +1,10 @@
 package com.konai.sendbirdapisampleapp
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.konai.sendbirdapisampleapp.MainActivity.Companion.TAG
 import com.konai.sendbirdapisampleapp.databinding.ItemChatChannelListBinding
 import com.konai.sendbirdapisampleapp.model.ChatListModel
 
@@ -20,6 +22,7 @@ class ChannelListAdapter : RecyclerView.Adapter<ChannelListAdapter.MyHolder>() {
 
         init {
             binding.root.setOnClickListener {
+                Log.d(TAG, "URL : ${_myData.url}")
 //                val number = _myData.number
 //                val title = _myData.title
 //                val timestamp = _myData.timestamp
@@ -27,7 +30,10 @@ class ChannelListAdapter : RecyclerView.Adapter<ChannelListAdapter.MyHolder>() {
             }
         }
         fun setContents (myData: ChatListModel) {
-//            _myData = myData
+            _myData = myData
+            binding.channelNameTextView.text = "${myData.name}"
+            binding.lastMessageTextView.text = "${myData.lastMessage}"
+
 //            binding.textNo.text = "${myData.number}"
 //            binding.textTitle.text = myData.title
 //            var sdf = SimpleDateFormat("yyyy/MM/dd")
