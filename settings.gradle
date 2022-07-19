@@ -10,7 +10,10 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        //sendbird
         maven { url "https://repo.sendbird.com/public/maven" }
+        //uikit
+        maven { url "https://jitpack.io" }
     }
 }
 rootProject.name = "SendBirdApiSampleApp"

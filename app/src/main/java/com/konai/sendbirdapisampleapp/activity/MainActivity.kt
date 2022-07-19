@@ -1,5 +1,6 @@
 package com.konai.sendbirdapisampleapp.activity
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -132,5 +133,14 @@ class MainActivity : AppCompatActivity() {
             binding.userIdTextView.text = "$currentUserNick [ID : ${currentUserId}]"
             initChannelList()
         }
+    }
+
+    fun uiKitButtonClicked() {
+
+
+
+        val intent = Intent(this, UiKitActivity::class.java)
+        startActivity(intent)
+
     }
 }

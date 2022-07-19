@@ -4,8 +4,10 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="../../POC/sendbirdApi/app/src/main/res/layout/activity_main.xml" value="0.26666666666666666" />
+        <entry key="../../POC/sendbirdApi/app/src/main/res/layout/activity_ui_kit.xml" value="0.18333333333333332" />
         <entry key="../../POC/sendbirdApi/app/src/main/res/layout/item_chat_channel_list.xml" value="0.33" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.22" />
+        <entry key="app/src/main/res/layout/activity_ui_kit.xml" value="0.17222222222222222" />
       </map>
     </option>
   </component>
