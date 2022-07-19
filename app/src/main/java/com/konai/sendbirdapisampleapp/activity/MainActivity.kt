@@ -8,9 +8,10 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.konai.sendbirdapisampleapp.Constants.TAG
 import com.konai.sendbirdapisampleapp.adapter.ChannelListAdapter
 import com.konai.sendbirdapisampleapp.R
-import com.konai.sendbirdapisampleapp.sendbird.SendBirdInit
+import com.konai.sendbirdapisampleapp.api.SendBirdInit
 import com.konai.sendbirdapisampleapp.Util.toast
 import com.konai.sendbirdapisampleapp.databinding.ActivityMainBinding
 import com.konai.sendbirdapisampleapp.model.ChannelListModel
@@ -23,12 +24,11 @@ import com.sendbird.android.params.GroupChannelListQueryParams
 import com.sendbird.android.params.UserUpdateParams
 
 class MainActivity : AppCompatActivity() {
-    companion object {
-        const val TAG = "applicationLog"
-        const val APP_ID = "D4FCF442-A653-49B3-9D87-6134CD87CA81"
-    }
+    //TODO MERGE VARIATION WITH CONSTANTS
     private var currentUserId: String? = null
     private var currentUserNick: String? = null
+
+
     private lateinit var binding: ActivityMainBinding
     private var _channelList: MutableList<ChannelListModel> = mutableListOf()
 
@@ -39,6 +39,38 @@ class MainActivity : AppCompatActivity() {
 
         SendBirdInit().initializeChatSdk(this)
     }
+
+    fun logInButtonClicked() {
+        //TODO ProgressBar
+        val userId = binding.userIdEditText.text.toString()
+
+        SendbirdChat.connect(userId) { user, e ->
+            val userInputNickName = binding.nickNameEditText.text.toString()
+            currentUserNick = if(userInputNickName == "") "No name" else userInputNickName
+            currentUserId = user?.userId.toString()
+
+            if (e != null) {
+                toast("로그인 에러 : $e")
+                Log.e(TAG, ": $e")
+                return@connect
+            }
+
+            val params = UserUpdateParams().apply {
+                nickname = currentUserNick
+            }
+
+            SendbirdChat.updateCurrentUserInfo(params) { e ->
+                Log.e(TAG, ": updateCurrentUserInfo Error : $e")
+            }
+
+
+            binding.logInLayout.visibility = View.INVISIBLE
+            binding.userIdTextView.text = "$currentUserNick [ID : ${currentUserId}]"
+
+            initChannelList()
+        }
+    }
+
 
     fun initChannelList() {
         _channelList = mutableListOf()
@@ -82,17 +114,18 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    //invite
     fun inviteButtonClicked() {
         val invitedUserId = binding.inviteEditText.text.toString()
-        //group channel : private, 1 to 1(distinct true ), Ephemeral?
         val users: List<String> = listOf(currentUserId!!, invitedUserId)
+
         val params = GroupChannelCreateParams().apply {
             userIds = users
             isDistinct = true
             name = "$currentUserId / $invitedUserId"
             isSuper = false
         }
+
+
         GroupChannel.createChannel(params) { channel, e ->
             if (e != null) {
                 toast("$e")
@@ -104,41 +137,17 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    //LogIn
-    fun logInButtonClicked() {
+
+
+
+
+
+
+
+    fun uiKitButtonClicked() {
         //TODO ProgressBar
+        //TODO MERGE THIS PART WITH UPPER CODES
         val userId = binding.userIdEditText.text.toString()
-
-        SendbirdChat.connect(userId) { user, e ->
-            currentUserId = user?.userId.toString() //TODO Null safety
-            currentUserNick = binding.nickNameEditText.text.toString() //TODO Null safety
-
-            if (e != null) {
-                toast("로그인 에러 : $e")
-                //400305 : User ID is too long.
-                Log.e(TAG, ": $e")
-                return@connect
-            }
-
-            //[START update profile]
-            val params = UserUpdateParams().apply {
-                nickname = currentUserNick
-            }
-            SendbirdChat.updateCurrentUserInfo(params) { e ->
-                Log.e(TAG, ": updateCurrentUserInfo Error : $e")
-            }
-            //[END update profile]
-
-            binding.logInLayout.visibility = View.INVISIBLE
-            binding.userIdTextView.text = "$currentUserNick [ID : ${currentUserId}]"
-            initChannelList()
-        }
-    }
-
-    fun uiKitButtonClicked() {
-
-
-
         val intent = Intent(this, UiKitActivity::class.java)
         startActivity(intent)
 

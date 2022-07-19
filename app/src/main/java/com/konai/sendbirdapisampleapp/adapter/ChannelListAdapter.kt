@@ -4,7 +4,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.konai.sendbirdapisampleapp.activity.MainActivity.Companion.TAG
+import com.konai.sendbirdapisampleapp.Constants.TAG
 import com.konai.sendbirdapisampleapp.databinding.ItemChatChannelListBinding
 import com.konai.sendbirdapisampleapp.model.ChannelListModel
 
