@@ -4,16 +4,17 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+
         <variable
             name="mainActivity"
-            type="com.konai.sendbirdapisampleapp.MainActivity" />
+            type="com.konai.sendbirdapisampleapp.activity.MainActivity" />
     </data>
 
     <!-- -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".MainActivity">
+        tools:context=".activity.MainActivity">
 
         <LinearLayout
             android:id="@+id/currentUserLayout"
@@ -28,13 +29,19 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textColor="@color/black"
+                android:textSize="18sp"
+                android:textStyle="bold"
                 android:text="로그인 사용자 정보 : " />
 
             <TextView
                 android:id="@+id/userIdTextView"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:hint="USER INFO" />
+                android:layout_height="match_parent"
+                android:hint="USER INFO"
+                android:textColor="@color/black"
+                android:textSize="18sp"
+                android:textStyle="bold" />
         </LinearLayout>
 
         <View
@@ -46,7 +53,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/currentUserLayout" />
-
 
         <!-- -->
         <LinearLayout
@@ -90,7 +96,21 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/inviteLayout" />
 
-<!--        -->
+        <TextView
+            android:id="@+id/channelListTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="#D4D2D6"
+            android:gravity="center"
+            android:text="채널 리스트"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/div2" />
+
+        <!--        -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/chatListRecyclerView"
             android:layout_width="0dp"
@@ -98,23 +118,22 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/div2" />
+            app:layout_constraintTop_toBottomOf="@id/channelListTextView" />
 
         <TextView
             android:id="@+id/chatListRecyclerViewCover"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:background="@color/white"
-            android:text="채팅방 없음"
             android:gravity="center"
-            android:visibility="invisible"
+            android:text="채팅방 없음"
             android:textSize="24sp"
             android:textStyle="bold"
+            android:visibility="invisible"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/div2" />
-
+            app:layout_constraintTop_toBottomOf="@id/channelListTextView" />
 
         <!-- -->
         <ProgressBar

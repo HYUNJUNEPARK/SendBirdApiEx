@@ -9,41 +9,68 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:padding="5dp">
+
+        <ImageView
+            android:id="@+id/coverImage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="15dp"
+            android:src="@drawable/ic_baseline_chat_24"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/channelNameTextView"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginLeft="10dp"
-            android:layout_marginTop="15dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginRight="10dp"
+            android:ellipsize="end"
+            android:gravity="left"
             android:maxLines="1"
             android:textColor="@color/black"
             android:textSize="18sp"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/timeTextView"
+            app:layout_constraintStart_toEndOf="@id/coverImage"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="channel name" />
 
         <TextView
             android:id="@+id/lastMessageTextView"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="20dp"
+            android:layout_marginRight="10dp"
+            android:ellipsize="end"
+            android:gravity="left"
             android:maxLines="1"
-            android:textSize="18sp"
-            app:layout_constraintBottom_toBottomOf="@id/channelNameTextView"
-            app:layout_constraintStart_toEndOf="@id/channelNameTextView"
-            app:layout_constraintTop_toTopOf="@id/channelNameTextView"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toStartOf="@id/timeTextView"
+            app:layout_constraintStart_toStartOf="@id/channelNameTextView"
+            app:layout_constraintTop_toBottomOf="@id/channelNameTextView"
             tools:text="Last Message" />
 
         <View
             android:layout_width="0dp"
             android:layout_height="2dp"
-            android:layout_marginTop="15dp"
+            android:layout_marginTop="10dp"
             android:background="@color/black"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/channelNameTextView" />
+            app:layout_constraintTop_toBottomOf="@id/lastMessageTextView" />
+
+        <TextView
+            android:id="@+id/timeTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="15dp"
+            android:text="12:00"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
