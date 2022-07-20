@@ -6,8 +6,20 @@
         <entry key="../../POC/sendbirdApi/app/src/main/res/layout/activity_main.xml" value="0.26666666666666666" />
         <entry key="../../POC/sendbirdApi/app/src/main/res/layout/activity_ui_kit.xml" value="0.18333333333333332" />
         <entry key="../../POC/sendbirdApi/app/src/main/res/layout/item_chat_channel_list.xml" value="0.33" />
-        <entry key="app/src/main/res/layout/activity_main.xml" value="0.22" />
+        <entry key="app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.1535" />
+        <entry key="app/src/main/res/drawable/ic_baseline_chat_24.xml" value="0.1715" />
+        <entry key="app/src/main/res/drawable/ic_baseline_home_24.xml" value="0.1715" />
+        <entry key="app/src/main/res/drawable/ic_baseline_person_pin_24.xml" value="0.1715" />
+        <entry key="app/src/main/res/layout/activity_main.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/activity_main2.xml" value="0.25" />
         <entry key="app/src/main/res/layout/activity_ui_kit.xml" value="0.17222222222222222" />
+        <entry key="app/src/main/res/layout/fragment_blank.xml" value="0.15" />
+        <entry key="app/src/main/res/layout/fragment_channel.xml" value="0.25" />
+        <entry key="app/src/main/res/layout/fragment_friend.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/ic_baseline_chat_24.xml" value="0.37589376915219613" />
+        <entry key="app/src/main/res/layout/ic_baseline_home_24.xml" value="0.37589376915219613" />
+        <entry key="app/src/main/res/layout/ic_baseline_person_pin_24.xml" value="0.38333333333333336" />
+        <entry key="app/src/main/res/menu/bottom_navi_menu.xml" value="0.38229166666666664" />
       </map>
     </option>
   </component>

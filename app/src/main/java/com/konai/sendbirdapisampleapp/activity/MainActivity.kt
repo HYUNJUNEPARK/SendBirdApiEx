@@ -28,7 +28,6 @@ class MainActivity : AppCompatActivity() {
     private var currentUserId: String? = null
     private var currentUserNick: String? = null
 
-
     private lateinit var binding: ActivityMainBinding
     private var _channelList: MutableList<ChannelListModel> = mutableListOf()
 
@@ -89,8 +88,6 @@ class MainActivity : AppCompatActivity() {
                 Log.e(TAG, "initChannelList Error : $e", )
                 return@next
             }
-            //TODO java.lang.IndexOutOfBoundsException: Index: 0, Size: 0
-            //user3 은 채널이 없는 상태임
             Log.d(TAG, "initChannelList: ${channels?.size}")
             for (i in 0 until channels!!.size) {
                 _channelList.add(
@@ -137,19 +134,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
-
-
-
-
-
-
     fun uiKitButtonClicked() {
         //TODO ProgressBar
         //TODO MERGE THIS PART WITH UPPER CODES
         val userId = binding.userIdEditText.text.toString()
         val intent = Intent(this, UiKitActivity::class.java)
         startActivity(intent)
-
     }
 }
