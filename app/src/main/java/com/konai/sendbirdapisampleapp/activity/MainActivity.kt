@@ -39,8 +39,6 @@ class MainActivity : AppCompatActivity() {
         SendBirdInit().initializeChatSdk(this)
     }
 
-
-
     fun logInButtonClicked() {
         //TODO ProgressBar
         val userId = binding.userIdEditText.text.toString()
@@ -54,6 +52,7 @@ class MainActivity : AppCompatActivity() {
                 toast("로그인 에러 : $e")
                 Log.e(TAG, ": $e")
                 return@connect
+
             }
 
             val params = UserUpdateParams().apply {

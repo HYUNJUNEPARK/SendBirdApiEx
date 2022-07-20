@@ -1,10 +1,6 @@
 package com.konai.sendbirdapisampleapp.fragment
 
-import android.util.Log
-import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.konai.sendbirdapisampleapp.Constants
-import com.konai.sendbirdapisampleapp.Constants.TAG
 import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.Util.toast
 import com.konai.sendbirdapisampleapp.adapter.ChannelListAdapter
@@ -20,13 +16,11 @@ class ChannelFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragment_c
 
     override fun initView() {
         super.initView()
-
         initRecyclerView()
     }
 
     private fun initRecyclerView() {
         initChannelList()
-
         val adapter = ChannelListAdapter()
         adapter.channelList = _channelList
         binding.chatListRecyclerView.adapter = adapter
@@ -48,7 +42,8 @@ class ChannelFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragment_c
                 return@next
             }
 
-            _channelList = mutableListOf() //to make the empty list
+            //to make the empty list
+            _channelList = mutableListOf()
 
             for (i in 0 until channels!!.size) {
                 _channelList.add(
@@ -63,5 +58,9 @@ class ChannelFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragment_c
         if (_channelList == null) {
             return
         }
+    }
+
+    private fun createChannelButton() {
+
     }
 }
