@@ -4,7 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
+        <variable
+            name="channelFragment"
+            type="com.konai.sendbirdapisampleapp.fragment.ChannelFragment" />
     </data>
 
     <androidx.constraintlayout.motion.widget.MotionLayout
@@ -39,7 +41,7 @@
             android:id="@+id/createChannelFragmentButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginRight="10dp"
+            android:layout_marginRight="20dp"
             android:backgroundTint="@color/transparent"
             android:src="@drawable/ic_baseline_post_add_24"
             app:layout_constraintBottom_toBottomOf="@id/div1"
@@ -97,8 +99,6 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/userIdInputEditText"
                 app:layout_constraintTop_toTopOf="@id/userIdInputEditText" />
-
-
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.constraintlayout.motion.widget.MotionLayout>

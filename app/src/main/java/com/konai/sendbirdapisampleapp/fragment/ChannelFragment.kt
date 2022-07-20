@@ -1,6 +1,10 @@
 package com.konai.sendbirdapisampleapp.fragment
 
+import android.util.Log
+import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.konai.sendbirdapisampleapp.Constants.TAG
+import com.konai.sendbirdapisampleapp.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.Util.toast
 import com.konai.sendbirdapisampleapp.adapter.ChannelListAdapter
@@ -9,6 +13,7 @@ import com.konai.sendbirdapisampleapp.model.ChannelListModel
 import com.sendbird.android.channel.GroupChannel
 import com.sendbird.android.channel.query.GroupChannelListQueryOrder
 import com.sendbird.android.channel.query.MyMemberStateFilter
+import com.sendbird.android.params.GroupChannelCreateParams
 import com.sendbird.android.params.GroupChannelListQueryParams
 
 class ChannelFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragment_channel) {
@@ -16,7 +21,13 @@ class ChannelFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragment_c
 
     override fun initView() {
         super.initView()
+
+        //binding.channelFragment = ChannelFragment()
         initRecyclerView()
+
+        binding.createChannelLayoutButton.setOnClickListener {
+            createChannelButtonClicked()
+        }
     }
 
     private fun initRecyclerView() {
@@ -60,7 +71,29 @@ class ChannelFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragment_c
         }
     }
 
-    private fun createChannelButton() {
+    //TODO dataBinding onClicked
+    fun createChannelButtonClicked() {
+        val invitedUserId = binding.userIdInputEditText.text.toString()
+        Log.d(TAG, "createChannelButtonClicked: $invitedUserId")
 
+        val users: List<String> = listOf(USER_ID!!, invitedUserId)
+
+        val params = GroupChannelCreateParams().apply {
+            userIds = users
+            isDistinct = true
+            name = "$USER_ID / $invitedUserId"
+            isSuper = false
+        }
+
+        GroupChannel.createChannel(params) { channel, e ->
+            if (e != null) {
+                requireContext().toast("$e")
+            }
+            if (channel != null) {
+                Toast.makeText(requireContext(), "채팅방 생성", Toast.LENGTH_SHORT).show()
+                //TODO refresh UI
+            }
+        }
+    binding.userIdInputEditText.text = null
     }
 }

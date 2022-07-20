@@ -16,6 +16,8 @@ abstract class BaseFragment<T: ViewDataBinding>(@LayoutRes private val layoutId:
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         _binding = DataBindingUtil.inflate(inflater, layoutId, container, false)
+        //TODO
+        //https://stackoverflow.com/questions/67944233/androidonclick-attribute-is-not-working-through-data-binding?noredirect=1&lq=1
         return binding.root
     }
 

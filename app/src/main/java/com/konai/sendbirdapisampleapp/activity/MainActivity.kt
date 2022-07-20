@@ -72,6 +72,9 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+
+
+
     fun initChannelList() {
         _channelList = mutableListOf()
 
@@ -110,16 +113,6 @@ class MainActivity : AppCompatActivity() {
         binding.chatListRecyclerView.adapter = adapter
         binding.chatListRecyclerView.layoutManager = LinearLayoutManager(this)
     }
-
-
-
-
-
-
-
-
-
-
 
 
     fun inviteButtonClicked() {
