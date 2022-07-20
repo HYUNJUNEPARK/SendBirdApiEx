@@ -6,7 +6,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.konai.sendbirdapisampleapp.Constants.TAG
 import com.konai.sendbirdapisampleapp.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.R
-import com.konai.sendbirdapisampleapp.Util.toast
+import com.konai.sendbirdapisampleapp.util.Extension.toast
 import com.konai.sendbirdapisampleapp.adapter.ChannelListAdapter
 import com.konai.sendbirdapisampleapp.databinding.FragmentChannelBinding
 import com.konai.sendbirdapisampleapp.model.ChannelListModel

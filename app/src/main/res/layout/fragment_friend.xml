@@ -128,7 +128,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:background="@color/gray"
             android:gravity="center"
-            android:text="Empty Friend List"
+            android:text="Empty Friends List"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/div2" />
 

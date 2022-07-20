@@ -16,5 +16,4 @@ class FriendFragment : BaseFragment<FragmentFriendBinding>(R.layout.fragment_fri
         userNickTextView.text = USER_NICKNAME
         userIdTextView.text = USER_ID
     }
-
 }
