@@ -16,26 +16,24 @@
         android:theme="@style/Theme.SendBirdApiSampleApp"
         tools:targetApi="31">
         <activity
-            android:name=".activity.MainActivity2"
-            android:exported="true" >
-
-
+            android:name=".activity.LoginActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
 
-
+        <activity
+            android:name=".activity.MainActivity2"
+            android:exported="false"/>
         <activity
             android:name=".activity.UiKitActivity"
             android:exported="false" />
         <activity
             android:name=".activity.MainActivity"
-            android:exported="false">
-        </activity>
+            android:exported="false"/>
     </application>
 
 </manifest>

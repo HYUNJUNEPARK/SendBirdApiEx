@@ -10,7 +10,6 @@ import com.konai.sendbirdapisampleapp.R
 import com.sendbird.uikit.activities.ChannelActivity
 
 class UiKitActivity : ChannelActivity() {
-
 //    override fun onCreate(savedInstanceState: Bundle?) {
 //        super.onCreate(savedInstanceState)
 //        setContentView(R.layout.activity_ui_kit)

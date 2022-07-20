@@ -39,13 +39,15 @@ class MainActivity : AppCompatActivity() {
         SendBirdInit().initializeChatSdk(this)
     }
 
+
+
     fun logInButtonClicked() {
         //TODO ProgressBar
         val userId = binding.userIdEditText.text.toString()
 
         SendbirdChat.connect(userId) { user, e ->
             val userInputNickName = binding.nickNameEditText.text.toString()
-            currentUserNick = if(userInputNickName == "") "No name" else userInputNickName
+            currentUserNick = if(userInputNickName == "") "-" else userInputNickName
             currentUserId = user?.userId.toString()
 
             if (e != null) {
@@ -88,7 +90,7 @@ class MainActivity : AppCompatActivity() {
                 Log.e(TAG, "initChannelList Error : $e", )
                 return@next
             }
-            Log.d(TAG, "initChannelList: ${channels?.size}")
+            //Log.d(TAG, "initChannelList: ${channels?.size}")
             for (i in 0 until channels!!.size) {
                 _channelList.add(
                     ChannelListModel(
@@ -103,13 +105,23 @@ class MainActivity : AppCompatActivity() {
             binding.chatListRecyclerViewCover.visibility = View.VISIBLE
             return
         }
-        Log.d(TAG, "initChannelList: outside query dataList22 $_channelList")
+        //Log.d(TAG, "initChannelList: outside query dataList22 $_channelList")
         val adapter = ChannelListAdapter()
         adapter.channelList = _channelList
         binding.chatListRecyclerView.adapter = adapter
         binding.chatListRecyclerView.layoutManager = LinearLayoutManager(this)
-
     }
+
+
+
+
+
+
+
+
+
+
+
 
     fun inviteButtonClicked() {
         val invitedUserId = binding.inviteEditText.text.toString()

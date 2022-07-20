@@ -5,9 +5,6 @@
 
     <data>
 
-        <variable
-            name="blankFragment"
-            type="com.konai.sendbirdapisampleapp.fragment.BlankFragment" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -15,23 +12,14 @@
         android:layout_height="match_parent"
         tools:context=".fragment.BlankFragment">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/toolbarLayout"
-            android:layout_width="0dp"
-            android:layout_height="?android:attr/actionBarSize"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <View
-            android:id="@+id/div1"
+        <TextView
+            android:text="Empty Fragment"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="@id/toolbarLayout"
-            android:background="#878686"
-            android:layout_width="0dp"
-            android:layout_height="2dp"/>
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

@@ -12,6 +12,6 @@
 
     <item
         android:id="@+id/blank"
-        android:icon="@drawable/ic_baseline_person_pin_24"
+        android:icon="@drawable/ic_baseline_more_horiz_24"
         android:title="blank" />
 </menu>

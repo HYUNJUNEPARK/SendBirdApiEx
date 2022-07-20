@@ -1,7 +1,7 @@
 package com.konai.sendbirdapisampleapp.activity
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import com.konai.sendbirdapisampleapp.R
@@ -24,6 +24,7 @@ class MainActivity2 : AppCompatActivity() {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main2)
 
         initFragment()
+        replaceFragment(fragmentList[0])
     }
 
     private fun initFragment() {
