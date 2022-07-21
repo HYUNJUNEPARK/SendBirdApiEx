@@ -6,7 +6,7 @@
     <data>
         <variable
             name="channelFragment"
-            type="com.konai.sendbirdapisampleapp.fragment.ChannelFragment" />
+            type="com.konai.sendbirdapisampleapp.fragment.ChannelListFragment" />
     </data>
 
     <androidx.constraintlayout.motion.widget.MotionLayout
@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layoutDescription="@xml/fragment_channel_xml_constraintlayout_scene"
-        tools:context=".fragment.ChannelFragment">
+        tools:context=".fragment.ChannelListFragment">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/toolbarLayout"

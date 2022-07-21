@@ -116,6 +116,9 @@ class LoginActivity : AppCompatActivity() {
         return isExist
     }
 
+    //TODO README
+    //https://www.fun25.co.kr/blog/android-execute-3rdparty-app/?category=003
+    //https://codechacha.com/ko/android-query-package-info/
     fun uiKitLaunchButtonClicked() {
         val userId = binding.userIdEditText.text.toString()
         val userNick = binding.nickNameEditText.text.toString().ifEmpty { "-" }
@@ -127,6 +130,4 @@ class LoginActivity : AppCompatActivity() {
         intent.putExtra(INTENT_NAME_USER_NICK, userNick)
         startActivity(intent)
     }
-    //https://www.fun25.co.kr/blog/android-execute-3rdparty-app/?category=003
-    //https://codechacha.com/ko/android-query-package-info/
 }

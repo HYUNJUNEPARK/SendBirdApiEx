@@ -16,7 +16,7 @@ import com.sendbird.android.channel.query.MyMemberStateFilter
 import com.sendbird.android.params.GroupChannelCreateParams
 import com.sendbird.android.params.GroupChannelListQueryParams
 
-class ChannelFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragment_channel) {
+class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragment_channel) {
     private var _channelList: MutableList<ChannelListModel> = mutableListOf()
 
     override fun initView() {

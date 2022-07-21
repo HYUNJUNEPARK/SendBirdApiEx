@@ -4,7 +4,8 @@
     package="com.konai.sendbirdapisampleapp">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+    <uses-permission
+        android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
 
     <application
@@ -18,6 +19,9 @@
         android:theme="@style/Theme.SendBirdApiSampleApp"
         tools:targetApi="31">
         <activity
+            android:name=".ChannelActivity"
+            android:exported="false" />
+        <activity
             android:name=".activity.LoginActivity"
             android:exported="true">
             <intent-filter>
@@ -26,9 +30,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".activity.MainActivity"
-            android:exported="false"/>
+            android:exported="false" />
     </application>
+
 </manifest>

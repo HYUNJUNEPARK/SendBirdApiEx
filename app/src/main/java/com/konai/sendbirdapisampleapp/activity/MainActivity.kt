@@ -7,14 +7,14 @@ import androidx.fragment.app.Fragment
 import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.databinding.ActivityMainBinding
 import com.konai.sendbirdapisampleapp.fragment.BlankFragment
-import com.konai.sendbirdapisampleapp.fragment.ChannelFragment
+import com.konai.sendbirdapisampleapp.fragment.ChannelListFragment
 import com.konai.sendbirdapisampleapp.fragment.FriendFragment
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val fragmentList = arrayListOf<Fragment>(
         FriendFragment(),
-        ChannelFragment(),
+        ChannelListFragment(),
         BlankFragment()
     )
 
