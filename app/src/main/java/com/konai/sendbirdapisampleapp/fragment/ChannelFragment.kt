@@ -3,8 +3,8 @@ package com.konai.sendbirdapisampleapp.fragment
 import android.util.Log
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.konai.sendbirdapisampleapp.Constants.TAG
-import com.konai.sendbirdapisampleapp.Constants.USER_ID
+import com.konai.sendbirdapisampleapp.util.Constants.TAG
+import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.util.Extension.toast
 import com.konai.sendbirdapisampleapp.adapter.ChannelListAdapter
@@ -22,9 +22,9 @@ class ChannelFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragment_c
     override fun initView() {
         super.initView()
 
-        //binding.channelFragment = ChannelFragment()
         initRecyclerView()
 
+        //TODO Clean code
         binding.createChannelLayoutButton.setOnClickListener {
             createChannelButtonClicked()
         }

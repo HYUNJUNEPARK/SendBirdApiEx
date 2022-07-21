@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+
         <variable
             name="loginActivity"
             type="com.konai.sendbirdapisampleapp.activity.LoginActivity" />
@@ -31,10 +32,18 @@
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/loginButton"
             android:layout_width="wrap_content"
-            android:enabled="false"
             android:layout_height="wrap_content"
+            android:enabled="false"
             android:onClick="@{()->loginActivity.logInButtonClicked()}"
             android:text="로그인" />
 
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/UiKitAppLaunchButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:enabled="false"
+            android:onClick="@{()->loginActivity.uiKitLaunchButtonClicked()}"
+            android:text="ui kit app start" />
     </LinearLayout>
 </layout>

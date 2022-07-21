@@ -1,7 +1,7 @@
 package com.konai.sendbirdapisampleapp.fragment
 
-import com.konai.sendbirdapisampleapp.Constants.USER_ID
-import com.konai.sendbirdapisampleapp.Constants.USER_NICKNAME
+import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
+import com.konai.sendbirdapisampleapp.util.Constants.USER_NICKNAME
 import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.databinding.FragmentFriendBinding
 
