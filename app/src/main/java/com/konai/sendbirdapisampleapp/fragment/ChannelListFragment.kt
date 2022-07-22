@@ -1,14 +1,13 @@
 package com.konai.sendbirdapisampleapp.fragment
 
 import android.util.Log
-import android.view.View
 import android.widget.Toast
-import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.adapter.ChannelListAdapter
 import com.konai.sendbirdapisampleapp.databinding.FragmentChannelBinding
 import com.konai.sendbirdapisampleapp.model.ChannelListModel
+import com.konai.sendbirdapisampleapp.util.Constants.TAG
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.util.Extension.convertLongToTime
 import com.konai.sendbirdapisampleapp.util.Extension.toast
@@ -20,14 +19,9 @@ import com.sendbird.android.params.GroupChannelListQueryParams
 
 class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragment_channel) {
     private var _channelList: MutableList<ChannelListModel> = mutableListOf()
-    private var isEmptryList = false
 
     override fun initView() {
         super.initView()
-
-        if (isEmptryList) {
-            binding.emptyChannelCoverTextView.visibility = View.VISIBLE
-        }
 
         initRecyclerView()
 
@@ -63,11 +57,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
             _channelList.clear() //to make the list empty
 
-            if (channels!!.isEmpty()){
-                isEmptryList = true
-                return@next
-            }
-
+            if (channels!!.isEmpty()) return@next
             for (i in channels.indices) {
                 _channelList.add(
                     ChannelListModel(
@@ -79,6 +69,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                 )
             }
             binding.chatListRecyclerView.adapter?.notifyDataSetChanged()
+            //  binding.emptyChannelCoverTextView.visibility = View.VISIBLE
         }
     }
 
@@ -97,9 +88,11 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
             if (e != null) {
                 requireContext().toast("$e")
             }
+            Log.d(TAG, "onCreateChannelButtonClicked: $channel")
             if (channel != null) {
-                Toast.makeText(requireContext(), "채팅방 생성", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "채널 생성", Toast.LENGTH_SHORT).show()
                 initChannelList()
+                //}}, inviter=User(userId='1', nickname='-', plainProfileImageUrl='', friendDiscoveryKey=null, friendName='null', metaData={},
             }
         }
         binding.userIdInputEditText.text = null

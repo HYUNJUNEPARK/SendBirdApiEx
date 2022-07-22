@@ -2,7 +2,6 @@ package com.konai.sendbirdapisampleapp.adapter
 
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -11,7 +10,6 @@ import com.konai.sendbirdapisampleapp.databinding.ItemChatChannelListBinding
 import com.konai.sendbirdapisampleapp.model.ChannelListModel
 import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
 import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_CHANNEL_URL
-import com.konai.sendbirdapisampleapp.util.Constants.TAG
 
 class ChannelListAdapter(val context: Context) : RecyclerView.Adapter<ChannelListAdapter.MyHolder>() {
     companion object {

@@ -18,14 +18,12 @@ class MainActivity : AppCompatActivity() {
     private var channelListFragment: ChannelListFragment? = null
     private var blankFragment: BlankFragment? = null
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
 
         initBottomNavi()
     }
-
 
     private fun initBottomNavi() {
         //최초로 보이는 프래그먼트
