@@ -3,6 +3,7 @@ package com.konai.sendbirdapisampleapp.fragment
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.adapter.ChannelListAdapter
@@ -25,7 +26,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         super.initView()
 
 
-        initChannelList()
+        initRecyclerView()
 
 
         //TODO clean code
@@ -37,7 +38,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
 
     private fun initRecyclerView() {
-        //initChannelList()
+        initChannelList()
         Log.d("1111", "channel List2 : $_channelList")
 
         val adapter = ChannelListAdapter(requireContext())
@@ -57,49 +58,38 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                 order = GroupChannelListQueryOrder.LATEST_LAST_MESSAGE
             }
         )
+
         query.next { channels, e ->
             if (e != null) {
                 requireContext().toast("$e")
                 return@next
             }
 
-            _channelList = mutableListOf() //to make the list empty
+            _channelList.clear() //to make the list empty
 
             if (channels!!.isEmpty()){
                 binding.emptyChannelCoverTextView.visibility = View.VISIBLE
                 return@next
             }
 
-            for (i in 0 until channels!!.size) {
+            for (i in channels.indices) {
                 _channelList.add(
                     ChannelListModel(
-                        name = channels!![i].name,
-                        url = channels!![i].url,
-                        lastMessage = channels!![i].lastMessage?.message,
-                        lastMessageTime = (channels!![i].lastMessage?.createdAt)?.convertLongToTime()
+                        name = channels[i].name,
+                        url = channels[i].url,
+                        lastMessage = channels[i].lastMessage?.message,
+                        lastMessageTime = (channels[i].lastMessage?.createdAt)?.convertLongToTime()
                     )
                 )
             }
-            Log.d("1111", "channel List 3: $_channelList")
+            binding.chatListRecyclerView.adapter?.notifyDataSetChanged()
         }
-        if (_channelList == null) return
-        initRecyclerView()
     }
-
-
-
-
-
-
-
-
-
-
 
     //TODO dataBinding onClicked
     private fun onCreateChannelButtonClicked() {
         val invitedUserId = binding.userIdInputEditText.text.toString()
-        val users: List<String> = listOf(USER_ID!!, invitedUserId)
+        val users: List<String> = listOf(USER_ID, invitedUserId)
         val params = GroupChannelCreateParams().apply {
             userIds = users
             isDistinct = true

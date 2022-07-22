@@ -14,6 +14,9 @@ import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_CHANNEL_URL
 import com.konai.sendbirdapisampleapp.util.Constants.TAG
 
 class ChannelListAdapter(val context: Context) : RecyclerView.Adapter<ChannelListAdapter.MyHolder>() {
+    companion object {
+    }
+
     var channelList = mutableListOf<ChannelListModel>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyHolder {

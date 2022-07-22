@@ -22,8 +22,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
 
-        initFragment()
         replaceFragment(fragmentList[0])
+        initFragment()
     }
 
     private fun initFragment() {
