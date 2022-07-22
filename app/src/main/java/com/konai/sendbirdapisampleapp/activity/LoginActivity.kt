@@ -32,18 +32,17 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_login)
 
-        syncUiKitLaunchButtonStatus()
-
         binding.loginActivity = this
-        initializeChatSdk()
+        initializeSendBirdSdk()
+        updateUiKitLaunchButtonState()
     }
 
-    private fun initializeChatSdk() {
+    private fun initializeSendBirdSdk() {
         SendbirdChat.init(
             InitParams(APP_ID, this, useCaching = true),
             object : InitResultHandler {
                 override fun onMigrationStarted() {
-                    Log.i(TAG, "initializeChatSdk: Ca lled when there's an update in Sendbird server.")
+                    Log.i(TAG, "initializeChatSdk: Called when there's an update in Sendbird server.")
                 }
                 override fun onInitFailed(e: SendbirdException) {
                     Log.e(TAG,"initializeChatSdk : Called when initialize failed. $e \n SDK will still operate properly as if useLocalCaching is set to false.")
@@ -58,14 +57,13 @@ class LoginActivity : AppCompatActivity() {
     }
 
     //TODO ProgressBar, ASYNC
-    fun logInButtonClicked() {
-        //TODO Button enabled false if tv empty
+    fun onLogInButtonClicked() {
         val _userId = binding.userIdEditText.text.toString()
-        val userId = if(_userId.isNotEmpty()) binding.userIdEditText.text.toString() else return@logInButtonClicked
+        val userId = if(_userId.isNotEmpty()) binding.userIdEditText.text.toString() else return@onLogInButtonClicked
 
         SendbirdChat.connect(userId) { user, e ->
             val userInputNickName = binding.nickNameEditText.text.toString()
-            USER_NICKNAME = userInputNickName.ifEmpty { "-" }
+            USER_NICKNAME = userInputNickName.ifEmpty { "$userId" }
             USER_ID = user?.userId.toString()
 
             if (e != null) {
@@ -84,7 +82,22 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun syncUiKitLaunchButtonStatus() {
+    //TODO README
+    //https://www.fun25.co.kr/blog/android-execute-3rdparty-app/?category=003
+    //https://codechacha.com/ko/android-query-package-info/
+    fun onUiKitLaunchButtonClicked() {
+        val userId = binding.userIdEditText.text.toString()
+        val userNick = binding.nickNameEditText.text.toString().ifEmpty { "$userId" }
+        val intent = packageManager.getLaunchIntentForPackage(SENDBIRD_UI_KIT_APP)!!.run {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            action = MY_APP_INTENT_ACTION
+            putExtra(INTENT_NAME_USER_ID, userId)
+            putExtra(INTENT_NAME_USER_NICK, userNick)
+        }
+        startActivity(intent)
+    }
+
+    private fun updateUiKitLaunchButtonState() {
         val userId = binding.userIdEditText
         userId.addTextChangedListener(
             object: TextWatcher {
@@ -92,13 +105,16 @@ class LoginActivity : AppCompatActivity() {
                 override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { }
                 override fun afterTextChanged(p0: Editable?) {
                     val userId = binding.userIdEditText.text
-                    binding.UiKitAppLaunchButton.isEnabled = userId.isNotEmpty() && isKitApp()
+
+                    //userId 와 디바이스에 uiKit 앱이 있어야 버튼 활성화
+                    binding.UiKitAppLaunchButton.isEnabled = userId.isNotEmpty() && isUiKitAppOnMyDevice()
                 }
             }
         )
     }
 
-    private fun isKitApp(): Boolean {
+    //need permission : <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
+    private fun isUiKitAppOnMyDevice(): Boolean {
         var isExist = false
         val packageManager = packageManager
         val packages: List<PackageInfo> = packageManager.getInstalledPackages(0)
@@ -114,20 +130,5 @@ class LoginActivity : AppCompatActivity() {
             isExist = false
         }
         return isExist
-    }
-
-    //TODO README
-    //https://www.fun25.co.kr/blog/android-execute-3rdparty-app/?category=003
-    //https://codechacha.com/ko/android-query-package-info/
-    fun uiKitLaunchButtonClicked() {
-        val userId = binding.userIdEditText.text.toString()
-        val userNick = binding.nickNameEditText.text.toString().ifEmpty { "-" }
-
-        val intent = packageManager.getLaunchIntentForPackage(SENDBIRD_UI_KIT_APP)
-        intent!!.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        intent.action = MY_APP_INTENT_ACTION
-        intent.putExtra(INTENT_NAME_USER_ID, userId)
-        intent.putExtra(INTENT_NAME_USER_NICK, userNick)
-        startActivity(intent)
     }
 }

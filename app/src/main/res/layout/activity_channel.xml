@@ -5,6 +5,9 @@
 
     <data>
 
+        <variable
+            name="channelActivity"
+            type="com.konai.sendbirdapisampleapp.activity.ChannelActivity" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -14,33 +17,33 @@
 
         <ImageButton
             android:id="@+id/backButton"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/div1"
-            android:src="@drawable/ic_baseline_arrow_back_24"
-            android:layout_width="wrap_content"
-            android:layout_margin="5dp"
+            android:layout_width="@dimen/button_size"
+            android:layout_height="@dimen/button_size"
+            android:layout_marginLeft="5dp"
             android:background="@color/transparent"
-            android:layout_height="wrap_content"/>
+            android:onClick="@{()->channelActivity.finish()}"
+            android:src="@drawable/ic_baseline_arrow_back_24"
+            app:layout_constraintBottom_toTopOf="@id/div1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <ImageButton
             android:id="@+id/channelInfoButton"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:src="@drawable/ic_baseline_menu_24"
-            android:background="@color/transparent"
+            android:layout_width="@dimen/button_size"
+            android:layout_height="@dimen/button_size"
             android:layout_marginRight="5dp"
+            android:background="@color/transparent"
+            android:src="@drawable/ic_baseline_menu_24"
             app:layout_constraintBottom_toBottomOf="@id/div1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/userIdTextView"
             android:layout_width="wrap_content"
             android:layout_height="?attr/actionBarSize"
-            android:gravity="center"
             android:layout_marginLeft="15dp"
+            android:gravity="center"
             android:text="userNick(UserID)"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -80,6 +83,7 @@
             android:id="@+id/messageEditText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
             android:layout_marginBottom="10dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/sendButton"
@@ -89,11 +93,12 @@
             android:id="@+id/sendButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginRight="10dp"
             android:layout_marginBottom="10dp"
             android:text="전송"
             android:textColor="@color/black"
-            android:textSize="18sp"
-            android:textStyle="bold"
+            android:onClick="@{()->channelActivity.sendButtonClicked()}"
+            android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 

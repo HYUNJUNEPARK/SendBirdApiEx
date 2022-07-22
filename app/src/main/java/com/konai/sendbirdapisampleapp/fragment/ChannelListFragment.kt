@@ -1,6 +1,7 @@
 package com.konai.sendbirdapisampleapp.fragment
 
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.konai.sendbirdapisampleapp.util.Constants.TAG
@@ -32,7 +33,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
     private fun initRecyclerView() {
         initChannelList()
-        val adapter = ChannelListAdapter()
+        val adapter = ChannelListAdapter(requireContext())
         adapter.channelList = _channelList
         binding.chatListRecyclerView.adapter = adapter
         binding.chatListRecyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -44,7 +45,6 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                 includeEmpty = true
                 myMemberStateFilter = MyMemberStateFilter.JOINED
                 order = GroupChannelListQueryOrder.LATEST_LAST_MESSAGE
-                //CHRONOLOGICAL, LATEST_LAST_MESSAGE, CHANNEL_NAME_ALPHABETICAL, METADATA_VALUE_ALPHABETICAL.
             }
         )
         query.next { channels, e ->
@@ -53,31 +53,36 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                 return@next
             }
 
-            //to make the empty list
-            _channelList = mutableListOf()
+            _channelList = mutableListOf() //to make the list empty
+
+            //inviter - 초대한 사람 // inviter.userId // inviter.nickname
+            // 초대 받은 사람 - channels!![0].members[0].userId // channels!![0].members[0].nickname
+
+            //여기서 채널 없으면 앱 죽음
+            //Log.d(TAG, "ChannelList: ${channels!![0].inviter} // ${channels!![0].members[0].nickname}")
+
+            if (channels!!.isEmpty()){
+                binding.emptyChannelCoverTextView.visibility = View.VISIBLE
+                return@next
+            }
 
             for (i in 0 until channels!!.size) {
                 _channelList.add(
                     ChannelListModel(
                         name = channels!![i].name,
                         url = channels!![i].url,
-                        lastMessage = channels!![i].lastMessage.toString()
+                        lastMessage = channels!![i].lastMessage?.message
                     )
                 )
             }
         }
-        if (_channelList == null) {
-            return
-        }
+        if (_channelList == null) return
     }
 
     //TODO dataBinding onClicked
     fun createChannelButtonClicked() {
         val invitedUserId = binding.userIdInputEditText.text.toString()
-        Log.d(TAG, "createChannelButtonClicked: $invitedUserId")
-
         val users: List<String> = listOf(USER_ID!!, invitedUserId)
-
         val params = GroupChannelCreateParams().apply {
             userIds = users
             isDistinct = true
@@ -94,6 +99,6 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                 //TODO refresh UI
             }
         }
-    binding.userIdInputEditText.text = null
+        binding.userIdInputEditText.text = null
     }
 }

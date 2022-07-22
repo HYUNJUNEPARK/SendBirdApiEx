@@ -19,7 +19,7 @@
         android:theme="@style/Theme.SendBirdApiSampleApp"
         tools:targetApi="31">
         <activity
-            android:name=".ChannelActivity"
+            android:name=".activity.ChannelActivity"
             android:exported="false" />
         <activity
             android:name=".activity.LoginActivity"

@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+
         <variable
             name="channelFragment"
             type="com.konai.sendbirdapisampleapp.fragment.ChannelListFragment" />
@@ -39,9 +40,9 @@
 
         <ImageButton
             android:id="@+id/createChannelFragmentButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="20dp"
+            android:layout_width="@dimen/button_size"
+            android:layout_height="@dimen/button_size"
+            android:layout_marginRight="5dp"
             android:backgroundTint="@color/transparent"
             android:src="@drawable/ic_baseline_post_add_24"
             app:layout_constraintBottom_toBottomOf="@id/div1"
@@ -83,23 +84,36 @@
                 android:gravity="center"
                 android:hint="대화 상대 아이디 입력"
                 android:textSize="16sp"
-                app:layout_constraintHorizontal_chainStyle="packed"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/createChannelLayoutButton"
+                app:layout_constraintHorizontal_chainStyle="packed"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/createChannelLayoutButton"
                 android:layout_width="wrap_content"
-                android:text="채널 생성"
-                android:layout_marginLeft="20dp"
                 android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:text="채널 생성"
                 app:layout_constraintBottom_toBottomOf="@id/userIdInputEditText"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/userIdInputEditText"
                 app:layout_constraintTop_toTopOf="@id/userIdInputEditText" />
         </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <TextView
+            android:id="@+id/emptyChannelCoverTextView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@color/gray"
+            android:gravity="center"
+            android:text="Empty Channel"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/div1" />
 
     </androidx.constraintlayout.motion.widget.MotionLayout>
 </layout>
