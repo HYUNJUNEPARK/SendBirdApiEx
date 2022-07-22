@@ -36,6 +36,7 @@ class ChannelListAdapter(val context: Context) : RecyclerView.Adapter<ChannelLis
             _myData = myData
             binding.channelNameTextView.text = "${myData.name}"
             binding.lastMessageTextView.text = "${myData.lastMessage}"
+            binding.timeTextView.text = "${myData.lastMessageTime}"
         }
     }
 
@@ -44,7 +45,5 @@ class ChannelListAdapter(val context: Context) : RecyclerView.Adapter<ChannelLis
         myHolder.setContents(data)
     }
 
-    override fun getItemCount(): Int {
-        return channelList.size
-    }
+    override fun getItemCount(): Int = channelList.size
 }

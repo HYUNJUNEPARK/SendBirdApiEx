@@ -75,7 +75,7 @@ class LoginActivity : AppCompatActivity() {
                 nickname = USER_NICKNAME
             }
             SendbirdChat.updateCurrentUserInfo(params) { e ->
-                Log.e(TAG, ": updateCurrentUserInfo Error : $e")
+                if (e != null)  Log.e(TAG, ": updateCurrentUserInfo Error : $e")
             }
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)

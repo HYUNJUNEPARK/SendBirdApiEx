@@ -1,7 +1,8 @@
 package com.konai.sendbirdapisampleapp.model
 
 data class ChannelListModel(
-    var name: String?,
-    var url: String?,
-    var lastMessage: String?
+    val name: String?,
+    val url: String?,
+    val lastMessage: String?,
+    val lastMessageTime: String?
 )

@@ -4,13 +4,13 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.konai.sendbirdapisampleapp.util.Constants.TAG
-import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.R
-import com.konai.sendbirdapisampleapp.util.Extension.toast
 import com.konai.sendbirdapisampleapp.adapter.ChannelListAdapter
 import com.konai.sendbirdapisampleapp.databinding.FragmentChannelBinding
 import com.konai.sendbirdapisampleapp.model.ChannelListModel
+import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
+import com.konai.sendbirdapisampleapp.util.Extension.convertLongToTime
+import com.konai.sendbirdapisampleapp.util.Extension.toast
 import com.sendbird.android.channel.GroupChannel
 import com.sendbird.android.channel.query.GroupChannelListQueryOrder
 import com.sendbird.android.channel.query.MyMemberStateFilter
@@ -20,24 +20,34 @@ import com.sendbird.android.params.GroupChannelListQueryParams
 class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragment_channel) {
     private var _channelList: MutableList<ChannelListModel> = mutableListOf()
 
+
     override fun initView() {
         super.initView()
 
-        initRecyclerView()
 
-        //TODO Clean code
+        initChannelList()
+
+
+        //TODO clean code
         binding.createChannelLayoutButton.setOnClickListener {
-            createChannelButtonClicked()
+            onCreateChannelButtonClicked()
         }
     }
 
+
+
     private fun initRecyclerView() {
-        initChannelList()
+        //initChannelList()
+        Log.d("1111", "channel List2 : $_channelList")
+
         val adapter = ChannelListAdapter(requireContext())
         adapter.channelList = _channelList
         binding.chatListRecyclerView.adapter = adapter
         binding.chatListRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        Log.d("1111", "channel List4 : $_channelList")
     }
+
+
 
     private fun initChannelList() {
         val query = GroupChannel.createMyGroupChannelListQuery(
@@ -55,12 +65,6 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
             _channelList = mutableListOf() //to make the list empty
 
-            //inviter - 초대한 사람 // inviter.userId // inviter.nickname
-            // 초대 받은 사람 - channels!![0].members[0].userId // channels!![0].members[0].nickname
-
-            //여기서 채널 없으면 앱 죽음
-            //Log.d(TAG, "ChannelList: ${channels!![0].inviter} // ${channels!![0].members[0].nickname}")
-
             if (channels!!.isEmpty()){
                 binding.emptyChannelCoverTextView.visibility = View.VISIBLE
                 return@next
@@ -71,22 +75,35 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                     ChannelListModel(
                         name = channels!![i].name,
                         url = channels!![i].url,
-                        lastMessage = channels!![i].lastMessage?.message
+                        lastMessage = channels!![i].lastMessage?.message,
+                        lastMessageTime = (channels!![i].lastMessage?.createdAt)?.convertLongToTime()
                     )
                 )
             }
+            Log.d("1111", "channel List 3: $_channelList")
         }
         if (_channelList == null) return
+        initRecyclerView()
     }
 
+
+
+
+
+
+
+
+
+
+
     //TODO dataBinding onClicked
-    fun createChannelButtonClicked() {
+    private fun onCreateChannelButtonClicked() {
         val invitedUserId = binding.userIdInputEditText.text.toString()
         val users: List<String> = listOf(USER_ID!!, invitedUserId)
         val params = GroupChannelCreateParams().apply {
             userIds = users
             isDistinct = true
-            name = "$USER_ID / $invitedUserId"
+            name = "$USER_ID, $invitedUserId"
             isSuper = false
         }
 
