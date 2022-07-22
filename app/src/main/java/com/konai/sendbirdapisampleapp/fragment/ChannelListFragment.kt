@@ -20,14 +20,16 @@ import com.sendbird.android.params.GroupChannelListQueryParams
 
 class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragment_channel) {
     private var _channelList: MutableList<ChannelListModel> = mutableListOf()
-
+    private var isEmptryList = false
 
     override fun initView() {
         super.initView()
 
+        if (isEmptryList) {
+            binding.emptyChannelCoverTextView.visibility = View.VISIBLE
+        }
 
         initRecyclerView()
-
 
         //TODO clean code
         binding.createChannelLayoutButton.setOnClickListener {
@@ -35,20 +37,14 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         }
     }
 
-
-
     private fun initRecyclerView() {
         initChannelList()
-        Log.d("1111", "channel List2 : $_channelList")
 
         val adapter = ChannelListAdapter(requireContext())
         adapter.channelList = _channelList
         binding.chatListRecyclerView.adapter = adapter
         binding.chatListRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-        Log.d("1111", "channel List4 : $_channelList")
     }
-
-
 
     private fun initChannelList() {
         val query = GroupChannel.createMyGroupChannelListQuery(
@@ -68,7 +64,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
             _channelList.clear() //to make the list empty
 
             if (channels!!.isEmpty()){
-                binding.emptyChannelCoverTextView.visibility = View.VISIBLE
+                isEmptryList = true
                 return@next
             }
 
@@ -103,7 +99,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
             }
             if (channel != null) {
                 Toast.makeText(requireContext(), "채팅방 생성", Toast.LENGTH_SHORT).show()
-                //TODO refresh UI
+                initChannelList()
             }
         }
         binding.userIdInputEditText.text = null

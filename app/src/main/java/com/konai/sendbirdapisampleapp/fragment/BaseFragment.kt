@@ -27,17 +27,9 @@ abstract class BaseFragment<T: ViewDataBinding>(@LayoutRes private val layoutId:
         initView()
     }
 
-    //TODO CHECK THIS BLOG TO SOLVE ISSUES
-    //https://leveloper.tistory.com/210
-    //https://yoon-dailylife.tistory.com/57
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-
     }
 
     protected open fun initView() { }

@@ -33,7 +33,7 @@ class FriendFragment : BaseFragment<FragmentFriendBinding>(R.layout.fragment_fri
         val params = GroupChannelCreateParams().apply {
             userIds = users
             isDistinct = true
-            name = "[ $USER_ID ]'s Personal Channel"
+            name = "[ $USER_ID ] Personal Channel"
             isSuper = false
         }
         GroupChannel.createChannel(params) { channel, e ->
