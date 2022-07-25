@@ -30,12 +30,8 @@ class ChannelListAdapter(val context: Context) : RecyclerView.Adapter<ChannelLis
             binding.root.setOnClickListener {
                 val intent = Intent(context, ChannelActivity::class.java)
                 intent.putExtra(INTENT_NAME_CHANNEL_URL, "${_myData.url}")
-                intent.putExtra(INTENT_NAME_USER_ID, _myData.partnerMemberId)
-                intent.putExtra(INTENT_NAME_USER_NICK, _myData.partnerMemberNick)
                 intent.action = CHANNEL_ACTIVITY_INTENT_ACTION
                 context.startActivity(intent)
-
-
             }
         }
         fun setContents (myData: ChannelListModel) {

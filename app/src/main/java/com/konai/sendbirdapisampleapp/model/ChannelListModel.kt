@@ -4,7 +4,5 @@ data class ChannelListModel(
     val name: String?,
     val url: String?,
     val lastMessage: String?,
-    val lastMessageTime: String?,
-    val partnerMemberId: String?,
-    val partnerMemberNick: String?
+    val lastMessageTime: String?
 )

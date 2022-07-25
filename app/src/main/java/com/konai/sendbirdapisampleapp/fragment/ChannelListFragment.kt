@@ -64,14 +64,6 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                 var partnerId: String
                 var partnerNickname: String
 
-//                //채널에 해당하는 대화 상대의 정보(아이디, 닉네임)만 데이터 클래스에 저장
-//                //TODO 문제점 : private 채널 일 때 앱 크래시
-//                if (channels!![i].members.size == 1) {
-//                    partnerId = "private"
-//                    partnerNickname = "private"
-//                    return@next
-//                }
-
                 //private channel
                 if(channels[i].members.size == 1) {
                     partnerId = USER_ID
@@ -93,9 +85,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                         name = channels[i].name,
                         url = channels[i].url,
                         lastMessage = channels[i].lastMessage?.message,
-                        lastMessageTime = (channels[i].lastMessage?.createdAt)?.convertLongToTime(),
-                        partnerMemberId = partnerId,
-                        partnerMemberNick = partnerNickname
+                        lastMessageTime = (channels[i].lastMessage?.createdAt)?.convertLongToTime()
                     )
                 )
             }
