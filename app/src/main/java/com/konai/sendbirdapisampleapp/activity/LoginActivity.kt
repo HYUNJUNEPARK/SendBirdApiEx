@@ -82,13 +82,10 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    //TODO README
-    //https://www.fun25.co.kr/blog/android-execute-3rdparty-app/?category=003
-    //https://codechacha.com/ko/android-query-package-info/
     fun onUiKitLaunchButtonClicked() {
         val userId = binding.userIdEditText.text.toString()
         val userNick = binding.nickNameEditText.text.toString().ifEmpty { "$userId" }
-        val intent = packageManager.getLaunchIntentForPackage(SENDBIRD_UI_KIT_APP)!!.run {
+        val intent = packageManager.getLaunchIntentForPackage(SENDBIRD_UI_KIT_APP)?.run {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             action = MY_APP_INTENT_ACTION
             putExtra(INTENT_NAME_USER_ID, userId)
@@ -97,6 +94,7 @@ class LoginActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
+    //editText 에 userId 와 디바이스에 uiKit 앱이 설치되어있어야 버튼 활성화
     private fun updateUiKitLaunchButtonState() {
         val userId = binding.userIdEditText
         userId.addTextChangedListener(
@@ -105,15 +103,12 @@ class LoginActivity : AppCompatActivity() {
                 override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { }
                 override fun afterTextChanged(p0: Editable?) {
                     val userId = binding.userIdEditText.text
-
-                    //userId 와 디바이스에 uiKit 앱이 있어야 버튼 활성화
                     binding.UiKitAppLaunchButton.isEnabled = userId.isNotEmpty() && isUiKitAppOnMyDevice()
                 }
             }
         )
     }
 
-    //need permission : <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
     private fun isUiKitAppOnMyDevice(): Boolean {
         var isExist = false
         val packageManager = packageManager
