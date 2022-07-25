@@ -4,7 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
+        <variable
+            name="mainActivity"
+            type="com.konai.sendbirdapisampleapp.activity.MainActivity" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

@@ -10,11 +10,12 @@ import com.konai.sendbirdapisampleapp.databinding.ItemChatChannelListBinding
 import com.konai.sendbirdapisampleapp.model.ChannelListModel
 import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
 import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_CHANNEL_URL
+import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_USER_ID
+import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_USER_NICK
+import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
+import com.konai.sendbirdapisampleapp.util.Constants.USER_NICKNAME
 
 class ChannelListAdapter(val context: Context) : RecyclerView.Adapter<ChannelListAdapter.MyHolder>() {
-    companion object {
-    }
-
     var channelList = mutableListOf<ChannelListModel>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyHolder {
@@ -29,8 +30,12 @@ class ChannelListAdapter(val context: Context) : RecyclerView.Adapter<ChannelLis
             binding.root.setOnClickListener {
                 val intent = Intent(context, ChannelActivity::class.java)
                 intent.putExtra(INTENT_NAME_CHANNEL_URL, "${_myData.url}")
+                intent.putExtra(INTENT_NAME_USER_ID, _myData.partnerMemberId)
+                intent.putExtra(INTENT_NAME_USER_NICK, _myData.partnerMemberNick)
                 intent.action = CHANNEL_ACTIVITY_INTENT_ACTION
                 context.startActivity(intent)
+
+
             }
         }
         fun setContents (myData: ChannelListModel) {

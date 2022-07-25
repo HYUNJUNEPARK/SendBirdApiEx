@@ -9,6 +9,7 @@ import com.konai.sendbirdapisampleapp.databinding.FragmentChannelBinding
 import com.konai.sendbirdapisampleapp.model.ChannelListModel
 import com.konai.sendbirdapisampleapp.util.Constants.TAG
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
+import com.konai.sendbirdapisampleapp.util.Constants.USER_NICKNAME
 import com.konai.sendbirdapisampleapp.util.Extension.convertLongToTime
 import com.konai.sendbirdapisampleapp.util.Extension.toast
 import com.sendbird.android.channel.GroupChannel
@@ -58,18 +59,47 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
             _channelList.clear() //to make the list empty
 
             if (channels!!.isEmpty()) return@next
+
             for (i in channels.indices) {
+                var partnerId: String
+                var partnerNickname: String
+
+//                //채널에 해당하는 대화 상대의 정보(아이디, 닉네임)만 데이터 클래스에 저장
+//                //TODO 문제점 : private 채널 일 때 앱 크래시
+//                if (channels!![i].members.size == 1) {
+//                    partnerId = "private"
+//                    partnerNickname = "private"
+//                    return@next
+//                }
+
+                //private channel
+                if(channels[i].members.size == 1) {
+                    partnerId = USER_ID
+                    partnerNickname = USER_NICKNAME
+                }
+                else {
+                    if(channels!![i].members[0].userId == USER_ID) {
+                        partnerId = channels!![i].members[1].userId
+                        partnerNickname = channels!![i].members[1].nickname
+                    }
+                    else {
+                        partnerId = channels!![i].members[0].userId
+                        partnerNickname = channels!![i].members[0].nickname
+                    }
+                }
+
                 _channelList.add(
                     ChannelListModel(
                         name = channels[i].name,
                         url = channels[i].url,
                         lastMessage = channels[i].lastMessage?.message,
-                        lastMessageTime = (channels[i].lastMessage?.createdAt)?.convertLongToTime()
+                        lastMessageTime = (channels[i].lastMessage?.createdAt)?.convertLongToTime(),
+                        partnerMemberId = partnerId,
+                        partnerMemberNick = partnerNickname
                     )
                 )
             }
             binding.chatListRecyclerView.adapter?.notifyDataSetChanged()
-            //  binding.emptyChannelCoverTextView.visibility = View.VISIBLE
         }
     }
 
@@ -92,7 +122,6 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
             if (channel != null) {
                 Toast.makeText(requireContext(), "채널 생성", Toast.LENGTH_SHORT).show()
                 initChannelList()
-                //}}, inviter=User(userId='1', nickname='-', plainProfileImageUrl='', friendDiscoveryKey=null, friendName='null', metaData={},
             }
         }
         binding.userIdInputEditText.text = null

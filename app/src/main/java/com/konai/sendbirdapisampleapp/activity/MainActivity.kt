@@ -3,7 +3,6 @@ package com.konai.sendbirdapisampleapp.activity
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
-import androidx.fragment.app.Fragment
 import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.databinding.ActivityMainBinding
 import com.konai.sendbirdapisampleapp.fragment.BlankFragment
@@ -12,7 +11,6 @@ import com.konai.sendbirdapisampleapp.fragment.FriendFragment
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-
     private val fragmentManager = supportFragmentManager
     private var friendFragment: FriendFragment? = null
     private var channelListFragment: ChannelListFragment? = null
@@ -21,17 +19,20 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+        binding.mainActivity = this
 
+        initFragment()
         initBottomNavi()
     }
 
-    private fun initBottomNavi() {
-        //최초로 보이는 프래그먼트
-        friendFragment = FriendFragment()
+    private fun initFragment() {
+        friendFragment = FriendFragment() //최초로 보이는 프래그먼트 세팅
         fragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, friendFragment!!)
             .commit()
+    }
 
+    private fun initBottomNavi() {
         binding.bottomNavigationView.setOnItemSelectedListener { menuItem ->
             when(menuItem.itemId) {
                 R.id.friend -> {
@@ -44,10 +45,8 @@ class MainActivity : AppCompatActivity() {
                     if (friendFragment != null) fragmentManager.beginTransaction().show(friendFragment!!).commit()
                     if (channelListFragment != null) fragmentManager.beginTransaction().hide(channelListFragment!!).commit()
                     if (blankFragment != null) fragmentManager.beginTransaction().hide(blankFragment!!).commit()
-                    //replaceFragment(fragmentList[0])
                 }
                 R.id.channel -> {
-                    //replaceFragment(fragmentList[1])
                     if (channelListFragment == null) {
                         channelListFragment = ChannelListFragment()
                         fragmentManager.beginTransaction()

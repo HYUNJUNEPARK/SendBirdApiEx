@@ -29,5 +29,5 @@ _channelListFragment -> 채널 생성 버튼 시 유저 없이 공백이라도 �
 프래그먼트 화면 전환 시 상태 유지하기 (FragmentManager)
 https://hanyeop.tistory.com/425
 
-Android) Fragment에서 View Binding 문제점, 제대로 사용하기</br>
+Android) Fragment 에서 View Binding 문제점, 제대로 사용하기</br>
 https://yoon-dailylife.tistory.com/57</br>

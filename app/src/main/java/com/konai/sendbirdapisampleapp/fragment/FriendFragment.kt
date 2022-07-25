@@ -6,6 +6,8 @@ import com.konai.sendbirdapisampleapp.activity.ChannelActivity
 import com.konai.sendbirdapisampleapp.databinding.FragmentFriendBinding
 import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
 import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_CHANNEL_URL
+import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_USER_ID
+import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_USER_NICK
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.util.Constants.USER_NICKNAME
 import com.konai.sendbirdapisampleapp.util.Extension.toast
@@ -43,6 +45,8 @@ class FriendFragment : BaseFragment<FragmentFriendBinding>(R.layout.fragment_fri
             if (channel != null) {
                 val intent = Intent(requireContext(), ChannelActivity::class.java)
                 intent.putExtra(INTENT_NAME_CHANNEL_URL, "${channel.url}")
+                intent.putExtra(INTENT_NAME_USER_ID, USER_ID)
+                intent.putExtra(INTENT_NAME_USER_NICK, USER_NICKNAME)
                 intent.action = CHANNEL_ACTIVITY_INTENT_ACTION
                 startActivity(intent)
             }

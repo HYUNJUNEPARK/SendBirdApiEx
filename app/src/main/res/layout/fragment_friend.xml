@@ -39,7 +39,6 @@
                 android:id="@+id/addFriendButton"
                 android:layout_width="@dimen/button_size"
                 android:layout_height="@dimen/button_size"
-                android:layout_marginRight="5dp"
                 android:backgroundTint="@color/transparent"
                 android:src="@drawable/ic_baseline_person_add_alt_1_24"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -61,7 +60,7 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/userProfileLayout"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="@dimen/item_size"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/div1">
@@ -70,7 +69,7 @@
                 android:id="@+id/userProfileImageView"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:layout_margin="15dp"
+                android:layout_marginLeft="15dp"
                 android:background="@color/gray"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
