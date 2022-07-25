@@ -9,7 +9,6 @@ import com.konai.sendbirdapisampleapp.databinding.FragmentChannelBinding
 import com.konai.sendbirdapisampleapp.model.ChannelListModel
 import com.konai.sendbirdapisampleapp.util.Constants.TAG
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
-import com.konai.sendbirdapisampleapp.util.Constants.USER_NICKNAME
 import com.konai.sendbirdapisampleapp.util.Extension.convertLongToTime
 import com.konai.sendbirdapisampleapp.util.Extension.toast
 import com.sendbird.android.channel.GroupChannel
@@ -49,43 +48,23 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                 order = GroupChannelListQueryOrder.LATEST_LAST_MESSAGE
             }
         )
-
         query.next { channels, e ->
             if (e != null) {
                 requireContext().toast("$e")
                 return@next
             }
+            if (channels!!.isEmpty()) return@next
 
             _channelList.clear() //to make the list empty
 
-            if (channels!!.isEmpty()) return@next
-
-            for (i in channels.indices) {
-                var partnerId: String
-                var partnerNickname: String
-
-                //private channel
-                if(channels[i].members.size == 1) {
-                    partnerId = USER_ID
-                    partnerNickname = USER_NICKNAME
-                }
-                else {
-                    if(channels!![i].members[0].userId == USER_ID) {
-                        partnerId = channels!![i].members[1].userId
-                        partnerNickname = channels!![i].members[1].nickname
-                    }
-                    else {
-                        partnerId = channels!![i].members[0].userId
-                        partnerNickname = channels!![i].members[0].nickname
-                    }
-                }
-
+            //TODO lastMessageTime Type string -> long
+            for (idx in channels.indices) {
                 _channelList.add(
                     ChannelListModel(
-                        name = channels[i].name,
-                        url = channels[i].url,
-                        lastMessage = channels[i].lastMessage?.message,
-                        lastMessageTime = (channels[i].lastMessage?.createdAt)?.convertLongToTime()
+                        name = channels[idx].name,
+                        url = channels[idx].url,
+                        lastMessage = channels[idx].lastMessage?.message,
+                        lastMessageTime = (channels[idx].lastMessage?.createdAt)?.convertLongToTime()
                     )
                 )
             }
