@@ -77,7 +77,6 @@ class ChannelActivity : AppCompatActivity() {
 
                 if (messages!!.isEmpty()) return@load
 
-
                 //TODO message.createdAt.convertLongToTime() : 보낸 시간
                 for (message in messages!!) {
                     _messageList.add(

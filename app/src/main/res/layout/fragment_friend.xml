@@ -4,14 +4,17 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+
         <variable
             name="friendFragment"
             type="com.konai.sendbirdapisampleapp.fragment.FriendFragment" />
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <androidx.constraintlayout.motion.widget.MotionLayout
+        android:id="@+id/constraintLayout2"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        app:layoutDescription="@xml/fragment_friend_xml_constraintlayout2_scene"
         tools:context=".fragment.FriendFragment">
 
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -33,19 +36,18 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
-
-            <ImageButton
-                android:id="@+id/addFriendButton"
-                android:layout_width="@dimen/button_size"
-                android:layout_height="@dimen/button_size"
-                android:backgroundTint="@color/transparent"
-                android:src="@drawable/ic_baseline_person_add_alt_1_24"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:tint="@color/gray_icon" />
-
         </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <ImageButton
+            android:id="@+id/addFriendButton"
+            android:layout_width="@dimen/button_size"
+            android:layout_height="@dimen/button_size"
+            android:backgroundTint="@color/transparent"
+            android:src="@drawable/ic_baseline_person_add_alt_1_24"
+            app:layout_constraintBottom_toBottomOf="@id/toolbarLayout"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/gray_icon" />
 
         <View
             android:id="@+id/div1"
@@ -147,9 +149,9 @@
             android:layout_width="0dp"
             android:layout_height="160dp"
             android:background="@color/gray"
+            app:layout_constraintBottom_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintStart_toStartOf="parent">
 
             <TextView
                 android:id="@+id/addFriendTextView"
@@ -167,7 +169,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_margin="10dp"
-                android:hint="대화 상대 아이디 입력"
+                android:hint="친구 ID 입력"
                 android:textSize="16sp"
                 app:layout_constraintBottom_toTopOf="@id/myIdTextView"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -187,7 +189,8 @@
                 android:id="@+id/myIdTextView2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="10dp"
+                android:layout_marginRight="20dp"
+                android:layout_marginBottom="10dp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -199,10 +202,11 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"
                 android:layout_marginLeft="20dp"
+                android:enabled="false"
                 android:text="확인"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.motion.widget.MotionLayout>
 </layout>

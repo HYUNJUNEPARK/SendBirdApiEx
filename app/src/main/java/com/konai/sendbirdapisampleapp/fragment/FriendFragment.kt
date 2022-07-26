@@ -28,6 +28,7 @@ class FriendFragment : BaseFragment<FragmentFriendBinding>(R.layout.fragment_fri
     private fun initUserProfile()= with(binding) {
         userNickTextView.text = USER_NICKNAME
         userIdTextView.text = USER_ID
+        myIdTextView2.text = USER_ID
     }
 
     private fun createMyChannel() {
