@@ -2,6 +2,7 @@ package com.konai.sendbirdapisampleapp.activity
 
 import android.os.Bundle
 import android.util.Log
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import com.konai.sendbirdapisampleapp.R
@@ -74,7 +75,6 @@ class ChannelActivity : AppCompatActivity() {
                     return@load
                 }
 
-
                 if (messages!!.isEmpty()) return@load
 
                 //TODO message.createdAt.convertLongToTime() : 보낸 시간
@@ -94,6 +94,9 @@ class ChannelActivity : AppCompatActivity() {
         }
     }
 
+
+
+
     //채널에 참여하고 있는 멤버 리스트를 가져와 대화상대를 뷰에 표시
     private fun initChannelPartnerInfo() {
         GroupChannel.getChannel(channelURL) { groupChannel, e ->
@@ -109,8 +112,50 @@ class ChannelActivity : AppCompatActivity() {
                     partnerNickname = member.nickname
                 }
             }
-            if (partnerId == null) binding.userIdTextView.text = "${USER_NICKNAME}($USER_ID)"
-            else binding.userIdTextView.text = "${partnerNickname}(${partnerId})"
+            if (partnerId == null) { //나와의 대화
+                binding.userIdTextView.text = "${USER_NICKNAME}($USER_ID)"
+
+                binding.myIdDetailLayoutTextView.text = "${USER_NICKNAME}($USER_ID)"
+            }
+            else {
+                binding.userIdTextView.text = "${partnerNickname}(${partnerId})"
+
+                binding.myIdDetailLayoutTextView.text = "$USER_NICKNAME ($USER_ID) [ 나 ]"
+                binding.partnerIdDetailLayoutTextView.text = "$partnerNickname (${partnerId})"
+            }
+        }
+    }
+
+    fun onDeleteChannelButtonClicked() {
+        AlertDialog.Builder(this)
+            .setTitle("채널 삭제")
+            .setMessage("채널을 삭제하시겠습니까?")
+            .setPositiveButton("취소") { _, _ -> }
+            .setNegativeButton("삭제") { _, _ ->
+                deleteChannel()
+                finish()
+            }
+            .create()
+            .show()
+    }
+
+    private fun deleteChannel() {
+        GroupChannel.getChannel(channelURL) { groupChannel, e ->
+            if (e != null) {
+                toast("Get Channel Error: $e")
+                Log.e(TAG, "Get Channel Error: $e")
+                return@getChannel
+            }
+
+            groupChannel?.delete { e->
+                if (e != null) {
+                    //TODO Delete Error: SendbirdException{code=400108, message=Not authorized. "To delete the channel, the user should be an operator.".}
+                    toast("Delete Error: $e")
+                    Log.e(TAG, "Delete Error: $e" )
+                    return@delete
+                }
+                toast("채널이 삭제되었습니다.")
+            }
         }
     }
 

@@ -78,6 +78,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         val users: List<String> = listOf(USER_ID, invitedUserId)
         val params = GroupChannelCreateParams().apply {
             userIds = users
+            operatorUserIds = users
             isDistinct = true
             name = "$USER_ID, $invitedUserId"
             isSuper = false

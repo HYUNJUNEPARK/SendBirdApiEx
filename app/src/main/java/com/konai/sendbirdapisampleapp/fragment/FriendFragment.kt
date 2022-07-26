@@ -19,7 +19,6 @@ class FriendFragment : BaseFragment<FragmentFriendBinding>(R.layout.fragment_fri
         super.initView()
 
         initUserProfile()
-
         binding.myChannelButton.setOnClickListener {
             createMyChannel()
         }
@@ -35,8 +34,9 @@ class FriendFragment : BaseFragment<FragmentFriendBinding>(R.layout.fragment_fri
         val users: List<String> = listOf(USER_ID)
         val params = GroupChannelCreateParams().apply {
             userIds = users
+            operatorUserIds = users
             isDistinct = true
-            name = "[ $USER_ID ] Personal Channel"
+            name = "<나> $USER_ID "
             isSuper = false
         }
         GroupChannel.createChannel(params) { channel, e ->
