@@ -31,6 +31,11 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        initChannelList()
+    }
+
     private fun initRecyclerView() {
         initChannelList()
 

@@ -36,7 +36,7 @@ class FriendFragment : BaseFragment<FragmentFriendBinding>(R.layout.fragment_fri
             userIds = users
             operatorUserIds = users
             isDistinct = true
-            name = "<나> $USER_ID "
+            name = "( 나 ) $USER_ID "
             isSuper = false
         }
         GroupChannel.createChannel(params) { channel, e ->

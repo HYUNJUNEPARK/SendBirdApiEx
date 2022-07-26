@@ -146,7 +146,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="5dp"
                 android:text="대화상대"
-                android:textSize="14sp"
+                android:textSize="20sp"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -168,7 +168,7 @@
                     android:layout_height="wrap_content">
                     <TextView
                         android:id="@+id/myIdDetailLayoutTextView"
-                        tools:text="My Nick"
+                        android:textSize="18sp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"/>
                 </LinearLayout>
@@ -179,7 +179,7 @@
                     android:layout_height="wrap_content">
                     <TextView
                         android:id="@+id/partnerIdDetailLayoutTextView"
-                        tools:text="My Nick"
+                        android:textSize="18sp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"/>
                 </LinearLayout>
