@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
         <variable
             name="channelActivity"
             type="com.konai.sendbirdapisampleapp.activity.ChannelActivity" />
@@ -63,7 +62,7 @@
             android:id="@+id/recyclerView"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:background="@color/gray"
+            android:background="@color/gray_background"
             app:layout_constraintBottom_toTopOf="@id/div2"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -73,34 +72,110 @@
             android:id="@+id/div2"
             android:layout_width="0dp"
             android:layout_height="1dp"
-            android:layout_marginBottom="10dp"
             android:background="@color/gray"
-            app:layout_constraintBottom_toTopOf="@id/messageEditText"
+            app:layout_constraintBottom_toTopOf="@id/bottomSendLayout"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <androidx.appcompat.widget.AppCompatEditText
-            android:id="@+id/messageEditText"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/bottomSendLayout"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
-            android:layout_marginBottom="10dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/sendButton"
-            app:layout_constraintStart_toStartOf="parent" />
+            android:layout_height="?android:attr/actionBarSize">
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/sendButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="10dp"
-            android:layout_marginBottom="10dp"
-            android:text="전송"
-            android:textColor="@color/black"
-            android:onClick="@{()->channelActivity.onSendButtonClicked()}"
-            android:textSize="16sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
 
+            <EditText
+                android:id="@+id/messageEditText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:layout_marginLeft="10dp"
+                app:layout_constraintBottom_toBottomOf="@id/sendButton"
+                app:layout_constraintEnd_toStartOf="@id/sendButton"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <ImageButton
+                android:id="@+id/sendButton"
+                android:layout_width="@dimen/button_size"
+                android:layout_height="@dimen/button_size"
+                android:layout_marginRight="10dp"
+                android:background="@color/gray_background"
+                android:onClick="@{()->channelActivity.onSendButtonClicked()}"
+                android:src="@drawable/ic_baseline_send_24"
+                android:text="전송"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/channelDetailLayout"
+            android:layout_width="350dp"
+            android:layout_height="0dp"
+            android:background="@color/gray_background"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+            <TextView
+                android:id="@+id/topTextView"
+                android:layout_width="0dp"
+                android:text="채널 상세 정보"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:gravity="center"
+                app:layout_constraintTop_toTopOf="parent"
+                android:background="@color/gray"
+                android:layout_height="?android:attr/actionBarSize"/>
+            <TextView
+                android:id="@+id/membersTextView"
+                android:text="대화 상대"
+                android:textStyle="bold"
+                android:layout_marginLeft="5dp"
+                android:textSize="14sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/topTextView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"/>
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/membersListRecyclerView"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/membersTextView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"/>
+            <androidx.viewpager.widget.ViewPager
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/membersListRecyclerView"
+                android:background="@color/gray"
+                android:layout_width="0dp"
+                android:layout_height="1dp"/>
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/bottomMenuLayout"
+                android:layout_width="0dp"
+                android:background="@color/gray"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_height="?android:attr/actionBarSize">
+                <ImageButton
+                    android:id="@+id/leaveChannelButton"
+                    android:background="@color/transparent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:src="@drawable/ic_baseline_logout_24"
+                    android:layout_width="@dimen/button_size"
+                    android:layout_height="@dimen/button_size"/>
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
