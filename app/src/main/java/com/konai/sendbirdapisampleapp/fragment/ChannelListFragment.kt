@@ -73,6 +73,8 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                     )
                 )
             }
+
+            //TODO It will always be more efficient to use more specific change events if you can. Rely on `notifyDataSetChanged` as a last resort.
             binding.chatListRecyclerView.adapter?.notifyDataSetChanged()
         }
     }

@@ -1,5 +1,81 @@
 package com.konai.sendbirdapisampleapp.adapter
 
-class ChannelMessageAdapter {
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
+import com.konai.sendbirdapisampleapp.databinding.ItemExceptionMessageBinding
+import com.konai.sendbirdapisampleapp.databinding.ItemMyMessageBinding
+import com.konai.sendbirdapisampleapp.databinding.ItemPartnerMessageBinding
+import com.konai.sendbirdapisampleapp.model.MessageModel
+import com.konai.sendbirdapisampleapp.util.Constants.MY_MESSAGE
+import com.konai.sendbirdapisampleapp.util.Constants.PARTNER_MESSAGE
+import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
+import com.konai.sendbirdapisampleapp.util.Extension.convertLongToTime
 
+class ChannelMessageAdapter() : ListAdapter<MessageModel, RecyclerView.ViewHolder>(diffUtil) {
+    inner class PartnerMessageViewHolder(private val binding: ItemPartnerMessageBinding): RecyclerView.ViewHolder(binding.root) {
+        fun bind(message: MessageModel){
+            binding.dateTextView.text = message.createdAt?.convertLongToTime()
+            binding.messageTextView.text = message.message
+        }
+    }
+
+    inner class MyMessageViewHolder(private val binding: ItemMyMessageBinding): RecyclerView.ViewHolder(binding.root) {
+        fun bind(message: MessageModel){
+            binding.dateTextView.text = message.createdAt?.convertLongToTime()
+            binding.messageTextView.text = message.message
+        }
+    }
+
+    inner class ExceptionMessageViewHolder(private val binding: ItemExceptionMessageBinding): RecyclerView.ViewHolder(binding.root) {
+        fun bind(message: MessageModel) {
+            binding.messageTextView.text = message.message
+        }
+    }
+
+    override fun getItemViewType(position: Int): Int {
+        val message = currentList[position]
+        return if(message.sender == USER_ID) {
+            MY_MESSAGE
+        }
+        else {
+            PARTNER_MESSAGE
+        }
+    }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val partnerMessageBinding = ItemPartnerMessageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val myMessageBinding = ItemMyMessageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val exceptionMessageBinding = ItemExceptionMessageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+
+        return when(viewType) {
+            MY_MESSAGE -> MyMessageViewHolder(myMessageBinding)
+            PARTNER_MESSAGE -> PartnerMessageViewHolder(partnerMessageBinding)
+            else -> ExceptionMessageViewHolder(exceptionMessageBinding)
+        }
+    }
+
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        if (currentList[position].sender == USER_ID) {
+            val holder = holder as MyMessageViewHolder
+            holder.bind(currentList[position])
+        }
+        //TODO USE ExceptionMessageViewHolder
+        else {
+            val holder = holder as PartnerMessageViewHolder
+            holder.bind(currentList[position])
+        }
+    }
+
+    companion object {
+        val diffUtil = object : DiffUtil.ItemCallback<MessageModel>() {
+            override fun areItemsTheSame(oldItem: MessageModel, newItem: MessageModel): Boolean {
+                return oldItem.messageId == newItem.messageId
+            }
+            override fun areContentsTheSame(oldItem: MessageModel, newItem:MessageModel): Boolean {
+                return oldItem == newItem
+            }
+        }
+    }
 }

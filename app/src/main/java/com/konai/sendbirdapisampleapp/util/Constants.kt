@@ -18,4 +18,12 @@ object Constants {
 
     //etc
     const val TAG = "applicationLog"
+
+    //Message Item ViewType
+    const val MY_MESSAGE = 0
+    const val PARTNER_MESSAGE = 1
+
+    //Channel Type
+    const val MY_PERSONAL_CHANNEL = 0
+    const val CONVERSATION_CHANNEL = 1
 }
