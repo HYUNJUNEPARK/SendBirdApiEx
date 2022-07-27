@@ -22,7 +22,7 @@ class MainActivity : AppCompatActivity() {
         binding.mainActivity = this
 
         initFragment()
-        initBottomNavi()
+        initBottomNavigation()
     }
 
     private fun initFragment() {
@@ -32,7 +32,7 @@ class MainActivity : AppCompatActivity() {
             .commit()
     }
 
-    private fun initBottomNavi() {
+    private fun initBottomNavigation() {
         binding.bottomNavigationView.setOnItemSelectedListener { menuItem ->
             when(menuItem.itemId) {
                 R.id.friend -> {

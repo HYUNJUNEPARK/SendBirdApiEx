@@ -5,7 +5,6 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.konai.sendbirdapisampleapp.databinding.ItemExceptionMessageBinding
 import com.konai.sendbirdapisampleapp.databinding.ItemMyMessageBinding
 import com.konai.sendbirdapisampleapp.databinding.ItemPartnerMessageBinding
 import com.konai.sendbirdapisampleapp.model.MessageModel
@@ -29,12 +28,6 @@ class ChannelMessageAdapter() : ListAdapter<MessageModel, RecyclerView.ViewHolde
         }
     }
 
-    inner class ExceptionMessageViewHolder(private val binding: ItemExceptionMessageBinding): RecyclerView.ViewHolder(binding.root) {
-        fun bind(message: MessageModel) {
-            binding.messageTextView.text = message.message
-        }
-    }
-
     override fun getItemViewType(position: Int): Int {
         val message = currentList[position]
         return if(message.sender == USER_ID) {
@@ -47,24 +40,23 @@ class ChannelMessageAdapter() : ListAdapter<MessageModel, RecyclerView.ViewHolde
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val partnerMessageBinding = ItemPartnerMessageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         val myMessageBinding = ItemMyMessageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        val exceptionMessageBinding = ItemExceptionMessageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
 
         return when(viewType) {
             MY_MESSAGE -> MyMessageViewHolder(myMessageBinding)
-            PARTNER_MESSAGE -> PartnerMessageViewHolder(partnerMessageBinding)
-            else -> ExceptionMessageViewHolder(exceptionMessageBinding)
+            else -> PartnerMessageViewHolder(partnerMessageBinding)
         }
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        if (currentList[position].sender == USER_ID) {
-            val holder = holder as MyMessageViewHolder
-            holder.bind(currentList[position])
-        }
-        //TODO USE ExceptionMessageViewHolder
-        else {
-            val holder = holder as PartnerMessageViewHolder
-            holder.bind(currentList[position])
+        when(currentList[position].sender) {
+            USER_ID -> {
+                val holder = holder as MyMessageViewHolder
+                holder.bind(currentList[position])
+            }
+            else -> {
+                val holder = holder as PartnerMessageViewHolder
+                holder.bind(currentList[position])
+            }
         }
     }
 

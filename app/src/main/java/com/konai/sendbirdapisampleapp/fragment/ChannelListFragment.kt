@@ -55,7 +55,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         )
         query.next { channels, e ->
             if (e != null) {
-                requireContext().showToast("$e")
+                showToast("$e")
                 return@next
             }
             if (channels!!.isEmpty()) return@next
@@ -93,7 +93,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
         GroupChannel.createChannel(params) { channel, e ->
             if (e != null) {
-                requireContext().showToast("$e")
+                showToast("$e")
             }
             Log.d(TAG, "onCreateChannelButtonClicked: $channel")
             if (channel != null) {

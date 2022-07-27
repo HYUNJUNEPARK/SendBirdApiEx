@@ -41,7 +41,7 @@ class FriendFragment : BaseFragment<FragmentFriendBinding>(R.layout.fragment_fri
         }
         GroupChannel.createChannel(params) { channel, e ->
             if (e != null) {
-                requireContext().showToast("$e")
+                showToast("$e")
             }
             if (channel != null) {
                 val intent = Intent(requireContext(), ChannelActivity::class.java)

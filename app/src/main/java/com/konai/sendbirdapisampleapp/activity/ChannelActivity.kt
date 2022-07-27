@@ -102,9 +102,7 @@ class ChannelActivity : AppCompatActivity() {
                     showToast("Load Message Error : $e")
                     return@load
                 }
-
                 if (messages!!.isEmpty()) return@load
-
                 _messageList.clear()
                 for (message in messages) {
                     _messageList.add(
