@@ -10,7 +10,7 @@ import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_USER_ID
 import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_USER_NICK
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.util.Constants.USER_NICKNAME
-import com.konai.sendbirdapisampleapp.util.Extension.toast
+import com.konai.sendbirdapisampleapp.util.Extension.showToast
 import com.sendbird.android.channel.GroupChannel
 import com.sendbird.android.params.GroupChannelCreateParams
 
@@ -41,11 +41,11 @@ class FriendFragment : BaseFragment<FragmentFriendBinding>(R.layout.fragment_fri
         }
         GroupChannel.createChannel(params) { channel, e ->
             if (e != null) {
-                requireContext().toast("$e")
+                requireContext().showToast("$e")
             }
             if (channel != null) {
                 val intent = Intent(requireContext(), ChannelActivity::class.java)
-                intent.putExtra(INTENT_NAME_CHANNEL_URL, "${channel.url}")
+                intent.putExtra(INTENT_NAME_CHANNEL_URL, channel.url)
                 intent.putExtra(INTENT_NAME_USER_ID, USER_ID)
                 intent.putExtra(INTENT_NAME_USER_NICK, USER_NICKNAME)
                 intent.action = CHANNEL_ACTIVITY_INTENT_ACTION

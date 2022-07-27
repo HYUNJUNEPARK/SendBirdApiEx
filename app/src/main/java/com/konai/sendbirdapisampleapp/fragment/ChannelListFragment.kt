@@ -10,7 +10,7 @@ import com.konai.sendbirdapisampleapp.model.ChannelListModel
 import com.konai.sendbirdapisampleapp.util.Constants.TAG
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.util.Extension.convertLongToTime
-import com.konai.sendbirdapisampleapp.util.Extension.toast
+import com.konai.sendbirdapisampleapp.util.Extension.showToast
 import com.sendbird.android.channel.GroupChannel
 import com.sendbird.android.channel.query.GroupChannelListQueryOrder
 import com.sendbird.android.channel.query.MyMemberStateFilter
@@ -55,7 +55,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         )
         query.next { channels, e ->
             if (e != null) {
-                requireContext().toast("$e")
+                requireContext().showToast("$e")
                 return@next
             }
             if (channels!!.isEmpty()) return@next
@@ -93,7 +93,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
         GroupChannel.createChannel(params) { channel, e ->
             if (e != null) {
-                requireContext().toast("$e")
+                requireContext().showToast("$e")
             }
             Log.d(TAG, "onCreateChannelButtonClicked: $channel")
             if (channel != null) {

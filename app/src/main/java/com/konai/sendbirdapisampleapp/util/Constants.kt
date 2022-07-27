@@ -26,4 +26,7 @@ object Constants {
     //Channel Type
     const val MY_PERSONAL_CHANNEL = 0
     const val CONVERSATION_CHANNEL = 1
+
+    //handler id
+    const val RECEIVE_MESSAGE_HANDLER = "messageHandler"
 }

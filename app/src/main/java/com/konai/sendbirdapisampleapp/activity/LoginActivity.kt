@@ -18,7 +18,7 @@ import com.konai.sendbirdapisampleapp.util.Constants.SENDBIRD_UI_KIT_APP
 import com.konai.sendbirdapisampleapp.util.Constants.TAG
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.util.Constants.USER_NICKNAME
-import com.konai.sendbirdapisampleapp.util.Extension.toast
+import com.konai.sendbirdapisampleapp.util.Extension.showToast
 import com.sendbird.android.SendbirdChat
 import com.sendbird.android.exception.SendbirdException
 import com.sendbird.android.handler.InitResultHandler
@@ -49,7 +49,7 @@ class LoginActivity : AppCompatActivity() {
                 }
                 override fun onInitSucceed() {
                     binding.loginButton.isEnabled = true
-                    toast("Called when initialization is completed.")
+                    showToast("Called when initialization is completed.")
                     Log.i(TAG, "initializeChatSdk : Called when initialization is completed.")
                 }
             }
@@ -59,15 +59,15 @@ class LoginActivity : AppCompatActivity() {
     //TODO ProgressBar, ASYNC
     fun onLogInButtonClicked() {
         val _userId = binding.userIdEditText.text.toString()
-        val userId = if(_userId.isNotEmpty()) binding.userIdEditText.text.toString() else return@onLogInButtonClicked
+        val userId = if(_userId.isNotEmpty()) binding.userIdEditText.text.toString() else return
 
         SendbirdChat.connect(userId) { user, e ->
             val userInputNickName = binding.nickNameEditText.text.toString()
-            USER_NICKNAME = userInputNickName.ifEmpty { "$userId" }
+            USER_NICKNAME = userInputNickName.ifEmpty { userId }
             USER_ID = user?.userId.toString()
 
             if (e != null) {
-                toast("로그인 에러 : $e")
+                showToast("로그인 에러 : $e")
                 Log.e(TAG, ": $e")
                 return@connect
             }
@@ -84,7 +84,7 @@ class LoginActivity : AppCompatActivity() {
 
     fun onUiKitLaunchButtonClicked() {
         val userId = binding.userIdEditText.text.toString()
-        val userNick = binding.nickNameEditText.text.toString().ifEmpty { "$userId" }
+        val userNick = binding.nickNameEditText.text.toString().ifEmpty { userId }
         val intent = packageManager.getLaunchIntentForPackage(SENDBIRD_UI_KIT_APP)?.run {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             action = MY_APP_INTENT_ACTION
