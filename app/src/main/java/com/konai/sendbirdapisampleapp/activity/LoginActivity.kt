@@ -56,7 +56,6 @@ class LoginActivity : AppCompatActivity() {
         )
     }
 
-    //TODO ProgressBar, ASYNC
     fun onLogInButtonClicked() {
         val _userId = binding.userIdEditText.text.toString()
         val userId = if(_userId.isNotEmpty()) binding.userIdEditText.text.toString() else return
@@ -75,10 +74,14 @@ class LoginActivity : AppCompatActivity() {
                 nickname = USER_NICKNAME
             }
             SendbirdChat.updateCurrentUserInfo(params) { e ->
-                if (e != null)  Log.e(TAG, ": updateCurrentUserInfo Error : $e")
+                if (e != null)  {
+                    Log.e(TAG, ": updateCurrentUserInfo Error : $e")
+                    showToast("유저 닉네임 업데이트 에러 : $e")
+                    return@updateCurrentUserInfo
+                }
+                val intent = Intent(this, MainActivity::class.java)
+                startActivity(intent)
             }
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
         }
     }
 
@@ -94,7 +97,7 @@ class LoginActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
-    //editText 에 userId 와 디바이스에 uiKit 앱이 설치되어있어야 버튼 활성화
+
     private fun updateUiKitLaunchButtonState() {
         val userId = binding.userIdEditText
         userId.addTextChangedListener(
@@ -103,6 +106,7 @@ class LoginActivity : AppCompatActivity() {
                 override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { }
                 override fun afterTextChanged(p0: Editable?) {
                     val userId = binding.userIdEditText.text
+                    //editText 에 userId 와 디바이스에 uiKit 앱이 설치되어있어야 UiKitAppLaunchButton 활성화
                     binding.UiKitAppLaunchButton.isEnabled = userId.isNotEmpty() && isUiKitAppOnMyDevice()
                 }
             }

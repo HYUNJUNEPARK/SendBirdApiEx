@@ -10,10 +10,6 @@ import com.konai.sendbirdapisampleapp.databinding.ItemChatChannelListBinding
 import com.konai.sendbirdapisampleapp.model.ChannelListModel
 import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
 import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_CHANNEL_URL
-import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_USER_ID
-import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_USER_NICK
-import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
-import com.konai.sendbirdapisampleapp.util.Constants.USER_NICKNAME
 import com.konai.sendbirdapisampleapp.util.Extension.convertLongToTime
 
 class ChannelListAdapter(val context: Context) : RecyclerView.Adapter<ChannelListAdapter.MyHolder>() {
