@@ -2,12 +2,15 @@ package com.konai.sendbirdapisampleapp.strongbox
 
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
+import android.util.Log
 import com.konai.sendbirdapisampleapp.strongbox.Constants.CURVE_TYPE
-import com.konai.sendbirdapisampleapp.strongbox.Constants.KEYSTORE_MY_KEYPAIR_ALIAS
 import com.konai.sendbirdapisampleapp.strongbox.Constants.KEYSTORE_TYPE
 import com.konai.sendbirdapisampleapp.strongbox.Constants.KEY_GEN_ALGORITHM
+import com.konai.sendbirdapisampleapp.util.Constants.TAG
+import java.lang.Exception
 import java.security.KeyPairGenerator
 import java.security.KeyStore
+import java.security.PublicKey
 import java.security.spec.ECGenParameterSpec
 
 class KeyStoreUtil {
@@ -15,13 +18,13 @@ class KeyStoreUtil {
         load(null)
     }
 
-    fun updateKeyPairToKeyStore() {
+    fun updateKeyPairToKeyStore(keyStoreAlias: String) {
         val keyPairGenerator = KeyPairGenerator.getInstance(
             KEY_GEN_ALGORITHM,
             KEYSTORE_TYPE
         )
         val parameterSpec = KeyGenParameterSpec.Builder(
-            KEYSTORE_MY_KEYPAIR_ALIAS,
+            keyStoreAlias, //== KEYSTORE_MY_KEYPAIR_ALIAS
             KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
         ).run {
             setUserAuthenticationRequired(false)
@@ -32,14 +35,24 @@ class KeyStoreUtil {
         keyPairGenerator.generateKeyPair()
     }
 
-    fun getKeyPairFromKeyStore(): KeyPairModel {
-        val keyStoreEntry = keyStore.getEntry(KEYSTORE_MY_KEYPAIR_ALIAS, null)
+    fun isKeyPairInKeyStore(keyStoreAlias: String): Boolean {
+        var keyStoreEntry: KeyStore.Entry? = keyStore.getEntry(keyStoreAlias, null)
+        return keyStoreEntry != null
+    }
+
+    fun getPublicKeyFromKeyStore(keyStoreAlias: String): PublicKey? {
+        val keyStoreEntry = keyStore.getEntry(keyStoreAlias, null)
+        return keyStore.getCertificate(keyStoreAlias).publicKey
+    }
+
+    fun getKeyPairFromKeyStore(keyStoreAlias: String): KeyPairModel {
+        val keyStoreEntry = keyStore.getEntry(keyStoreAlias, null)
         val privateKey = (keyStoreEntry as KeyStore.PrivateKeyEntry).privateKey
-        val publicKey = keyStore.getCertificate(KEYSTORE_MY_KEYPAIR_ALIAS).publicKey
+        val publicKey = keyStore.getCertificate(keyStoreAlias).publicKey
         return KeyPairModel(privateKey, publicKey)
     }
 
-    fun deleteKeyStoreKeyPair() {
-        keyStore.deleteEntry(KEYSTORE_MY_KEYPAIR_ALIAS)
+    fun deleteKeyStoreKeyPair(keyStoreAlias: String) {
+        keyStore.deleteEntry(keyStoreAlias)
     }
 }

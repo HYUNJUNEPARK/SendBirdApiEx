@@ -12,6 +12,8 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.databinding.ActivityLoginBinding
+import com.konai.sendbirdapisampleapp.strongbox.KeyPairModel
+import com.konai.sendbirdapisampleapp.strongbox.KeyStoreUtil
 import com.konai.sendbirdapisampleapp.util.Constants.APP_ID
 import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_USER_ID
 import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_USER_NICK
@@ -26,9 +28,12 @@ import com.sendbird.android.exception.SendbirdException
 import com.sendbird.android.handler.InitResultHandler
 import com.sendbird.android.params.InitParams
 import com.sendbird.android.params.UserUpdateParams
+import java.security.PublicKey
+import java.security.interfaces.ECPublicKey
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
+    private var keyPair: KeyPairModel? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,58 +42,94 @@ class LoginActivity : AppCompatActivity() {
         binding.loginActivity = this
         initializeSendBirdSdk()
         updateUiKitLaunchButtonState()
+
+        //TEST
+        updatePublicKey()
+        getPublicKey()
     }
-
-
 
 
     /////[Start Firebase]
     fun updatePublicKey() {
+        val userId = "userA"
         binding.publicKeyButton.setOnClickListener {
-            //TODO 키쌍 생성
+            //키스토어에 해당 키가 있는지 확인하고
+            if (KeyStoreUtil().isKeyPairInKeyStore(userId)) {
+                showToast("키스토어에 키 있음")
+                return@setOnClickListener
+            }
+            showToast("키스토어에 키 없음")
+
+            //키 생성하고 키스토어에 저장
+            KeyStoreUtil().updateKeyPairToKeyStore(userId)
 
 
-            //TODO 키쌍 저장
-
-            //TODO 서버 업로드
-
-
-
-            val db = Firebase.firestore
-
-            val user = hashMapOf(
-                "userID" to "user1",
-                "publicKey" to "123123123123123212312312312",
-            )
-
-            db.collection("publicKey")
-                .add(user)
-                .addOnSuccessListener { documentReference ->
-                    Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference.id}")
-                }
-                .addOnFailureListener { e ->
-                    Log.w(TAG, "Error adding document", e)
-                }
+            //퍼블릭 키만 가져와서 서버에 올림
+            KeyStoreUtil().getPublicKeyFromKeyStore(userId)?.let { publicKey ->
+                updatePublicKeyXYToServer(publicKey)
+            }
         }
     }
 
+    fun updatePublicKeyXYToServer(publicKey: PublicKey) {
+        val userId = "userA"
+
+        val publicKey = publicKey as ECPublicKey
+
+        val db = Firebase.firestore
+        val user = hashMapOf(
+            "userID" to userId,
+            "affineX" to publicKey.w.affineX.toString(),
+            "affineY" to publicKey.w.affineY.toString()
+        )
+
+        db.collection("publicKey")
+            .add(user)
+            .addOnSuccessListener { documentReference ->
+                Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference.id}")
+            }
+            .addOnFailureListener { e ->
+                Log.w(TAG, "Error adding document", e)
+            }
+    }
+
+
+
+
     fun getPublicKey() {
         binding.loadPublicKeyButton.setOnClickListener {
-            val db = Firebase.firestore
+            //TODO 키스토어에 키가 있는지 확인
+            val userId = "userA"
 
-            db.collection("publicKey")
-                .get()
-                .addOnSuccessListener { result ->
-                    for (document in result) {
-                        if (document.data["userID"] == "user1") {
-                            Log.d(TAG, "user id : ${document.data["userID"]}")
-                            return@addOnSuccessListener
-                        }
-                    }
-                }
-                .addOnFailureListener { exception ->
-                    Log.w(TAG, "Error getting documents.", exception)
-                }
+            //키스토어 키 삭제
+            KeyStoreUtil().deleteKeyStoreKeyPair(userId)
+
+
+            if(KeyStoreUtil().isKeyPairInKeyStore(userId)) {
+                showToast("키스토어에 키 있음")
+            }
+            else {
+                showToast("키스토어에 키 없음")
+            }
+
+
+
+
+//            val db = Firebase.firestore
+//
+//            db.collection("publicKey")
+//                .get()
+//                .addOnSuccessListener { result ->
+//                    for (document in result) {
+//                        if (document.data["userID"] == "user1") {
+//                            Log.d(TAG, "user id : ${document.data["userID"]}")
+//                            return@addOnSuccessListener
+//                        }
+//                    }
+//                }
+//                .addOnFailureListener { exception ->
+//                    Log.w(TAG, "Error getting documents.", exception)
+//                }
         }
     }
     ////[End Firebase]
