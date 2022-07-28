@@ -14,6 +14,7 @@ import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_USER_ID
 import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_USER_NICK
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.util.Constants.USER_NICKNAME
+import com.konai.sendbirdapisampleapp.util.Extension.convertLongToTime
 
 class ChannelListAdapter(val context: Context) : RecyclerView.Adapter<ChannelListAdapter.MyHolder>() {
     var channelList = mutableListOf<ChannelListModel>()
@@ -38,7 +39,7 @@ class ChannelListAdapter(val context: Context) : RecyclerView.Adapter<ChannelLis
             _myData = myData
             binding.channelNameTextView.text = "${myData.name}"
             binding.lastMessageTextView.text = "${myData.lastMessage}"
-            binding.timeTextView.text = "${myData.lastMessageTime}"
+            binding.timeTextView.text = "${myData.lastMessageTime?.convertLongToTime()}"
         }
     }
 

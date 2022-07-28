@@ -24,7 +24,6 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         super.initView()
 
         initRecyclerView()
-
         //TODO clean code
         binding.createChannelLayoutButton.setOnClickListener {
             onCreateChannelButtonClicked()
@@ -69,7 +68,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                         name = channels[idx].name,
                         url = channels[idx].url,
                         lastMessage = channels[idx].lastMessage?.message,
-                        lastMessageTime = (channels[idx].lastMessage?.createdAt)?.convertLongToTime()
+                        lastMessageTime = channels[idx].lastMessage?.createdAt
                     )
                 )
             }
