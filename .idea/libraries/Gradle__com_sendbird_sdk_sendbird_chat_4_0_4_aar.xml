@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="Gradle: com.sendbird.sdk:sendbird-chat:4.0.4@aar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-3/8f01150e3e11a982a1a9350d3ffe950f/transformed/sendbird-chat-4.0.4/jars/classes.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-3/8f01150e3e11a982a1a9350d3ffe950f/transformed/sendbird-chat-4.0.4/jars/libs/sendbird-shadow.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/8f01150e3e11a982a1a9350d3ffe950f/transformed/sendbird-chat-4.0.4/res" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/8f01150e3e11a982a1a9350d3ffe950f/transformed/sendbird-chat-4.0.4/AndroidManifest.xml" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
