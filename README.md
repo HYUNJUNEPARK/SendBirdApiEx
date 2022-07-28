@@ -80,4 +80,8 @@ https://www.fun25.co.kr/blog/android-execute-3rdparty-app/?category=003
 Android - PackageManager로 Package 정보 가져오기
 https://codechacha.com/ko/android-query-package-info/
 
+파이어베이스 그레들리 셋팅 방법(buildscript 설명 참고)
+https://gift123.tistory.com/68
+
+
 

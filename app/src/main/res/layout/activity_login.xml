@@ -16,6 +16,17 @@
         android:orientation="vertical"
         tools:context=".activity.LoginActivity">
 
+        <Button
+            android:id="@+id/publicKeyButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <Button
+            android:id="@+id/loadPublicKeyButton"
+            android:text="load"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
         <EditText
             android:id="@+id/userIdEditText"
             android:layout_width="wrap_content"

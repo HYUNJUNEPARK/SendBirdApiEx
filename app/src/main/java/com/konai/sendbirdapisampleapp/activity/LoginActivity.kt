@@ -8,6 +8,8 @@ import android.text.TextWatcher
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.databinding.ActivityLoginBinding
 import com.konai.sendbirdapisampleapp.util.Constants.APP_ID
@@ -36,6 +38,66 @@ class LoginActivity : AppCompatActivity() {
         initializeSendBirdSdk()
         updateUiKitLaunchButtonState()
     }
+
+
+
+
+    /////[Start Firebase]
+    fun updatePublicKey() {
+        binding.publicKeyButton.setOnClickListener {
+            //TODO 키쌍 생성
+
+
+            //TODO 키쌍 저장
+
+            //TODO 서버 업로드
+
+
+
+            val db = Firebase.firestore
+
+            val user = hashMapOf(
+                "userID" to "user1",
+                "publicKey" to "123123123123123212312312312",
+            )
+
+            db.collection("publicKey")
+                .add(user)
+                .addOnSuccessListener { documentReference ->
+                    Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference.id}")
+                }
+                .addOnFailureListener { e ->
+                    Log.w(TAG, "Error adding document", e)
+                }
+        }
+    }
+
+    fun getPublicKey() {
+        binding.loadPublicKeyButton.setOnClickListener {
+            val db = Firebase.firestore
+
+            db.collection("publicKey")
+                .get()
+                .addOnSuccessListener { result ->
+                    for (document in result) {
+                        if (document.data["userID"] == "user1") {
+                            Log.d(TAG, "user id : ${document.data["userID"]}")
+                            return@addOnSuccessListener
+                        }
+                    }
+                }
+                .addOnFailureListener { exception ->
+                    Log.w(TAG, "Error getting documents.", exception)
+                }
+        }
+    }
+    ////[End Firebase]
+
+
+
+
+
+
 
     private fun initializeSendBirdSdk() {
         SendbirdChat.init(
