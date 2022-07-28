@@ -41,7 +41,6 @@ class KeyStoreUtil {
     }
 
     fun getPublicKeyFromKeyStore(keyStoreAlias: String): PublicKey? {
-        val keyStoreEntry = keyStore.getEntry(keyStoreAlias, null)
         return keyStore.getCertificate(keyStoreAlias).publicKey
     }
 
@@ -53,6 +52,13 @@ class KeyStoreUtil {
     }
 
     fun deleteKeyStoreKeyPair(keyStoreAlias: String) {
-        keyStore.deleteEntry(keyStoreAlias)
+        try {
+            keyStore.deleteEntry(keyStoreAlias)
+            Log.i(TAG, "keystore key is deleted")
+        }
+        catch (e: Exception) {
+            Log.e(TAG, "keystore key is deleted failed")
+        }
+
     }
 }

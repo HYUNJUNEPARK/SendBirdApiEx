@@ -8,6 +8,7 @@ import android.text.TextWatcher
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.konai.sendbirdapisampleapp.R
@@ -28,12 +29,17 @@ import com.sendbird.android.exception.SendbirdException
 import com.sendbird.android.handler.InitResultHandler
 import com.sendbird.android.params.InitParams
 import com.sendbird.android.params.UserUpdateParams
+import java.math.BigInteger
+import java.security.KeyFactory
 import java.security.PublicKey
 import java.security.interfaces.ECPublicKey
+import java.security.spec.ECPoint
+import java.security.spec.ECPublicKeySpec
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
     private var keyPair: KeyPairModel? = null
+    private lateinit var db: FirebaseFirestore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,11 +47,13 @@ class LoginActivity : AppCompatActivity() {
 
         binding.loginActivity = this
         initializeSendBirdSdk()
+        db = Firebase.firestore
         updateUiKitLaunchButtonState()
 
         //TEST
         updatePublicKey()
         getPublicKey()
+        deleteKey()
     }
 
 
@@ -53,36 +61,30 @@ class LoginActivity : AppCompatActivity() {
     fun updatePublicKey() {
         val userId = "userA"
         binding.publicKeyButton.setOnClickListener {
-            //키스토어에 해당 키가 있는지 확인하고
+            //키스토어에 해당 키가 있는지 확인하고 키 있으면 키생성 안함
+            //키 없으면 키 생성하고 서버에 올림
             if (KeyStoreUtil().isKeyPairInKeyStore(userId)) {
                 showToast("키스토어에 키 있음")
                 return@setOnClickListener
             }
             showToast("키스토어에 키 없음")
 
-            //키 생성하고 키스토어에 저장
+            //TODO coroutine suspend 처리
             KeyStoreUtil().updateKeyPairToKeyStore(userId)
-
-
-            //퍼블릭 키만 가져와서 서버에 올림
             KeyStoreUtil().getPublicKeyFromKeyStore(userId)?.let { publicKey ->
                 updatePublicKeyXYToServer(publicKey)
             }
         }
     }
 
-    fun updatePublicKeyXYToServer(publicKey: PublicKey) {
+    private fun updatePublicKeyXYToServer(publicKey: PublicKey) {
         val userId = "userA"
-
         val publicKey = publicKey as ECPublicKey
-
-        val db = Firebase.firestore
         val user = hashMapOf(
-            "userID" to userId,
+            "userId" to userId,
             "affineX" to publicKey.w.affineX.toString(),
             "affineY" to publicKey.w.affineY.toString()
         )
-
         db.collection("publicKey")
             .add(user)
             .addOnSuccessListener { documentReference ->
@@ -94,42 +96,45 @@ class LoginActivity : AppCompatActivity() {
     }
 
 
-
-
     fun getPublicKey() {
         binding.loadPublicKeyButton.setOnClickListener {
             //TODO 키스토어에 키가 있는지 확인
             val userId = "userA"
+            var affineX: BigInteger? = null
+            var affineY: BigInteger? = null
+            var publicKey: PublicKey? = null
 
-            //키스토어 키 삭제
+            db.collection("publicKey")
+                .get()
+                .addOnSuccessListener { result ->
+                    showToast("키 가져오기 성공")
+                    for (document in result) {
+                        if (document.data["userId"] == "userA") {
+                            affineX = BigInteger(document.data["affineX"].toString())
+                            affineY = BigInteger(document.data["affineY"].toString())
+
+                            //TODO make publickey
+                            //https://stackoverflow.com/questions/30116758/generating-publickey-from-x-and-y-values-of-elliptic-curve-point
+
+                            val ecPoint = ECPoint(affineX, affineY)
+                            val keySpec = ECPublicKeySpec(ecPoint, null) //TODO Check params
+
+                            val keyFactory = KeyFactory.getInstance("EC")
+                            val publicKey: PublicKey = keyFactory.generatePublic(keySpec)
+                        }
+                    }
+                }
+                .addOnFailureListener { exception ->
+                    showToast("키 가져오기 실패")
+                    Log.w(TAG, "Error getting documents.", exception)
+                }
+        }
+    }
+
+    fun deleteKey() {
+        binding.deleteKeyButton.setOnClickListener {
+            val userId = "userA"
             KeyStoreUtil().deleteKeyStoreKeyPair(userId)
-
-
-            if(KeyStoreUtil().isKeyPairInKeyStore(userId)) {
-                showToast("키스토어에 키 있음")
-            }
-            else {
-                showToast("키스토어에 키 없음")
-            }
-
-
-
-
-//            val db = Firebase.firestore
-//
-//            db.collection("publicKey")
-//                .get()
-//                .addOnSuccessListener { result ->
-//                    for (document in result) {
-//                        if (document.data["userID"] == "user1") {
-//                            Log.d(TAG, "user id : ${document.data["userID"]}")
-//                            return@addOnSuccessListener
-//                        }
-//                    }
-//                }
-//                .addOnFailureListener { exception ->
-//                    Log.w(TAG, "Error getting documents.", exception)
-//                }
         }
     }
     ////[End Firebase]

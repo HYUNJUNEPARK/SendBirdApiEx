@@ -17,14 +17,20 @@
         tools:context=".activity.LoginActivity">
 
         <Button
-            android:text="update"
+            android:text="키 업로드"
             android:id="@+id/publicKeyButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
         <Button
             android:id="@+id/loadPublicKeyButton"
-            android:text="load"
+            android:text="키 가져오기"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <Button
+            android:id="@+id/deleteKeyButton"
+            android:text="키 삭제"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
