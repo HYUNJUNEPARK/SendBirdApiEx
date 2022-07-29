@@ -29,4 +29,12 @@ object Constants {
 
     //handler id
     const val RECEIVE_MESSAGE_HANDLER = "messageHandler"
+
+    //firebase
+    const val FIRE_STORE_FIELD_USER_ID = "userId"
+    const val FIRE_STORE_FIELD_AFFINE_X = "affineX"
+    const val FIRE_STORE_FIELD_AFFINE_Y = "affineY"
+    const val FIRE_STORE_DOCUMENT_PUBLIC_KEY = "publicKey"
+
+
 }

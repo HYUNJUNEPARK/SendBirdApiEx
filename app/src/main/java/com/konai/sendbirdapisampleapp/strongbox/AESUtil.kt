@@ -1,10 +1,10 @@
 package com.konai.sendbirdapisampleapp.strongbox
 
 import android.util.Base64
-import com.konai.sendbirdapisampleapp.strongbox.Constants.CIPHER_CBC_ALGORITHM
-import com.konai.sendbirdapisampleapp.strongbox.Constants.CIPHER_ECB_ALGORITHM
-import com.konai.sendbirdapisampleapp.strongbox.Constants.KEY_ALGORITHM
-import com.konai.sendbirdapisampleapp.strongbox.Constants.iv
+import com.konai.sendbirdapisampleapp.strongbox.StrongBoxConstants.CIPHER_CBC_ALGORITHM
+import com.konai.sendbirdapisampleapp.strongbox.StrongBoxConstants.CIPHER_ECB_ALGORITHM
+import com.konai.sendbirdapisampleapp.strongbox.StrongBoxConstants.KEY_ALGORITHM
+import com.konai.sendbirdapisampleapp.strongbox.StrongBoxConstants.iv
 import java.security.Key
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
@@ -42,7 +42,6 @@ class AESUtil {
         val key: Key = convertHashToKey(hash)
         val userInputData: ByteArray = userInputData.toByteArray()
         val cipher = Cipher.getInstance(CIPHER_CBC_ALGORITHM) //AES/CBC/PKCS7Padding
-
         cipher.init(
             Cipher.ENCRYPT_MODE,
             key,

@@ -1,6 +1,6 @@
 package com.konai.sendbirdapisampleapp.strongbox
 
-object Constants {
+object StrongBoxConstants {
     var iv: ByteArray? = ByteArray(16)
 
     const val CURVE_TYPE = "secp256r1"
@@ -11,7 +11,7 @@ object Constants {
     const val KEY_AGREEMENT_ALGORITHM = "ECDH"
     const val MESSAGE_DIGEST_ALGORITHM = "SHA-256"
 
+    const val KEYSTORE_TYPE = "AndroidKeyStore"
     const val KEYSTORE_MY_KEYPAIR_ALIAS = "mKey"
     const val KEYSTORE_SECRET_KEY_ALIAS = "ssk"
-    const val KEYSTORE_TYPE = "AndroidKeyStore"
 }

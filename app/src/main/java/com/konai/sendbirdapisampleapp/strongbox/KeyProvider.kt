@@ -1,9 +1,9 @@
 package com.konai.sendbirdapisampleapp.strongbox
 
-import com.konai.sendbirdapisampleapp.strongbox.Constants.CURVE_TYPE
-import com.konai.sendbirdapisampleapp.strongbox.Constants.KEY_AGREEMENT_ALGORITHM
-import com.konai.sendbirdapisampleapp.strongbox.Constants.KEY_GEN_ALGORITHM
-import com.konai.sendbirdapisampleapp.strongbox.Constants.MESSAGE_DIGEST_ALGORITHM
+import com.konai.sendbirdapisampleapp.strongbox.StrongBoxConstants.CURVE_TYPE
+import com.konai.sendbirdapisampleapp.strongbox.StrongBoxConstants.KEY_AGREEMENT_ALGORITHM
+import com.konai.sendbirdapisampleapp.strongbox.StrongBoxConstants.KEY_GEN_ALGORITHM
+import com.konai.sendbirdapisampleapp.strongbox.StrongBoxConstants.MESSAGE_DIGEST_ALGORITHM
 import java.security.*
 import java.security.spec.ECGenParameterSpec
 import javax.crypto.KeyAgreement

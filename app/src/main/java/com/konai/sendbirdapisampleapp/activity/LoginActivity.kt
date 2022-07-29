@@ -9,13 +9,18 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.databinding.ActivityLoginBinding
-import com.konai.sendbirdapisampleapp.strongbox.KeyPairModel
 import com.konai.sendbirdapisampleapp.strongbox.KeyStoreUtil
+import com.konai.sendbirdapisampleapp.strongbox.StrongBoxConstants.KEY_GEN_ALGORITHM
 import com.konai.sendbirdapisampleapp.util.Constants.APP_ID
+import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_DOCUMENT_PUBLIC_KEY
+import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_AFFINE_X
+import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_AFFINE_Y
+import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_USER_ID
 import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_USER_ID
 import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_USER_NICK
 import com.konai.sendbirdapisampleapp.util.Constants.MY_APP_INTENT_ACTION
@@ -38,7 +43,6 @@ import java.security.spec.ECPublicKeySpec
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
-    private var keyPair: KeyPairModel? = null
     private lateinit var db: FirebaseFirestore
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,83 +54,40 @@ class LoginActivity : AppCompatActivity() {
         db = Firebase.firestore
         updateUiKitLaunchButtonState()
 
-        //TEST
-        updatePublicKey()
         getPublicKey()
         deleteKey()
     }
 
-
     /////[Start Firebase]
-    fun updatePublicKey() {
-        val userId = "userA"
-        binding.publicKeyButton.setOnClickListener {
-            //키스토어에 해당 키가 있는지 확인하고 키 있으면 키생성 안함
-            //키 없으면 키 생성하고 서버에 올림
-            if (KeyStoreUtil().isKeyPairInKeyStore(userId)) {
-                showToast("키스토어에 키 있음")
-                return@setOnClickListener
-            }
-            showToast("키스토어에 키 없음")
-
-            //TODO coroutine suspend 처리
-            KeyStoreUtil().updateKeyPairToKeyStore(userId)
-            KeyStoreUtil().getPublicKeyFromKeyStore(userId)?.let { publicKey ->
-                updatePublicKeyXYToServer(publicKey)
-            }
-        }
-    }
-
-    private fun updatePublicKeyXYToServer(publicKey: PublicKey) {
-        val userId = "userA"
-        val publicKey = publicKey as ECPublicKey
-        val user = hashMapOf(
-            "userId" to userId,
-            "affineX" to publicKey.w.affineX.toString(),
-            "affineY" to publicKey.w.affineY.toString()
-        )
-        db.collection("publicKey")
-            .add(user)
-            .addOnSuccessListener { documentReference ->
-                Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference.id}")
-            }
-            .addOnFailureListener { e ->
-                Log.w(TAG, "Error adding document", e)
-            }
-    }
-
-
     fun getPublicKey() {
         binding.loadPublicKeyButton.setOnClickListener {
             //TODO 키스토어에 키가 있는지 확인
             val userId = "userA"
-            var affineX: BigInteger? = null
-            var affineY: BigInteger? = null
-            var publicKey: PublicKey? = null
+            var affineX: BigInteger?
+            var affineY: BigInteger?
+            var publicKey: PublicKey?
 
-            db.collection("publicKey")
+            db.collection(FIRE_STORE_DOCUMENT_PUBLIC_KEY)
                 .get()
                 .addOnSuccessListener { result ->
                     showToast("키 가져오기 성공")
                     for (document in result) {
-                        if (document.data["userId"] == "userA") {
-                            affineX = BigInteger(document.data["affineX"].toString())
-                            affineY = BigInteger(document.data["affineY"].toString())
-
-                            //TODO make publickey
-                            //https://stackoverflow.com/questions/30116758/generating-publickey-from-x-and-y-values-of-elliptic-curve-point
+                        if (document.data[FIRE_STORE_FIELD_USER_ID] == "userA") {
+                            affineX = BigInteger(document.data[FIRE_STORE_FIELD_AFFINE_X].toString())
+                            affineY = BigInteger(document.data[FIRE_STORE_FIELD_AFFINE_Y].toString())
 
                             val ecPoint = ECPoint(affineX, affineY)
-                            val keySpec = ECPublicKeySpec(ecPoint, null) //TODO Check params
-
-                            val keyFactory = KeyFactory.getInstance("EC")
-                            val publicKey: PublicKey = keyFactory.generatePublic(keySpec)
+                            val params = KeyStoreUtil().getECParameterSpec()
+                            val keySpec = ECPublicKeySpec(ecPoint, params)
+                            val keyFactory = KeyFactory.getInstance(KEY_GEN_ALGORITHM) //EC
+                            publicKey = keyFactory.generatePublic(keySpec)
+                            Log.d(TAG, "getPublicKey -------- : ${(publicKey as ECPublicKey).w.affineX}\n${(publicKey as ECPublicKey).w.affineY}")
                         }
                     }
                 }
                 .addOnFailureListener { exception ->
                     showToast("키 가져오기 실패")
-                    Log.w(TAG, "Error getting documents.", exception)
+                    Log.e(TAG, "Error getting documents from firestore : $exception")
                 }
         }
     }
@@ -138,11 +99,6 @@ class LoginActivity : AppCompatActivity() {
         }
     }
     ////[End Firebase]
-
-
-
-
-
 
 
     private fun initializeSendBirdSdk() {
@@ -178,6 +134,7 @@ class LoginActivity : AppCompatActivity() {
                 Log.e(TAG, ": $e")
                 return@connect
             }
+
             val params = UserUpdateParams().apply {
                 nickname = USER_NICKNAME
             }
@@ -187,12 +144,84 @@ class LoginActivity : AppCompatActivity() {
                     showToast("유저 닉네임 업데이트 에러 : $e")
                     return@updateCurrentUserInfo
                 }
+            }
+            updatePublicKeyOnServer(USER_ID)
+        }
+    }
+
+
+    private fun updatePublicKeyOnServer(userId: String) {
+        db.collection(FIRE_STORE_DOCUMENT_PUBLIC_KEY)
+            .get()
+            .addOnSuccessListener { result ->
+                if (result.isEmpty) {
+                    syncKeyStoreWithServer(userId, result)
+                }
+
+                for (document in result) {
+                    if (document.data[FIRE_STORE_FIELD_USER_ID] == userId) {
+                        Log.i(TAG, "서버에 키 있음")
+                        val intent = Intent(this, MainActivity::class.java)
+                        startActivity(intent)
+                    }
+                    else {
+                        syncKeyStoreWithServer(userId, result)
+                    }
+                }
+            }
+            .addOnFailureListener { exception ->
+                showToast("키 가져오기 실패")
+                Log.e(TAG, "Error getting documents from firestore : $exception")
+            }
+    }
+
+    private fun syncKeyStoreWithServer(userId: String, result: QuerySnapshot) {
+        Log.i(TAG, "서버에 키 없음")
+        if (KeyStoreUtil().isKeyPairInKeyStore(userId)) {
+            Log.i(TAG, "키스토어에 키 있음")
+            KeyStoreUtil().getPublicKeyFromKeyStore(userId)?.let { publicKey ->
+                updatePublicKeyAffineXYToServer(userId, publicKey)
+                Log.i(TAG, "서버에 키 업로드 완료")
+                val intent = Intent(this, MainActivity::class.java)
+                startActivity(intent)
+            }
+        }
+        else {
+            Log.i(TAG, "키스토어에 키 없음")
+            //키 스토어에 키생성
+            KeyStoreUtil().updateKeyPairToKeyStore(userId)
+            //키스토어에서 퍼블릭 키 가져와 서버에 키 업로드
+            KeyStoreUtil().getPublicKeyFromKeyStore(userId)?.let { publicKey ->
+                updatePublicKeyAffineXYToServer(userId, publicKey)
+                Log.i(TAG, "서버에 키 업로드 완료")
                 val intent = Intent(this, MainActivity::class.java)
                 startActivity(intent)
             }
         }
     }
 
+
+////////////
+
+    private fun updatePublicKeyAffineXYToServer(userId: String, publicKey: PublicKey) {
+        val ecPublicKey = publicKey as ECPublicKey
+        val user = hashMapOf(
+            FIRE_STORE_FIELD_USER_ID to userId,
+            FIRE_STORE_FIELD_AFFINE_X to ecPublicKey.w.affineX.toString(),
+            FIRE_STORE_FIELD_AFFINE_Y to ecPublicKey.w.affineY.toString()
+        )
+        db.collection("publicKey")
+            .add(user)
+            .addOnSuccessListener { documentReference ->
+                Log.d(TAG, "Update Key Success DocumentSnapshot ID: ${documentReference.id}")
+                showToast("키 업로드 성공")
+            }
+            .addOnFailureListener { e ->
+                Log.w(TAG, "Error adding document", e)
+                showToast("키 업로드 실패")
+            }
+    }
+////////////
     fun onUiKitLaunchButtonClicked() {
         val userId = binding.userIdEditText.text.toString()
         val userNick = binding.nickNameEditText.text.toString().ifEmpty { userId }
