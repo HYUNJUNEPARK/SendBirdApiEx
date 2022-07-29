@@ -11,6 +11,7 @@ import java.lang.Exception
 import java.math.BigInteger
 import java.security.KeyPairGenerator
 import java.security.KeyStore
+import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.spec.*
 
@@ -45,6 +46,11 @@ class KeyStoreUtil {
         return keyStore.getCertificate(keyStoreAlias).publicKey
     }
 
+    fun getPrivateKeyFromKeyStore(keyStoreAlias: String): PrivateKey? {
+        val keyStoreEntry = keyStore.getEntry(keyStoreAlias, null)
+        return (keyStoreEntry as KeyStore.PrivateKeyEntry).privateKey
+    }
+
     //Elliptic Curve Domain Parameters : https://www.secg.org/sec2-v2.pdf Page9 of 33-34
     fun getECParameterSpec(): ECParameterSpec {
         val p = BigInteger("FFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF", 16)
@@ -63,7 +69,6 @@ class KeyStoreUtil {
     fun getKeyPairFromKeyStore(keyStoreAlias: String): KeyPairModel {
         val keyStoreEntry = keyStore.getEntry(keyStoreAlias, null)
         val privateKey = (keyStoreEntry as KeyStore.PrivateKeyEntry).privateKey
-        //val test = (privateKey as ECPrivateKey).params ****ClassCastException
         val publicKey = keyStore.getCertificate(keyStoreAlias).publicKey
         return KeyPairModel(privateKey, publicKey)
     }

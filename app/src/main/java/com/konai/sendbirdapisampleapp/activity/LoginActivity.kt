@@ -54,43 +54,7 @@ class LoginActivity : AppCompatActivity() {
         db = Firebase.firestore
         updateUiKitLaunchButtonState()
 
-        getPublicKey()
         deleteKey()
-    }
-
-    /////[Start Firebase]
-    //TODO MOVE
-    fun getPublicKey() {
-        binding.loadPublicKeyButton.setOnClickListener {
-            //TODO 키스토어에 키가 있는지 확인
-            val userId = "userA"
-            var affineX: BigInteger?
-            var affineY: BigInteger?
-            var publicKey: PublicKey?
-
-            db.collection(FIRE_STORE_DOCUMENT_PUBLIC_KEY)
-                .get()
-                .addOnSuccessListener { result ->
-                    showToast("키 가져오기 성공")
-                    for (document in result) {
-                        if (document.data[FIRE_STORE_FIELD_USER_ID] == "userA") {
-                            affineX = BigInteger(document.data[FIRE_STORE_FIELD_AFFINE_X].toString())
-                            affineY = BigInteger(document.data[FIRE_STORE_FIELD_AFFINE_Y].toString())
-
-                            val ecPoint = ECPoint(affineX, affineY)
-                            val params = KeyStoreUtil().getECParameterSpec()
-                            val keySpec = ECPublicKeySpec(ecPoint, params)
-                            val keyFactory = KeyFactory.getInstance(KEY_GEN_ALGORITHM) //EC
-                            publicKey = keyFactory.generatePublic(keySpec)
-                            Log.d(TAG, "getPublicKey -------- : ${(publicKey as ECPublicKey).w.affineX}\n${(publicKey as ECPublicKey).w.affineY}")
-                        }
-                    }
-                }
-                .addOnFailureListener { exception ->
-                    showToast("키 가져오기 실패")
-                    Log.e(TAG, "Error getting documents from firestore : $exception")
-                }
-        }
     }
 
     //TODO MOVE
@@ -147,29 +111,30 @@ class LoginActivity : AppCompatActivity() {
                     return@updateCurrentUserInfo
                 }
             }
+
             updatePublicKeyOnServer(USER_ID)
         }
     }
-
 
     private fun updatePublicKeyOnServer(userId: String) {
         db.collection(FIRE_STORE_DOCUMENT_PUBLIC_KEY)
             .get()
             .addOnSuccessListener { result ->
                 if (result.isEmpty) {
+                    Log.i(TAG, "Empty Server")
                     syncKeyStoreWithServer(userId, result)
+                    return@addOnSuccessListener
                 }
-
                 for (document in result) {
                     if (document.data[FIRE_STORE_FIELD_USER_ID] == userId) {
                         Log.i(TAG, "서버에 키 있음")
                         val intent = Intent(this, MainActivity::class.java)
                         startActivity(intent)
-                    }
-                    else {
-                        syncKeyStoreWithServer(userId, result)
+                        return@addOnSuccessListener
                     }
                 }
+                Log.i(TAG, "서버에 키 없음")
+                syncKeyStoreWithServer(userId, result)
             }
             .addOnFailureListener { exception ->
                 showToast("키 가져오기 실패")
@@ -178,7 +143,6 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun syncKeyStoreWithServer(userId: String, result: QuerySnapshot) {
-        Log.i(TAG, "서버에 키 없음")
         if (KeyStoreUtil().isKeyPairInKeyStore(userId)) {
             Log.i(TAG, "키스토어에 키 있음")
             KeyStoreUtil().getPublicKeyFromKeyStore(userId)?.let { publicKey ->
@@ -186,6 +150,7 @@ class LoginActivity : AppCompatActivity() {
                 Log.i(TAG, "서버에 키 업로드 완료")
                 val intent = Intent(this, MainActivity::class.java)
                 startActivity(intent)
+                return
             }
         }
         else {
@@ -198,12 +163,10 @@ class LoginActivity : AppCompatActivity() {
                 Log.i(TAG, "서버에 키 업로드 완료")
                 val intent = Intent(this, MainActivity::class.java)
                 startActivity(intent)
+                return
             }
         }
     }
-
-
-////////////
 
     private fun updatePublicKeyAffineXYToServer(userId: String, publicKey: PublicKey) {
         val ecPublicKey = publicKey as ECPublicKey
@@ -212,14 +175,13 @@ class LoginActivity : AppCompatActivity() {
             FIRE_STORE_FIELD_AFFINE_X to ecPublicKey.w.affineX.toString(),
             FIRE_STORE_FIELD_AFFINE_Y to ecPublicKey.w.affineY.toString()
         )
-        db.collection("publicKey")
+        db.collection(FIRE_STORE_DOCUMENT_PUBLIC_KEY)
             .add(user)
-            .addOnSuccessListener { documentReference ->
-                Log.d(TAG, "Update Key Success DocumentSnapshot ID: ${documentReference.id}")
+            .addOnSuccessListener {
                 showToast("키 업로드 성공")
             }
             .addOnFailureListener { e ->
-                Log.w(TAG, "Error adding document", e)
+                Log.e(TAG, "Error adding document", e)
                 showToast("키 업로드 실패")
             }
     }
