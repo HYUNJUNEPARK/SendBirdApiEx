@@ -7,6 +7,7 @@ import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.adapter.ChannelListAdapter
 import com.konai.sendbirdapisampleapp.databinding.FragmentChannelBinding
 import com.konai.sendbirdapisampleapp.model.ChannelListModel
+import com.konai.sendbirdapisampleapp.strongbox.KeyProvider
 import com.konai.sendbirdapisampleapp.util.Constants.TAG
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.util.Extension.convertLongToTime
@@ -94,12 +95,30 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
             if (e != null) {
                 showToast("$e")
             }
-            Log.d(TAG, "onCreateChannelButtonClicked: $channel")
             if (channel != null) {
                 Toast.makeText(requireContext(), "채널 생성", Toast.LENGTH_SHORT).show()
+                createChannelMetadata(channel)
                 initChannelList()
+
+                //TODO make shared secret key
+
             }
         }
         binding.userIdInputEditText.text = null
     }
+
+    private fun createChannelMetadata(channel: GroupChannel) {
+        val randomNumbers = KeyProvider().getRandomNumbers()
+        val metadata = mapOf(
+            "metadata" to randomNumbers
+        )
+        channel.createMetaData(metadata) { map, e ->
+            if (e != null) {
+                Log.e(TAG, "creating channel metadata was failed : $e ")
+                return@createMetaData
+            }
+        }
+    }
+
+
 }

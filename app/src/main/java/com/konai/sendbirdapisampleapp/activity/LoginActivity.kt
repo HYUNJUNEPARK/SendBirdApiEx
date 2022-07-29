@@ -59,6 +59,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     /////[Start Firebase]
+    //TODO MOVE
     fun getPublicKey() {
         binding.loadPublicKeyButton.setOnClickListener {
             //TODO 키스토어에 키가 있는지 확인
@@ -92,6 +93,7 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+    //TODO MOVE
     fun deleteKey() {
         binding.deleteKeyButton.setOnClickListener {
             val userId = "userA"

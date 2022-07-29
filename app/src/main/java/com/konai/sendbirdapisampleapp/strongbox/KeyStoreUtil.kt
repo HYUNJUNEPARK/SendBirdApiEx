@@ -37,7 +37,7 @@ class KeyStoreUtil {
     }
 
     fun isKeyPairInKeyStore(keyStoreAlias: String): Boolean {
-        var keyStoreEntry: KeyStore.Entry? = keyStore.getEntry(keyStoreAlias, null)
+        val keyStoreEntry: KeyStore.Entry? = keyStore.getEntry(keyStoreAlias, null)
         return keyStoreEntry != null
     }
 

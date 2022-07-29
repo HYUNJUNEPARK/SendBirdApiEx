@@ -1,5 +1,6 @@
 package com.konai.sendbirdapisampleapp.strongbox
 
+import android.util.Base64
 import com.konai.sendbirdapisampleapp.strongbox.StrongBoxConstants.CURVE_TYPE
 import com.konai.sendbirdapisampleapp.strongbox.StrongBoxConstants.KEY_AGREEMENT_ALGORITHM
 import com.konai.sendbirdapisampleapp.strongbox.StrongBoxConstants.KEY_GEN_ALGORITHM
@@ -16,10 +17,7 @@ class KeyProvider {
         return KeyPairModel(keyPair.private, keyPair.public)
     }
 
-    fun createSharedSecretHash(
-        myPrivateKey: PrivateKey,
-        counterpartPublicKey: PublicKey
-    ): ByteArray {
+    fun createSharedSecretHash(myPrivateKey: PrivateKey, counterpartPublicKey: PublicKey): ByteArray {
         val keyAgreement = KeyAgreement.getInstance(KEY_AGREEMENT_ALGORITHM) //ECDH
         keyAgreement.init(myPrivateKey)
         keyAgreement.doPhase(counterpartPublicKey, true)
@@ -32,7 +30,7 @@ class KeyProvider {
         try {
             val messageDigest = MessageDigest.getInstance(MESSAGE_DIGEST_ALGORITHM) //SHA-256
             messageDigest.update(key)
-            hash = messageDigest.digest(getRandomNumbers())
+            hash = messageDigest.digest(getRandomByteArray())
         }
         catch (e: CloneNotSupportedException) {
             throw DigestException("$e")
@@ -40,9 +38,15 @@ class KeyProvider {
         return hash
     }
 
-    private fun getRandomNumbers(): ByteArray {
+    private fun getRandomByteArray(): ByteArray {
         val randomByteArray = ByteArray(32)
         SecureRandom().nextBytes(randomByteArray)
         return randomByteArray
+    }
+
+    fun getRandomNumbers(): String {
+        val randomNumbers = ByteArray(32)
+        SecureRandom().nextBytes(randomNumbers)
+        return Base64.encodeToString(randomNumbers, Base64.DEFAULT)
     }
 }
