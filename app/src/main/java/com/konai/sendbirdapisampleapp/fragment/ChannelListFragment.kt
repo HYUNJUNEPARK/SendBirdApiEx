@@ -1,6 +1,9 @@
 package com.konai.sendbirdapisampleapp.fragment
 
+import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.content.Intent
+import android.content.SharedPreferences
 import android.util.Base64
 import android.util.Log
 import android.widget.Toast
@@ -10,6 +13,7 @@ import com.konai.sendbirdapisampleapp.activity.ChannelActivity
 import com.konai.sendbirdapisampleapp.adapter.ChannelListAdapter
 import com.konai.sendbirdapisampleapp.databinding.FragmentChannelBinding
 import com.konai.sendbirdapisampleapp.model.ChannelListModel
+import com.konai.sendbirdapisampleapp.preference.KeySharedPreference
 import com.konai.sendbirdapisampleapp.strongbox.KeyProvider
 import com.konai.sendbirdapisampleapp.strongbox.KeyStoreUtil
 import com.konai.sendbirdapisampleapp.util.Constants
@@ -20,6 +24,7 @@ import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_AFFINE_X
 import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_AFFINE_Y
 import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_USER_ID
 import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_CHANNEL_URL
+import com.konai.sendbirdapisampleapp.util.Constants.PREFERENCE_NAME_HASH
 import com.konai.sendbirdapisampleapp.util.Constants.TAG
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.util.Extension.showToast
@@ -103,20 +108,22 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
             name = "$USER_ID, $invitedUserId"
             isSuper = false
         }
-
         GroupChannel.createChannel(params) { channel, e ->
             if (e != null) {
                 showToast("$e")
             }
+
             if (channel != null) {
                 Toast.makeText(requireContext(), "채널 생성", Toast.LENGTH_SHORT).show()
-
                 createChannelMetadataAndSharedKey(channel, invitedUserId)
 
-                val intent = Intent(requireContext(), ChannelActivity::class.java)
-                intent.putExtra(INTENT_NAME_CHANNEL_URL, "${channel.url}")
-                intent.action = CHANNEL_ACTIVITY_INTENT_ACTION
-                startActivity(intent)
+                initChannelList()
+
+//TODO 액티비티로 이동하면 처음 sp 값이 초기화가 안됨 -> 해결할 방법 필요함
+//                val intent = Intent(requireContext(), ChannelActivity::class.java)
+//                intent.putExtra(INTENT_NAME_CHANNEL_URL, channel.url)
+//                intent.action = CHANNEL_ACTIVITY_INTENT_ACTION
+//                startActivity(intent)
             }
         }
         binding.userIdInputEditText.text = null
@@ -127,7 +134,8 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         val randomNumbers_byteArray = KeyProvider().getRandomNumbers() //키 생성용
         val randomNumbers_str = Base64.encodeToString(randomNumbers_byteArray, Base64.DEFAULT) //서버 업로드용
         val privateKey: PrivateKey = KeyStoreUtil().getPrivateKeyFromKeyStore(USER_ID)!!
-        getSharedHash(privateKey, invitedUserId, randomNumbers_byteArray)
+
+        createSharedHash(privateKey, invitedUserId, randomNumbers_byteArray, channel.url)
 
         //Meta data
         val metadata = mapOf(
@@ -141,7 +149,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         }
     }
 
-    private fun getSharedHash(privateKey: PrivateKey, invitedUserId: String, randomNumbers: ByteArray) {
+    private fun createSharedHash(privateKey: PrivateKey, invitedUserId: String, randomNumbers: ByteArray, preferenceKey: String) {
         var affineX: BigInteger?
         var affineY: BigInteger?
 
@@ -154,12 +162,22 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                         affineX = BigInteger(document.data[FIRE_STORE_FIELD_AFFINE_X].toString())
                         affineY = BigInteger(document.data[FIRE_STORE_FIELD_AFFINE_Y].toString())
                         val publicKey: PublicKey = KeyStoreUtil().createPublicKeyByECPoint(affineX!!, affineY!!)
-                        val sharedSecretHash = KeyProvider().createSharedSecretHash(
+                        val sharedSecretHash: ByteArray = KeyProvider().createSharedSecretHash(
                             privateKey,
                             publicKey!!,
                             randomNumbers
                         )
-                        //TODO 스트링 타입으로 바꾼다음에 sharedPreference 에 저장
+
+                        //Shared preference
+                        val sharedPreferences = requireContext().getSharedPreferences(PREFERENCE_NAME_HASH, MODE_PRIVATE)
+                        val editor: SharedPreferences.Editor = sharedPreferences.edit()
+                        val hash: String = Base64.encodeToString(sharedSecretHash, Base64.DEFAULT)
+                        editor.putString(preferenceKey, hash)
+                        editor.apply()
+                        //Shared preference
+
+
+
                         Log.d(TAG, "getSharedKey: $sharedSecretHash")
                     }
                 }

@@ -38,4 +38,7 @@ object Constants {
 
     //sendbird
     const val CHANNEL_META_DATA = "metadata"
+
+    //shared preference
+    const val PREFERENCE_NAME_HASH = "hash"
 }

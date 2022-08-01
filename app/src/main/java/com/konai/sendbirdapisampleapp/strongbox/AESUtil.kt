@@ -67,7 +67,7 @@ class AESUtil {
     }
 
     //common
-    private fun convertHashToKey(sharedSecretHash : ByteArray): Key {
+    fun convertHashToKey(sharedSecretHash : ByteArray): Key {
         return SecretKeySpec(sharedSecretHash, KEY_ALGORITHM)
     }
 }

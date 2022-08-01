@@ -1,6 +1,8 @@
 package com.konai.sendbirdapisampleapp.activity
 
+import android.content.Context
 import android.os.Bundle
+import android.util.Base64
 import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -10,10 +12,12 @@ import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.adapter.ChannelMessageAdapter
 import com.konai.sendbirdapisampleapp.databinding.ActivityChannelBinding
 import com.konai.sendbirdapisampleapp.model.MessageModel
+import com.konai.sendbirdapisampleapp.strongbox.AESUtil
 import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
 import com.konai.sendbirdapisampleapp.util.Constants.CONVERSATION_CHANNEL
 import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_CHANNEL_URL
 import com.konai.sendbirdapisampleapp.util.Constants.MY_PERSONAL_CHANNEL
+import com.konai.sendbirdapisampleapp.util.Constants.PREFERENCE_NAME_HASH
 import com.konai.sendbirdapisampleapp.util.Constants.RECEIVE_MESSAGE_HANDLER
 import com.konai.sendbirdapisampleapp.util.Constants.TAG
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
@@ -29,6 +33,7 @@ import com.sendbird.android.message.UserMessage
 import com.sendbird.android.params.PreviousMessageListQueryParams
 import com.sendbird.android.params.UserMessageCreateParams
 import com.sendbird.android.user.Member
+import java.security.Key
 
 class ChannelActivity : AppCompatActivity() {
     private lateinit var binding: ActivityChannelBinding
@@ -37,6 +42,8 @@ class ChannelActivity : AppCompatActivity() {
     private var partnerNickname: String? = null
     private var partnerId: String? = null
     private var _messageList: MutableList<MessageModel> = mutableListOf()
+    private lateinit var hash: ByteArray
+    private var sharedSecretKey: Key? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,12 +52,34 @@ class ChannelActivity : AppCompatActivity() {
 
         if (intent.action == CHANNEL_ACTIVITY_INTENT_ACTION) {
             channelURL = intent.getStringExtra(INTENT_NAME_CHANNEL_URL)!!
+            initChannelMembersInfo()
+            initRecyclerView()
+            readAllMessages()
+            messageReceived()
+
+            //sharedPreference
+            //TODO 채팅을 초대 받은 사람은 ssk 가 없기 때문에 이를 만들어주는 작업이 필요함
+            /*
+            초대 받은 사람 것(로그인 된 내것)
+            랜덤 넘버 - 채널 메타 데이터에서 갖고 옴
+            상대방 퍼블릭 키 - 서버에서 갖고 올것
+            * */
+
+
+            val sharedPreferences = getSharedPreferences(PREFERENCE_NAME_HASH, Context.MODE_PRIVATE)
+            val _hash: String? = sharedPreferences.getString(channelURL, "empty hash")
+            hash = Base64.decode(_hash, Base64.DEFAULT)
+            sharedSecretKey = AESUtil().convertHashToKey(hash)
+
+            if (sharedSecretKey != null) {
+                binding.secretKeyStateImageView.setImageResource(R.drawable.ic_baseline_check_circle_24)
+            }
+            //Log.d(TAG, "mysptest result: $hash")
+            //sharedPreference
+
         }
-        initChannelMembersInfo()
-        initRecyclerView()
-        readAllMessages()
-        messageReceived()
     }
+
 
     private fun initChannelMembersInfo() {
         GroupChannel.getChannel(channelURL) { groupChannel, e ->
@@ -156,8 +185,10 @@ class ChannelActivity : AppCompatActivity() {
     }
 
     fun onSendButtonClicked() {
-        val userInput: String = binding.messageEditText.text.toString()
-        val params = UserMessageCreateParams(userInput)
+        val userMessage: String = binding.messageEditText.text.toString()
+        val encryptedMessage = AESUtil().encryptionCBCMode(userMessage, hash)
+        val params = UserMessageCreateParams(encryptedMessage)
+
         GroupChannel.getChannel(channelURL) { groupChannel, e ->
             if (e != null) {
                 showToast("Error : $e")
