@@ -21,6 +21,8 @@ class KeyProvider {
     //InvalidKeyException: Keystore operation failed
     fun createSharedSecretHash(myPrivateKey: PrivateKey, partnerPublicKey: PublicKey, randomNumber: ByteArray): ByteArray {
         val keyAgreement = KeyAgreement.getInstance(KEY_AGREEMENT_ALGORITHM) //ECDH
+
+
         keyAgreement.init(myPrivateKey)
         keyAgreement.doPhase(partnerPublicKey, true)
         val sharedSecret: ByteArray = keyAgreement.generateSecret()

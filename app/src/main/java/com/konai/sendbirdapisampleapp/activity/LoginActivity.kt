@@ -15,7 +15,6 @@ import com.google.firebase.ktx.Firebase
 import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.databinding.ActivityLoginBinding
 import com.konai.sendbirdapisampleapp.strongbox.KeyStoreUtil
-import com.konai.sendbirdapisampleapp.strongbox.StrongBoxConstants.KEY_GEN_ALGORITHM
 import com.konai.sendbirdapisampleapp.util.Constants.APP_ID
 import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_DOCUMENT_PUBLIC_KEY
 import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_AFFINE_X
@@ -34,12 +33,8 @@ import com.sendbird.android.exception.SendbirdException
 import com.sendbird.android.handler.InitResultHandler
 import com.sendbird.android.params.InitParams
 import com.sendbird.android.params.UserUpdateParams
-import java.math.BigInteger
-import java.security.KeyFactory
 import java.security.PublicKey
 import java.security.interfaces.ECPublicKey
-import java.security.spec.ECPoint
-import java.security.spec.ECPublicKeySpec
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
@@ -53,19 +48,7 @@ class LoginActivity : AppCompatActivity() {
         initializeSendBirdSdk()
         db = Firebase.firestore
         updateUiKitLaunchButtonState()
-
-        deleteKey()
     }
-
-    //TODO MOVE
-    fun deleteKey() {
-        binding.deleteKeyButton.setOnClickListener {
-            val userId = "userA"
-            KeyStoreUtil().deleteKeyStoreKeyPair(userId)
-        }
-    }
-    ////[End Firebase]
-
 
     private fun initializeSendBirdSdk() {
         SendbirdChat.init(
@@ -156,7 +139,7 @@ class LoginActivity : AppCompatActivity() {
         else {
             Log.i(TAG, "키스토어에 키 없음")
             //키 스토어에 키생성
-            KeyStoreUtil().updateKeyPairToKeyStore(userId)
+            KeyStoreUtil().createKeyPairToKeyStore(userId)
             //키스토어에서 퍼블릭 키 가져와 서버에 키 업로드
             KeyStoreUtil().getPublicKeyFromKeyStore(userId)?.let { publicKey ->
                 updatePublicKeyAffineXYToServer(userId, publicKey)
@@ -185,7 +168,7 @@ class LoginActivity : AppCompatActivity() {
                 showToast("키 업로드 실패")
             }
     }
-////////////
+
     fun onUiKitLaunchButtonClicked() {
         val userId = binding.userIdEditText.text.toString()
         val userNick = binding.nickNameEditText.text.toString().ifEmpty { userId }

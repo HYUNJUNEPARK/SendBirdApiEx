@@ -14,12 +14,12 @@ import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.util.Extension.showToast
 
 class BlankFragment : BaseFragment<FragmentBlankBinding>(R.layout.fragment_blank) {
-    private var db: FirebaseFirestore? = null
+    //private var db: FirebaseFirestore? = null
 
     override fun initView() {
         super.initView()
 
-        db = Firebase.firestore
+        //db = Firebase.firestore
         initKeyStoreKeyState()
         initServerKeyState()
     }
