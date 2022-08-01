@@ -15,9 +15,11 @@ import com.konai.sendbirdapisampleapp.strongbox.KeyStoreUtil
 import com.konai.sendbirdapisampleapp.strongbox.StrongBoxConstants
 import com.konai.sendbirdapisampleapp.strongbox.StrongBoxConstants.KEY_GEN_ALGORITHM
 import com.konai.sendbirdapisampleapp.util.Constants
+import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_META_DATA
 import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_DOCUMENT_PUBLIC_KEY
 import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_AFFINE_X
 import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_AFFINE_Y
+import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_USER_ID
 import com.konai.sendbirdapisampleapp.util.Constants.TAG
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.util.Extension.showToast
@@ -113,11 +115,12 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
             }
             if (channel != null) {
                 Toast.makeText(requireContext(), "채널 생성", Toast.LENGTH_SHORT).show()
+
+                //TODO ERROR
                 createChannelMetadataAndSharedKey(channel, invitedUserId)
+
+                //TODO initChannelList() -> 채널로 바로 이동
                 initChannelList()
-
-
-
             }
         }
         binding.userIdInputEditText.text = null
@@ -127,23 +130,29 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         val randomNumbers_byteArray = KeyProvider().getRandomNumbers() //키 생성용
         val randomNumbers_str = Base64.encodeToString(randomNumbers_byteArray, Base64.DEFAULT) //서버 업로드용
 
-        //TODO ERROR
         val privateKey: PrivateKey = KeyStoreUtil().getPrivateKeyFromKeyStore(USER_ID)!!
 
-        getSharedKey(privateKey, invitedUserId, randomNumbers_byteArray)
+
+        //TODO ERROR 프라이빗 키 꺼내오는 거 까지는 괜찮은데 키 합치는게 안됨
+        //getSharedKey(privateKey, invitedUserId, randomNumbers_byteArray)
 
 
-        //metaData
+        //updata channel metaData
         val metadata = mapOf(
-            "metadata" to randomNumbers_str
+            CHANNEL_META_DATA to randomNumbers_str
         )
         channel.createMetaData(metadata) { map, e ->
             if (e != null) {
-                Log.e(TAG, "creating channel metadata was failed : $e ")
+                Log.e(TAG, "Creating channel metadata was failed : $e ")
                 return@createMetaData
             }
         }
     }
+
+
+
+
+
 
     private fun getSharedKey(privateKey: PrivateKey, invitedUserId: String, randomNumbers: ByteArray) {
         val db = Firebase.firestore
@@ -157,7 +166,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
             .get()
             .addOnSuccessListener { result ->
                 for (document in result) {
-                    if (document.data[Constants.FIRE_STORE_FIELD_USER_ID] == invitedUserId) {
+                    if (document.data[FIRE_STORE_FIELD_USER_ID] == invitedUserId) {
                         showToast("상대방 공개키 얻음")
                         //상대방 공개키 조합
                         affineX = BigInteger(document.data[FIRE_STORE_FIELD_AFFINE_X].toString())

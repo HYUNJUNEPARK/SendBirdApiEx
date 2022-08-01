@@ -35,4 +35,7 @@ object Constants {
     const val FIRE_STORE_FIELD_AFFINE_X = "affineX"
     const val FIRE_STORE_FIELD_AFFINE_Y = "affineY"
     const val FIRE_STORE_DOCUMENT_PUBLIC_KEY = "publicKey"
+
+    //sendbird
+    const val CHANNEL_META_DATA = "metadata"
 }
