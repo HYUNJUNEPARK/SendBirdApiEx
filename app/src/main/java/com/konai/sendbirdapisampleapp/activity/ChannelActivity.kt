@@ -62,6 +62,11 @@ class ChannelActivity : AppCompatActivity() {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_channel)
         binding.channelActivity = this
 
+
+        binding.decryptionButton.setOnClickListener {
+            showToast("복호화 시작")
+        }
+
         db = Firebase.firestore
 
         if (intent.action == CHANNEL_ACTIVITY_INTENT_ACTION) {
@@ -117,21 +122,6 @@ class ChannelActivity : AppCompatActivity() {
 
                     }
                 }
-
-            //내가 초대 받은 상황
-            //키를 sp 없는 경우
-            /* -> sp 부터 만들어야함
-
-
-            1. 내 프라이빗 키
-
-            2. 랜덤 넘버 - 채널 메타 데이터에서 갖고 옴
-
-
-
-            3. 상대방 퍼블릭 키 - 서버에서 갖고 올것(나 아닌 상대방 아이디로 찾음)
-
-            */
             }
         }
     }
@@ -171,20 +161,6 @@ class ChannelActivity : AppCompatActivity() {
                 Log.e(TAG, "Error getting documents from firestore : $exception")
             }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
