@@ -141,7 +141,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         val metadata = mapOf(
             CHANNEL_META_DATA to randomNumbers_str
         )
-        channel.createMetaData(metadata) { map, e ->
+        channel.createMetaData(metadata) { _, e ->
             if (e != null) {
                 Log.e(TAG, "Creating channel metadata was failed : $e ")
                 return@createMetaData
@@ -175,8 +175,6 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                         editor.putString(preferenceKey, hash)
                         editor.apply()
                         //Shared preference
-
-
 
                         Log.d(TAG, "getSharedKey: $sharedSecretHash")
                     }

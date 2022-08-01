@@ -38,7 +38,7 @@ import java.security.interfaces.ECPublicKey
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
-    private lateinit var db: FirebaseFirestore
+    private var db: FirebaseFirestore? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -99,10 +99,16 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+
+        db = null
+    }
+
     private fun updatePublicKeyOnServer(userId: String) {
-        db.collection(FIRE_STORE_DOCUMENT_PUBLIC_KEY)
-            .get()
-            .addOnSuccessListener { result ->
+        db?.collection(FIRE_STORE_DOCUMENT_PUBLIC_KEY)
+            ?.get()
+            ?.addOnSuccessListener { result ->
                 if (result.isEmpty) {
                     Log.i(TAG, "Empty Server")
                     syncKeyStoreWithServer(userId, result)
@@ -119,7 +125,7 @@ class LoginActivity : AppCompatActivity() {
                 Log.i(TAG, "서버에 키 없음")
                 syncKeyStoreWithServer(userId, result)
             }
-            .addOnFailureListener { exception ->
+            ?.addOnFailureListener { exception ->
                 showToast("키 가져오기 실패")
                 Log.e(TAG, "Error getting documents from firestore : $exception")
             }
@@ -140,6 +146,7 @@ class LoginActivity : AppCompatActivity() {
             Log.i(TAG, "키스토어에 키 없음")
             //키 스토어에 키생성
             KeyStoreUtil().createKeyPairToKeyStore(userId)
+
             //키스토어에서 퍼블릭 키 가져와 서버에 키 업로드
             KeyStoreUtil().getPublicKeyFromKeyStore(userId)?.let { publicKey ->
                 updatePublicKeyAffineXYToServer(userId, publicKey)
@@ -158,12 +165,12 @@ class LoginActivity : AppCompatActivity() {
             FIRE_STORE_FIELD_AFFINE_X to ecPublicKey.w.affineX.toString(),
             FIRE_STORE_FIELD_AFFINE_Y to ecPublicKey.w.affineY.toString()
         )
-        db.collection(FIRE_STORE_DOCUMENT_PUBLIC_KEY)
-            .add(user)
-            .addOnSuccessListener {
+        db?.collection(FIRE_STORE_DOCUMENT_PUBLIC_KEY)
+            ?.add(user)
+            ?.addOnSuccessListener {
                 showToast("키 업로드 성공")
             }
-            .addOnFailureListener { e ->
+            ?.addOnFailureListener { e ->
                 Log.e(TAG, "Error adding document", e)
                 showToast("키 업로드 실패")
             }

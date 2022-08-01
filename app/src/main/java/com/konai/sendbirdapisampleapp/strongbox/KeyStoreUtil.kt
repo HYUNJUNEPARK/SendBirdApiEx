@@ -23,6 +23,7 @@ class KeyStoreUtil {
             KEY_GEN_ALGORITHM, //EC
             KEYSTORE_TYPE
         )
+        //TODO 디바아스에 따라서 에러 발생
         val parameterSpec = KeyGenParameterSpec.Builder(
             keyStoreAlias,
             KeyProperties.PURPOSE_ENCRYPT or

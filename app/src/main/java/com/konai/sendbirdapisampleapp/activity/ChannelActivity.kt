@@ -1,6 +1,7 @@
 package com.konai.sendbirdapisampleapp.activity
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Base64
 import android.util.Log
@@ -8,12 +9,19 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.adapter.ChannelMessageAdapter
 import com.konai.sendbirdapisampleapp.databinding.ActivityChannelBinding
 import com.konai.sendbirdapisampleapp.model.MessageModel
 import com.konai.sendbirdapisampleapp.strongbox.AESUtil
+import com.konai.sendbirdapisampleapp.strongbox.KeyProvider
+import com.konai.sendbirdapisampleapp.strongbox.KeyStoreUtil
+import com.konai.sendbirdapisampleapp.util.Constants
 import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
+import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_META_DATA
 import com.konai.sendbirdapisampleapp.util.Constants.CONVERSATION_CHANNEL
 import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_CHANNEL_URL
 import com.konai.sendbirdapisampleapp.util.Constants.MY_PERSONAL_CHANNEL
@@ -33,7 +41,10 @@ import com.sendbird.android.message.UserMessage
 import com.sendbird.android.params.PreviousMessageListQueryParams
 import com.sendbird.android.params.UserMessageCreateParams
 import com.sendbird.android.user.Member
+import java.math.BigInteger
 import java.security.Key
+import java.security.PrivateKey
+import java.security.PublicKey
 
 class ChannelActivity : AppCompatActivity() {
     private lateinit var binding: ActivityChannelBinding
@@ -44,11 +55,14 @@ class ChannelActivity : AppCompatActivity() {
     private var _messageList: MutableList<MessageModel> = mutableListOf()
     private lateinit var hash: ByteArray
     private var sharedSecretKey: Key? = null
+    private lateinit var db: FirebaseFirestore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_channel)
         binding.channelActivity = this
+
+        db = Firebase.firestore
 
         if (intent.action == CHANNEL_ACTIVITY_INTENT_ACTION) {
             channelURL = intent.getStringExtra(INTENT_NAME_CHANNEL_URL)!!
@@ -57,28 +71,122 @@ class ChannelActivity : AppCompatActivity() {
             readAllMessages()
             messageReceived()
 
-            //sharedPreference
-            //TODO 채팅을 초대 받은 사람은 ssk 가 없기 때문에 이를 만들어주는 작업이 필요함
-            /*
-            초대 받은 사람 것(로그인 된 내것)
-            랜덤 넘버 - 채널 메타 데이터에서 갖고 옴
-            상대방 퍼블릭 키 - 서버에서 갖고 올것
-            * */
-
-
             val sharedPreferences = getSharedPreferences(PREFERENCE_NAME_HASH, Context.MODE_PRIVATE)
-            val _hash: String? = sharedPreferences.getString(channelURL, "empty hash")
-            hash = Base64.decode(_hash, Base64.DEFAULT)
-            sharedSecretKey = AESUtil().convertHashToKey(hash)
+            if(sharedPreferences.contains(channelURL)) {
+                val _hash: String? = sharedPreferences.getString(channelURL, "empty hash")
 
-            if (sharedSecretKey != null) {
-                binding.secretKeyStateImageView.setImageResource(R.drawable.ic_baseline_check_circle_24)
+                if (_hash == "empty hash") {
+                    showToast("Can't get proper hash from shared preferences")
+                    Log.e(TAG, "Can't get proper hash from shared preferences : ChannelActivity")
+                    return
+                }
+                else {
+                    hash = Base64.decode(_hash, Base64.DEFAULT)
+                    sharedSecretKey = AESUtil().convertHashToKey(hash)
+                    binding.secretKeyStateImageView.setImageResource(R.drawable.ic_baseline_check_circle_24)
+                }
             }
-            //Log.d(TAG, "mysptest result: $hash")
-            //sharedPreference
+            else {
+                showToast("SP 에 값 없음")
 
+                //내 퍼블릭 키
+                val key = listOf(CHANNEL_META_DATA)
+                GroupChannel.getChannel(channelURL) { groupChannel, e ->
+                    //var _metadata: String? = null
+
+                    if (e != null) {
+                        showToast("Can't get channel : $e")
+                        Log.e(TAG, "Can't get channel / ChannelActivity :$e" )
+                        return@getChannel
+                    }
+
+                    groupChannel!!.getMetaData(key) { map, e ->
+                        if (e != null) {
+                            showToast("Can't get channel meta data error : $e")
+                            Log.e(TAG, "Can't get channel meta data error / ChannelActivity :$e" )
+                            return@getMetaData
+                        }
+                        //서버로 부터 온 메타데이터 앞에 [ 가 붙어 있음 [QCPPm6RxW6tJtLJrVcqVq5wMVEhvXsvfLli2bG9P3g4=
+                        val _metadata = map!!.values.toString().substring(1 until map!!.values.toString().length)
+                        val metadata: ByteArray = Base64.decode(_metadata, Base64.DEFAULT)
+
+                        val privateKey = KeyStoreUtil().getPrivateKeyFromKeyStore(USER_ID)
+                        Log.d(TAG, "meta data: $_metadata // $privateKey")
+
+                        createSharedHash(privateKey!!, partnerId!!, metadata, channelURL)
+
+                    }
+                }
+
+            //내가 초대 받은 상황
+            //키를 sp 없는 경우
+            /* -> sp 부터 만들어야함
+
+
+            1. 내 프라이빗 키
+
+            2. 랜덤 넘버 - 채널 메타 데이터에서 갖고 옴
+
+
+
+            3. 상대방 퍼블릭 키 - 서버에서 갖고 올것(나 아닌 상대방 아이디로 찾음)
+
+            */
+            }
         }
     }
+
+    //TODO 중복되는 함수
+    private fun createSharedHash(privateKey: PrivateKey, invitedUserId: String, randomNumbers: ByteArray, preferenceKey: String) {
+        var affineX: BigInteger?
+        var affineY: BigInteger?
+
+        db?.collection(Constants.FIRE_STORE_DOCUMENT_PUBLIC_KEY)
+            ?.get()
+            ?.addOnSuccessListener { result ->
+                for (document in result) {
+                    if (document.data[Constants.FIRE_STORE_FIELD_USER_ID] == invitedUserId) {
+                        showToast("상대방 공개키 affineX/affineY 얻음")
+                        affineX = BigInteger(document.data[Constants.FIRE_STORE_FIELD_AFFINE_X].toString())
+                        affineY = BigInteger(document.data[Constants.FIRE_STORE_FIELD_AFFINE_Y].toString())
+                        val publicKey: PublicKey = KeyStoreUtil().createPublicKeyByECPoint(affineX!!, affineY!!)
+                        val sharedSecretHash: ByteArray = KeyProvider().createSharedSecretHash(
+                            privateKey,
+                            publicKey!!,
+                            randomNumbers
+                        )
+                        //Shared preference
+                        val sharedPreferences = getSharedPreferences(PREFERENCE_NAME_HASH, MODE_PRIVATE)
+                        val editor: SharedPreferences.Editor = sharedPreferences.edit()
+                        val hash: String = Base64.encodeToString(sharedSecretHash, Base64.DEFAULT)
+                        editor.putString(preferenceKey, hash)
+                        editor.apply()
+                        //Shared preference
+                        showToast("public key 저장 완료")
+                    }
+                }
+            }
+            ?.addOnFailureListener { exception ->
+                showToast("키 가져오기 실패")
+                Log.e(TAG, "Error getting documents from firestore : $exception")
+            }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     private fun initChannelMembersInfo() {
