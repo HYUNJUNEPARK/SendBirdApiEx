@@ -47,14 +47,14 @@ import java.security.PrivateKey
 import java.security.PublicKey
 
 class ChannelActivity : AppCompatActivity() {
+    private var partnerId: String? = null
+    private var messageList: MutableList<MessageModel> = mutableListOf()
+    private var partnerNickname: String? = null
+    private var sharedSecretKey: Key? = null
     private lateinit var binding: ActivityChannelBinding
     private lateinit var adapter: ChannelMessageAdapter
     private lateinit var channelURL: String
-    private var partnerNickname: String? = null
-    private var partnerId: String? = null
-    private var _messageList: MutableList<MessageModel> = mutableListOf()
     private lateinit var hash: ByteArray
-    private var sharedSecretKey: Key? = null
     private lateinit var db: FirebaseFirestore
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,68 +63,97 @@ class ChannelActivity : AppCompatActivity() {
         binding.channelActivity = this
 
 
+
+
+
+
+
+        
+        
+
+
+
+        if(intent.action != CHANNEL_ACTIVITY_INTENT_ACTION) return
+
+
+
+        //TODO 복호화 기능 만들기
         binding.decryptionButton.setOnClickListener {
             showToast("복호화 시작")
-        }
 
+
+
+
+
+            for(message in messageList) {
+                Log.d(TAG, "message: ${message.message}")
+            }
+        }
+        ////TODO
+        
+        
+        
+        
+        
+        
+
+        channelURL = intent.getStringExtra(INTENT_NAME_CHANNEL_URL)!!
         db = Firebase.firestore
 
-        if (intent.action == CHANNEL_ACTIVITY_INTENT_ACTION) {
-            channelURL = intent.getStringExtra(INTENT_NAME_CHANNEL_URL)!!
-            initChannelMembersInfo()
-            initRecyclerView()
-            readAllMessages()
-            messageReceived()
+        initChannelMembersInfo()
+        initMessageRecyclerView()
+        initDecryptionButtonState()
+        readAllMessages()
+        messageReceived()
 
-            val sharedPreferences = getSharedPreferences(PREFERENCE_NAME_HASH, Context.MODE_PRIVATE)
-            if(sharedPreferences.contains(channelURL)) {
-                val _hash: String? = sharedPreferences.getString(channelURL, "empty hash")
+        val sharedPreferences = getSharedPreferences(PREFERENCE_NAME_HASH, Context.MODE_PRIVATE)
+        if(sharedPreferences.contains(channelURL)) {
+            val _hash: String? = sharedPreferences.getString(channelURL, "empty hash")
 
-                if (_hash == "empty hash") {
-                    showToast("Can't get proper hash from shared preferences")
-                    Log.e(TAG, "Can't get proper hash from shared preferences : ChannelActivity")
-                    return
-                }
-                else {
-                    hash = Base64.decode(_hash, Base64.DEFAULT)
-                    sharedSecretKey = AESUtil().convertHashToKey(hash)
-                    binding.secretKeyStateImageView.setImageResource(R.drawable.ic_baseline_check_circle_24)
-                }
+            if (_hash == "empty hash") {
+                showToast("Can't get proper hash from shared preferences")
+                Log.e(TAG, "Can't get proper hash from shared preferences : ChannelActivity")
+                return
             }
             else {
-                showToast("SP 에 값 없음")
+                hash = Base64.decode(_hash, Base64.DEFAULT)
+                sharedSecretKey = AESUtil().convertHashToKey(hash)
+                binding.secretKeyStateImageView.setImageResource(R.drawable.ic_baseline_check_circle_24)
+            }
+        }
 
-                //내 퍼블릭 키
-                val key = listOf(CHANNEL_META_DATA)
-                GroupChannel.getChannel(channelURL) { groupChannel, e ->
-                    //var _metadata: String? = null
+        else {
+            showToast("SP 에 값 없음")
 
+            //내 퍼블릭 키
+            val key = listOf(CHANNEL_META_DATA)
+            GroupChannel.getChannel(channelURL) { groupChannel, e ->
+                //var _metadata: String? = null
+                if (e != null) {
+                    showToast("Can't get channel : $e")
+                    Log.e(TAG, "Can't get channel / ChannelActivity :$e" )
+                    return@getChannel
+                }
+                groupChannel!!.getMetaData(key) { map, e ->
                     if (e != null) {
-                        showToast("Can't get channel : $e")
-                        Log.e(TAG, "Can't get channel / ChannelActivity :$e" )
-                        return@getChannel
+                        showToast("Can't get channel meta data error : $e")
+                        Log.e(TAG, "Can't get channel meta data error / ChannelActivity :$e" )
+                        return@getMetaData
                     }
+                    //서버로 부터 온 메타데이터 앞에 [ 가 붙어 있음 [QCPPm6RxW6tJtLJrVcqVq5wMVEhvXsvfLli2bG9P3g4=
+                    val _metadata = map!!.values.toString().substring(1 until map!!.values.toString().length)
+                    val metadata: ByteArray = Base64.decode(_metadata, Base64.DEFAULT)
 
-                    groupChannel!!.getMetaData(key) { map, e ->
-                        if (e != null) {
-                            showToast("Can't get channel meta data error : $e")
-                            Log.e(TAG, "Can't get channel meta data error / ChannelActivity :$e" )
-                            return@getMetaData
-                        }
-                        //서버로 부터 온 메타데이터 앞에 [ 가 붙어 있음 [QCPPm6RxW6tJtLJrVcqVq5wMVEhvXsvfLli2bG9P3g4=
-                        val _metadata = map!!.values.toString().substring(1 until map!!.values.toString().length)
-                        val metadata: ByteArray = Base64.decode(_metadata, Base64.DEFAULT)
+                    val privateKey = KeyStoreUtil().getPrivateKeyFromKeyStore(USER_ID)
+                    Log.d(TAG, "meta data: $_metadata // $privateKey")
 
-                        val privateKey = KeyStoreUtil().getPrivateKeyFromKeyStore(USER_ID)
-                        Log.d(TAG, "meta data: $_metadata // $privateKey")
+                    createSharedHash(privateKey!!, partnerId!!, metadata, channelURL)
 
-                        createSharedHash(privateKey!!, partnerId!!, metadata, channelURL)
-
-                    }
                 }
             }
         }
     }
+
 
     //TODO 중복되는 함수
     private fun createSharedHash(privateKey: PrivateKey, invitedUserId: String, randomNumbers: ByteArray, preferenceKey: String) {
@@ -162,9 +191,7 @@ class ChannelActivity : AppCompatActivity() {
             }
     }
 
-
-
-
+//[START Init]
     private fun initChannelMembersInfo() {
         GroupChannel.getChannel(channelURL) { groupChannel, e ->
             if (e != null) {
@@ -191,22 +218,31 @@ class ChannelActivity : AppCompatActivity() {
         }
     }
 
-    private fun initRecyclerView() {
+    private fun initMessageRecyclerView() {
         adapter = ChannelMessageAdapter()
         binding.recyclerView.adapter = adapter
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
     }
 
-    //TODO 최초 한번만 실행되면 될 듯 -> 실행 후 데이터는 ROOM 에다가 저장
+    private fun initDecryptionButtonState() {
+        val sharedPreferences = getSharedPreferences(PREFERENCE_NAME_HASH, Context.MODE_PRIVATE)
+        if(sharedPreferences.contains(channelURL)) {
+            binding.decryptionButton.isEnabled = true
+        }
+    }
+//[END Init]
+
+//[START Read message]
+    //TODO 최초 한번만 실행 -> 실행 후 데이터는 ROOM 에다가 저장
     private fun readAllMessages() {
-        GroupChannel.getChannel(channelURL) { groupChannel, e ->
+        GroupChannel.getChannel(channelURL) { channel, e ->
             if (e != null) {
                 showToast("Get Channel Error : $e")
                 Log.e(TAG, "Get Channel Error : $e")
                 return@getChannel
             }
 
-            val query = groupChannel!!.createPreviousMessageListQuery(
+            val query = channel!!.createPreviousMessageListQuery(
                 PreviousMessageListQueryParams() //Custom QueryParams if it's needed. use .apply {}
             )
             query.load { messages, e ->
@@ -216,9 +252,9 @@ class ChannelActivity : AppCompatActivity() {
                     return@load
                 }
                 if (messages!!.isEmpty()) return@load
-                _messageList.clear()
+                messageList.clear() //메시지 리스트를 한번 초기화하고 새로운 메시지를 추가
                 for (message in messages) {
-                    _messageList.add(
+                    messageList.add(
                         MessageModel(
                             message = message.message,
                             sender = message.sender!!.userId,
@@ -227,7 +263,7 @@ class ChannelActivity : AppCompatActivity() {
                         )
                     )
                 }
-                adapter.submitList(_messageList)
+                adapter.submitList(messageList)
             }
         }
     }
@@ -239,12 +275,11 @@ class ChannelActivity : AppCompatActivity() {
                 override fun onMessageReceived(channel: BaseChannel, message: BaseMessage) {
                     when (message) {
                         is UserMessage -> {
-                            //TODO 상대방이 메시지 보낼 때 마다 호출 -> 뷰 다시 그려주면 될 듯
-                            //TODO 생각해볼 것 : channelListFragment 에서 message.message 토스트가 뜨는것이 확인됨
-                            //TODO -> 여기서 신호가 오면 채팅방을 바꿔주는 것도 괜찮을 듯
+                            //TODO 생각해볼 것 : 상대방이 메시지 보낼 때 마다 호출 -> channelListFragment 에서 message.message 토스트가 뜨는것이 확인됨
+                            //TODO 여기서 신호가 오면 채팅 리스트를 바꿔줌
                             showToast("상대방 메시지 수신")
 
-                            _messageList.add(
+                            messageList.add(
                                 MessageModel(
                                     message = message.message,
                                     sender = message.sender!!.userId,
@@ -252,11 +287,10 @@ class ChannelActivity : AppCompatActivity() {
                                     createdAt = message.createdAt
                                 )
                             )
-                            adapter.submitList(_messageList)
+                            adapter.submitList(messageList)
                             adapter.notifyDataSetChanged()
 
-                            //리사이클러뷰 위치 조정
-                            binding.recyclerView.run {
+                            binding.recyclerView.run { //리사이클러뷰 위치 조정
                                 postDelayed({
                                     scrollToPosition(adapter!!.itemCount - 1)
                                 }, 300)
@@ -267,7 +301,9 @@ class ChannelActivity : AppCompatActivity() {
             }
         )
     }
+//[END Read message]
 
+//[START Clicked event]
     fun onSendButtonClicked() {
         val userMessage: String = binding.messageEditText.text.toString()
         val encryptedMessage = AESUtil().encryptionCBCMode(userMessage, hash)
@@ -285,7 +321,7 @@ class ChannelActivity : AppCompatActivity() {
                     Log.e(TAG, "sendUserMessage Error: $e")
                     return@sendUserMessage
                 }
-                _messageList.add(
+                messageList.add(
                     MessageModel(
                         message = message?.message,
                         sender = message?.sender?.userId,
@@ -293,7 +329,7 @@ class ChannelActivity : AppCompatActivity() {
                         createdAt = message?.createdAt
                     )
                 )
-                adapter.submitList(_messageList)
+                adapter.submitList(messageList)
                 //TODO It will always be more efficient to use more specific change events if you can. Rely on `notifyDataSetChanged` as a last resort.
                 adapter.notifyDataSetChanged()
 
@@ -313,30 +349,48 @@ class ChannelActivity : AppCompatActivity() {
             .setMessage("채널을 삭제하시겠습니까? \n삭제한 채널과 대화내용은 다시 복구 할 수 없습니다.")
             .setPositiveButton("취소") { _, _ -> }
             .setNegativeButton("삭제") { _, _ ->
-                deleteChannel()
+                //delete channel
+                GroupChannel.getChannel(channelURL) { channel, e ->
+                    if (e != null) {
+                        showToast("Get Channel Error: $e")
+                        Log.e(TAG, "Get Channel Error: $e")
+                        return@getChannel
+                    }
+                    channel?.delete { e->
+                        if (e != null) {
+                            // cf. error code 400108 : Not authorized. To delete the channel, the user should be an operator.
+                            showToast("Delete Error: $e")
+                            Log.e(TAG, "Delete Error: $e" )
+                            return@delete
+                        }
+                        showToast("채널이 삭제되었습니다.")
+                    }
+                }
+                //close channel activity
                 finish()
             }
             .create()
             .show()
     }
+//[END Clicked event]
 
-    private fun deleteChannel() {
-        GroupChannel.getChannel(channelURL) { groupChannel, e ->
-            if (e != null) {
-                showToast("Get Channel Error: $e")
-                Log.e(TAG, "Get Channel Error: $e")
-                return@getChannel
-            }
-            groupChannel?.delete { e->
-                if (e != null) {
-                    /* error code 400108
-                    Not authorized. To delete the channel, the user should be an operator.*/
-                    showToast("Delete Error: $e")
-                    Log.e(TAG, "Delete Error: $e" )
-                    return@delete
-                }
-                showToast("채널이 삭제되었습니다.")
-            }
-        }
-    }
+//    private fun deleteChannel() {
+//        GroupChannel.getChannel(channelURL) { channel, e ->
+//            if (e != null) {
+//                showToast("Get Channel Error: $e")
+//                Log.e(TAG, "Get Channel Error: $e")
+//                return@getChannel
+//            }
+//            channel?.delete { e->
+//                if (e != null) {
+//                    /* error code 400108
+//                    Not authorized. To delete the channel, the user should be an operator.*/
+//                    showToast("Delete Error: $e")
+//                    Log.e(TAG, "Delete Error: $e" )
+//                    return@delete
+//                }
+//                showToast("채널이 삭제되었습니다.")
+//            }
+//        }
+//    }
 }
