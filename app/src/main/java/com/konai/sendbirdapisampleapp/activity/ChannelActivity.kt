@@ -50,16 +50,16 @@ import java.security.PrivateKey
 import java.security.PublicKey
 
 class ChannelActivity : AppCompatActivity() {
+    private var db: FirebaseFirestore? = null
     private var partnerId: String? = null
-    private var encryptionMessageList: MutableList<MessageModel> = mutableListOf()
-    private var decryptionMessageList: MutableList<MessageModel> = mutableListOf()
     private var partnerNickname: String? = null
     private var sharedSecretKey: Key? = null
+    private var encryptionMessageList: MutableList<MessageModel> = mutableListOf()
+    private var decryptionMessageList: MutableList<MessageModel> = mutableListOf()
     private lateinit var binding: ActivityChannelBinding
     private lateinit var adapter: ChannelMessageAdapter
     private lateinit var channelURL: String
     private lateinit var hash: ByteArray
-    private var db: FirebaseFirestore? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,7 +82,6 @@ class ChannelActivity : AppCompatActivity() {
         super.onDestroy()
         db = null
     }
-
 
 //[START Init]
     private fun initChannelMembersInfo() {
@@ -111,6 +110,12 @@ class ChannelActivity : AppCompatActivity() {
         }
     }
 
+    private fun initMessageRecyclerView() {
+        adapter = ChannelMessageAdapter()
+        binding.recyclerView.adapter = adapter
+        binding.recyclerView.layoutManager = LinearLayoutManager(this)
+    }
+
     private fun initSharedSecretKey() {
         val sharedPreferences = getSharedPreferences(PREFERENCE_NAME_HASH, Context.MODE_PRIVATE)
         //channel 에 해당하는 Key 가 shared preference 에 있는 경우
@@ -133,7 +138,6 @@ class ChannelActivity : AppCompatActivity() {
                 Log.e(TAG, "firebase database initialize error")
                 return
             }
-
             Log.i(TAG, "shared preference 에 키 없음")
             val data = listOf(CHANNEL_META_DATA)
             GroupChannel.getChannel(channelURL) { channel, e ->
@@ -150,12 +154,15 @@ class ChannelActivity : AppCompatActivity() {
                         return@getMetaData
                     }
                     Log.i(TAG, "get channel metadata")
-                    val privateKey = KeyStoreUtil().getPrivateKeyFromKeyStore(USER_ID)
+
+                    //TODO 키스토어에 내 private 키가 없을 경우 예외 처리가 필요함
+                    val privateKey: PrivateKey = KeyStoreUtil().getPrivateKeyFromKeyStore(USER_ID) ?: return@getMetaData
+
                     val metadata = metaDataMap!!.values.toString().substring(1 until metaDataMap.values.toString().length).let { data ->
                         Base64.decode(data, Base64.DEFAULT)
                     }
                     createSharedHash(
-                        privateKey = privateKey!!,
+                        privateKey = privateKey,
                         invitedUserId = partnerId!!,
                         randomNumbers = metadata,
                         preferenceKey = channelURL
@@ -164,15 +171,9 @@ class ChannelActivity : AppCompatActivity() {
             }
         }
     }
-
-    private fun initMessageRecyclerView() {
-        adapter = ChannelMessageAdapter()
-        binding.recyclerView.adapter = adapter
-        binding.recyclerView.layoutManager = LinearLayoutManager(this)
-    }
 //[END Init]
 
-//[START Firestore: Key]
+//[START Firestore: Public Key]
     private fun createSharedHash(privateKey: PrivateKey, invitedUserId: String, randomNumbers: ByteArray, preferenceKey: String) {
         var affineX: BigInteger?
         var affineY: BigInteger?
@@ -211,7 +212,7 @@ class ChannelActivity : AppCompatActivity() {
                 Log.e(TAG, "Error getting documents from firebase DB : $exception")
             }
     }
-//[END Firestore: Key]
+//[END Firestore: Public Key]
 
 //[START Read message]
     private fun readAllMessages() {
@@ -284,7 +285,7 @@ class ChannelActivity : AppCompatActivity() {
     }
 //[END Read message]
 
-//[START Clicked event]
+//[START Click Event]
     fun onSendButtonClicked() {
         val userMessage: String = binding.messageEditText.text.toString()
         val encryptedMessage = AESUtil().encryptionCBCMode(userMessage, hash)
@@ -314,7 +315,6 @@ class ChannelActivity : AppCompatActivity() {
                 adapter.submitList(encryptionMessageList)
                 adapter.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can.
                 adjustRecyclerViewPosition()
-
             }
         }
     }
@@ -376,7 +376,7 @@ class ChannelActivity : AppCompatActivity() {
             .create()
             .show()
     }
-//[END Clicked event]
+//[END Click Event]
 
 //[START Util]
     private fun adjustRecyclerViewPosition() {
