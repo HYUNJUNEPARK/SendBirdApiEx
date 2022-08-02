@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import com.google.firebase.firestore.FirebaseFirestore
@@ -54,6 +55,10 @@ class LoginActivity : AppCompatActivity() {
         db = null
     }
 
+    override fun onResume() {
+        super.onResume()
+        binding.progressBarLayout.visibility = View.GONE
+    }
 //[START init]
     private fun initializeSendBirdSdk() {
         SendbirdChat.init(
@@ -117,13 +122,8 @@ class LoginActivity : AppCompatActivity() {
             return
         }
 
-
-
-
-        //TODO progressbar
-
-
-
+        //TODO
+        binding.progressBarLayout.visibility = View.VISIBLE
 
         SendbirdChat.connect(userId) { user, e ->
             USER_NICKNAME = binding.nickNameEditText.text.toString().ifEmpty { userId }
@@ -231,11 +231,12 @@ class LoginActivity : AppCompatActivity() {
         db!!.collection(FIRE_STORE_DOCUMENT_PUBLIC_KEY)
             .add(user)
             .addOnSuccessListener {
-                showToast("키 업로드 성공")
+                showToast("퍼블릭키 업로드")
             }
             .addOnFailureListener { e ->
                 Log.e(TAG, "Error adding document", e)
-                showToast("키 업로드 실패")
+                showToast("퍼블릭키 업로드 실패")
+                finish()
             }
     }
 //[END Firestore: Public Key]
