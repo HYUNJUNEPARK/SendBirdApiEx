@@ -19,9 +19,12 @@
         android:theme="@style/Theme.SendBirdApiSampleApp"
         tools:targetApi="31">
         <activity
-            android:name=".activity.ChannelActivity"
-            android:windowSoftInputMode="adjustPan"
+            android:name=".activity.MyChannelActivity"
             android:exported="false" />
+        <activity
+            android:name=".activity.ChannelActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".activity.LoginActivity"
             android:exported="true">
@@ -33,7 +36,8 @@
         </activity>
         <activity
             android:name=".activity.MainActivity"
-            android:windowSoftInputMode="adjustNothing"
-            android:exported="false" />
+            android:exported="false"
+            android:windowSoftInputMode="adjustNothing" />
     </application>
+
 </manifest>

@@ -68,12 +68,19 @@ class ChannelActivity : AppCompatActivity() {
 
         if(intent.action != CHANNEL_ACTIVITY_INTENT_ACTION) return
 
+
+
         db = Firebase.firestore
         channelURL = intent.getStringExtra(INTENT_NAME_CHANNEL_URL)!!
 
         initChannelMembersInfo()
         initMessageRecyclerView()
         initSharedSecretKey()
+
+        if (!KeyStoreUtil().isKeyInKeyStore(USER_ID)) {
+            binding.decryptionButton.isEnabled = false
+        }
+
         readAllMessages()
         messageReceived()
     }
@@ -117,6 +124,9 @@ class ChannelActivity : AppCompatActivity() {
     }
 
     private fun initSharedSecretKey() {
+        //내 키가 기기에 없다면(다른 기기로 로그인했다면) 공유키를 생성할 필요가 없음
+        if (! KeyStoreUtil().isKeyInKeyStore(USER_ID)) return
+
         val sharedPreferences = getSharedPreferences(PREFERENCE_NAME_HASH, Context.MODE_PRIVATE)
         //channel 에 해당하는 Key 가 shared preference 에 있는 경우
         //-> Value 인 Hash 를 갖고 Shared Key 를 생성
@@ -138,7 +148,7 @@ class ChannelActivity : AppCompatActivity() {
                 Log.e(TAG, "firebase database initialize error")
                 return
             }
-            Log.i(TAG, "shared preference 에 키 없음")
+            Log.i(TAG, "shared preference 에 공유키 키 없음")
             val data = listOf(CHANNEL_META_DATA)
             GroupChannel.getChannel(channelURL) { channel, e ->
                 //var _metadata: String? = null
@@ -155,9 +165,7 @@ class ChannelActivity : AppCompatActivity() {
                     }
                     Log.i(TAG, "get channel metadata")
 
-                    //TODO 키스토어에 내 private 키가 없을 경우 예외 처리가 필요함
                     val privateKey: PrivateKey = KeyStoreUtil().getPrivateKeyFromKeyStore(USER_ID) ?: return@getMetaData
-
                     val metadata = metaDataMap!!.values.toString().substring(1 until metaDataMap.values.toString().length).let { data ->
                         Base64.decode(data, Base64.DEFAULT)
                     }

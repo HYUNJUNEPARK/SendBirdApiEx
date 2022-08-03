@@ -136,18 +136,19 @@ class LoginActivity : AppCompatActivity() {
                 return@connect
             }
 
-            //update user nickname
-            val params = UserUpdateParams().apply {
-                nickname = USER_NICKNAME
-            }
-            SendbirdChat.updateCurrentUserInfo(params) { exception ->
-                if (exception != null)  {
-                    binding.progressBarLayout.visibility = View.GONE
-                    Log.e(TAG, "update Current UserInfo Error : $exception")
-                    showToast("유저 닉네임 업데이트 에러 : $exception")
-                    return@updateCurrentUserInfo
-                }
-            }
+//TODO 닉네임 등록 코드 다른 곳으로 기능 이전(로그인 처리가 더 느려짐)
+//            update user nickname
+//            val params = UserUpdateParams().apply {
+//                nickname = USER_NICKNAME
+//            }
+//            SendbirdChat.updateCurrentUserInfo(params) { exception ->
+//                if (exception != null)  {
+//                    binding.progressBarLayout.visibility = View.GONE
+//                    Log.e(TAG, "update Current UserInfo Error : $exception")
+//                    showToast("유저 닉네임 업데이트 에러 : $exception")
+//                    return@updateCurrentUserInfo
+//                }
+//            }
 
             updatePublicKeyOnServer(USER_ID)
         }

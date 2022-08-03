@@ -133,11 +133,14 @@
             </LinearLayout>
 
             <View
+                android:id="@+id/div3"
                 android:layout_width="match_parent"
                 android:layout_height="2dp"
                 android:layout_marginTop="5dp"
                 android:background="@color/gray" />
         </LinearLayout>
+
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

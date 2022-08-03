@@ -2,7 +2,7 @@ package com.konai.sendbirdapisampleapp.fragment
 
 import android.content.Intent
 import com.konai.sendbirdapisampleapp.R
-import com.konai.sendbirdapisampleapp.activity.ChannelActivity
+import com.konai.sendbirdapisampleapp.activity.MyChannelActivity
 import com.konai.sendbirdapisampleapp.databinding.FragmentFriendBinding
 import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
 import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_CHANNEL_URL
@@ -36,7 +36,7 @@ class FriendFragment : BaseFragment<FragmentFriendBinding>(R.layout.fragment_fri
             userIds = users
             operatorUserIds = users
             isDistinct = true
-            name = "( 나 ) $USER_ID "
+            name = "나와의 채팅"
             isSuper = false
         }
         GroupChannel.createChannel(params) { channel, e ->
@@ -44,7 +44,7 @@ class FriendFragment : BaseFragment<FragmentFriendBinding>(R.layout.fragment_fri
                 showToast("$e")
             }
             if (channel != null) {
-                val intent = Intent(requireContext(), ChannelActivity::class.java)
+                val intent = Intent(requireContext(), MyChannelActivity::class.java)
                 intent.putExtra(INTENT_NAME_CHANNEL_URL, channel.url)
                 intent.putExtra(INTENT_NAME_USER_ID, USER_ID)
                 intent.putExtra(INTENT_NAME_USER_NICK, USER_NICKNAME)
