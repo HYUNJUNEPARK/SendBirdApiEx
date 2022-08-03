@@ -18,12 +18,18 @@ import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_AFFINE_X
 import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_AFFINE_Y
 import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_USER_ID
 import com.konai.sendbirdapisampleapp.util.Constants.PREFERENCE_NAME_HASH
+import com.konai.sendbirdapisampleapp.util.Constants.ALL_MESSAGE_RECEIVE_HANDLER
 import com.konai.sendbirdapisampleapp.util.Constants.TAG
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.util.Extension.showToast
+import com.sendbird.android.SendbirdChat
+import com.sendbird.android.channel.BaseChannel
 import com.sendbird.android.channel.GroupChannel
 import com.sendbird.android.channel.query.GroupChannelListQueryOrder
 import com.sendbird.android.channel.query.MyMemberStateFilter
+import com.sendbird.android.handler.GroupChannelHandler
+import com.sendbird.android.message.BaseMessage
+import com.sendbird.android.message.UserMessage
 import com.sendbird.android.params.GroupChannelCreateParams
 import com.sendbird.android.params.GroupChannelListQueryParams
 import java.math.BigInteger
@@ -37,6 +43,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         super.initView()
 
         initRecyclerView()
+        initMessageHandler()
 
         if (!KeyStoreUtil().isKeyInKeyStore(USER_ID)) {
             binding.createChannelLayoutButton.isEnabled = false
@@ -50,7 +57,28 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
     override fun onResume() {
         super.onResume()
-        initChannelList()
+        initMessageHandler()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        SendbirdChat.removeChannelHandler(ALL_MESSAGE_RECEIVE_HANDLER)
+    }
+
+    private fun initMessageHandler() {
+        SendbirdChat.addChannelHandler(
+            ALL_MESSAGE_RECEIVE_HANDLER,
+            object : GroupChannelHandler() {
+                override fun onMessageReceived(channel: BaseChannel, message: BaseMessage) {
+                    when (message) {
+                        is UserMessage -> {
+                            showToast("상대방 메시지 수신")
+                            initChannelList()
+                        }
+                    }
+                }
+            }
+        )
     }
 
     private fun initRecyclerView() {
@@ -81,13 +109,14 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
             //TODO lastMessageTime Type string -> long
             for (idx in channels.indices) {
+                channels[idx].unreadMessageCount
                 _channelList.add(
                     ChannelListModel(
                         name = channels[idx].name,
                         url = channels[idx].url,
                         lastMessage = channels[idx].lastMessage?.message,
                         lastMessageTime = channels[idx].lastMessage?.createdAt,
-                        memberSize = channels[idx].members.size
+                        memberSize = channels[idx].memberCount
                     )
                 )
             }
@@ -164,7 +193,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                         val publicKey: PublicKey = KeyStoreUtil().createPublicKeyByECPoint(affineX!!, affineY!!)
                         val sharedSecretHash: ByteArray = KeyProvider().createSharedSecretHash(
                             privateKey,
-                            publicKey!!,
+                            publicKey,
                             randomNumbers
                         )
 

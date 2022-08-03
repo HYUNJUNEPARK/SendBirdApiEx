@@ -9,15 +9,12 @@ import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.adapter.ChannelMessageAdapter
 import com.konai.sendbirdapisampleapp.databinding.ActivityMyChannelBinding
 import com.konai.sendbirdapisampleapp.model.MessageModel
-import com.konai.sendbirdapisampleapp.strongbox.AESUtil
 import com.konai.sendbirdapisampleapp.util.Constants
+import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
+import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_CHANNEL_URL
+import com.konai.sendbirdapisampleapp.util.Constants.TAG
 import com.konai.sendbirdapisampleapp.util.Extension.showToast
-import com.sendbird.android.SendbirdChat
-import com.sendbird.android.channel.BaseChannel
 import com.sendbird.android.channel.GroupChannel
-import com.sendbird.android.handler.GroupChannelHandler
-import com.sendbird.android.message.BaseMessage
-import com.sendbird.android.message.UserMessage
 import com.sendbird.android.params.PreviousMessageListQueryParams
 import com.sendbird.android.params.UserMessageCreateParams
 
@@ -32,8 +29,8 @@ class MyChannelActivity : AppCompatActivity() {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_my_channel)
         binding.myChannelActivity = this
 
-        if (intent.action != Constants.CHANNEL_ACTIVITY_INTENT_ACTION) return
-        channelURL = intent.getStringExtra(Constants.INTENT_NAME_CHANNEL_URL)!!
+        if (intent.action != CHANNEL_ACTIVITY_INTENT_ACTION) return
+        channelURL = intent.getStringExtra(INTENT_NAME_CHANNEL_URL)!!
 
         initMessageRecyclerView()
         readAllMessages()
@@ -52,7 +49,7 @@ class MyChannelActivity : AppCompatActivity() {
         GroupChannel.getChannel(channelURL) { channel, e ->
             if (e != null) {
                 showToast("Get Channel Error : $e")
-                Log.e(Constants.TAG, "Get Channel Error : $e")
+                Log.e(TAG, "Get Channel Error : $e")
                 return@getChannel
             }
 
@@ -61,7 +58,7 @@ class MyChannelActivity : AppCompatActivity() {
             )
             query.load { messages, exception ->
                 if (exception != null) {
-                    Log.e(Constants.TAG, "Load Previous message Error : $exception")
+                    Log.e(TAG, "Load Previous message Error : $exception")
                     showToast("Load Message Error : $exception")
                     return@load
                 }
@@ -81,41 +78,6 @@ class MyChannelActivity : AppCompatActivity() {
                 adapter.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can.
             }
         }
-    }
-
-    //TODO 문제가 있을것 같음 !!!!!! - ChannelActivity
-    private fun messageReceived() {
-        SendbirdChat.addChannelHandler(
-            Constants.RECEIVE_MESSAGE_HANDLER,
-            object : GroupChannelHandler() {
-                override fun onMessageReceived(channel: BaseChannel, message: BaseMessage) {
-                    when (message) {
-                        is UserMessage -> {
-                            //TODO 생각해볼 것 : 상대방이 메시지 보낼 때 마다 호출 -> channelListFragment 에서 message.message 토스트가 뜨는것이 확인됨
-                            //TODO 여기서 신호가 오면 채팅 리스트를 바꿔줌
-                            showToast("상대방 메시지 수신")
-
-                            messageList.add(
-                                MessageModel(
-                                    message = message.message,
-                                    sender = message.sender!!.userId,
-                                    messageId = message.messageId,
-                                    createdAt = message.createdAt
-                                )
-                            )
-                            adapter.submitList(messageList)
-                            adapter.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can.
-
-                            binding.recyclerView.run { //리사이클러뷰 위치 조정
-                                postDelayed({
-                                    scrollToPosition(adapter!!.itemCount - 1)
-                                }, 300)
-                            }
-                        }
-                    }
-                }
-            }
-        )
     }
 //[END Read message]
 

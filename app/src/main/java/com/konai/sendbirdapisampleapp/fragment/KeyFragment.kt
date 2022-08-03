@@ -14,13 +14,13 @@ class KeyFragment : BaseFragment<FragmentBlankBinding>(R.layout.fragment_blank) 
     override fun initView() {
         super.initView()
 
-        if(db != null) {
-            initKeyStoreKeyState()
-            initServerKeyStateIcon()
+        if (db == null) {
+            showToast("Firebase DB initialize error")
+            return
         }
-        else {
-            showToast("Firebase DB initialize failed")
-        }
+
+        initKeyStoreKeyState()
+        initServerKeyStateIcon()
     }
 
     private fun initKeyStoreKeyState() {

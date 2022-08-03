@@ -32,7 +32,6 @@ import com.sendbird.android.SendbirdChat
 import com.sendbird.android.exception.SendbirdException
 import com.sendbird.android.handler.InitResultHandler
 import com.sendbird.android.params.InitParams
-import com.sendbird.android.params.UserUpdateParams
 import java.security.PublicKey
 import java.security.interfaces.ECPublicKey
 

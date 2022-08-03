@@ -27,9 +27,9 @@ import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_AFFINE_X
 import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_AFFINE_Y
 import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_USER_ID
 import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_CHANNEL_URL
+import com.konai.sendbirdapisampleapp.util.Constants.LOGIN_ACCOUNT_MESSAGE_RECEIVE_HANDLER
 import com.konai.sendbirdapisampleapp.util.Constants.MY_PERSONAL_CHANNEL
 import com.konai.sendbirdapisampleapp.util.Constants.PREFERENCE_NAME_HASH
-import com.konai.sendbirdapisampleapp.util.Constants.RECEIVE_MESSAGE_HANDLER
 import com.konai.sendbirdapisampleapp.util.Constants.TAG
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.util.Constants.USER_NICKNAME
@@ -40,7 +40,6 @@ import com.sendbird.android.channel.BaseChannel
 import com.sendbird.android.channel.GroupChannel
 import com.sendbird.android.handler.GroupChannelHandler
 import com.sendbird.android.message.BaseMessage
-import com.sendbird.android.message.UserMessage
 import com.sendbird.android.params.PreviousMessageListQueryParams
 import com.sendbird.android.params.UserMessageCreateParams
 import com.sendbird.android.user.Member
@@ -77,9 +76,20 @@ class ChannelActivity : AppCompatActivity() {
 
         if (!KeyStoreUtil().isKeyInKeyStore(USER_ID)) {
             binding.decryptionButton.isEnabled = false
+            binding.sendButton.isEnabled = false
+            binding.sendButton.setImageResource(R.drawable.ic_baseline_cancel_schedule_send_24)
         }
         readAllMessages()
-        messageReceived()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        initMessageHandler()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        SendbirdChat.removeChannelHandler(LOGIN_ACCOUNT_MESSAGE_RECEIVE_HANDLER)
     }
 
     override fun onDestroy() {
@@ -122,11 +132,11 @@ class ChannelActivity : AppCompatActivity() {
 
     private fun initSharedSecretKey() {
         //내 키가 기기에 없다면(다른 기기로 로그인했다면) 공유키를 생성할 필요가 없음
-        if (! KeyStoreUtil().isKeyInKeyStore(USER_ID)) return
+        if (!KeyStoreUtil().isKeyInKeyStore(USER_ID)) return
 
-        val sharedPreferences = getSharedPreferences(PREFERENCE_NAME_HASH, Context.MODE_PRIVATE)
         //channel 에 해당하는 Key 가 shared preference 에 있는 경우
         //-> Value 인 Hash 를 갖고 Shared Key 를 생성
+        val sharedPreferences = getSharedPreferences(PREFERENCE_NAME_HASH, Context.MODE_PRIVATE)
         if(sharedPreferences.contains(channelURL)) {
             val data: String? = sharedPreferences.getString(channelURL, "empty hash")
             if (data != "empty hash") {
@@ -162,10 +172,10 @@ class ChannelActivity : AppCompatActivity() {
                     }
                     Log.i(TAG, "get channel metadata")
 
-                    val privateKey: PrivateKey = KeyStoreUtil().getPrivateKeyFromKeyStore(USER_ID) ?: return@getMetaData
                     val metadata = metaDataMap!!.values.toString().substring(1 until metaDataMap.values.toString().length).let { data ->
                         Base64.decode(data, Base64.DEFAULT)
                     }
+                    val privateKey: PrivateKey = KeyStoreUtil().getPrivateKeyFromKeyStore(USER_ID)!!
                     createSharedHash(
                         privateKey = privateKey,
                         invitedUserId = partnerId!!,
@@ -175,6 +185,30 @@ class ChannelActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun initMessageHandler() {
+        SendbirdChat.addChannelHandler(
+            LOGIN_ACCOUNT_MESSAGE_RECEIVE_HANDLER,
+            object : GroupChannelHandler() {
+                override fun onMessageReceived(channel: BaseChannel, message: BaseMessage) {
+                    when (channel.url) {
+                        channelURL -> {
+                            encryptionMessageList.add(
+                                MessageModel(
+                                    message = message.message,
+                                    sender = message.sender!!.userId,
+                                    messageId = message.messageId,
+                                    createdAt = message.createdAt
+                                )
+                            )
+                            adapter.submitList(encryptionMessageList)
+                            adapter.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can.
+                        }
+                    }
+                }
+            }
+        )
     }
 //[END Init]
 
@@ -217,6 +251,9 @@ class ChannelActivity : AppCompatActivity() {
                 Log.e(TAG, "Error getting documents from firebase DB : $exception")
             }
     }
+
+
+
 //[END Firestore: Public Key]
 
 //[START Read message]
@@ -253,41 +290,6 @@ class ChannelActivity : AppCompatActivity() {
                 adapter.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can.
             }
         }
-    }
-
-    //TODO 문제가 있을것 같음 !!!!!! - MyChannelActivity
-    private fun messageReceived() {
-        SendbirdChat.addChannelHandler(
-            RECEIVE_MESSAGE_HANDLER,
-            object : GroupChannelHandler() {
-                override fun onMessageReceived(channel: BaseChannel, message: BaseMessage) {
-                    when (message) {
-                        is UserMessage -> {
-                            //TODO 생각해볼 것 : 상대방이 메시지 보낼 때 마다 호출 -> channelListFragment 에서 message.message 토스트가 뜨는것이 확인됨
-                            //TODO 여기서 신호가 오면 채팅 리스트를 바꿔줌
-                            showToast("상대방 메시지 수신")
-
-                            encryptionMessageList.add(
-                                MessageModel(
-                                    message = message.message,
-                                    sender = message.sender!!.userId,
-                                    messageId = message.messageId,
-                                    createdAt = message.createdAt
-                                )
-                            )
-                            adapter.submitList(encryptionMessageList)
-                            adapter.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can.
-
-                            binding.recyclerView.run { //리사이클러뷰 위치 조정
-                                postDelayed({
-                                    scrollToPosition(adapter!!.itemCount - 1)
-                                }, 300)
-                            }
-                        }
-                    }
-                }
-            }
-        )
     }
 //[END Read message]
 

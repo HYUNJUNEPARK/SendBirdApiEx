@@ -27,8 +27,10 @@ object Constants {
     const val MY_PERSONAL_CHANNEL = 0
     const val CONVERSATION_CHANNEL = 1
 
-    //handler id
-    const val RECEIVE_MESSAGE_HANDLER = "messageHandler"
+    //Message handler id
+    const val ALL_MESSAGE_RECEIVE_HANDLER = "allMessageHandler"
+    const val LOGIN_ACCOUNT_MESSAGE_RECEIVE_HANDLER = "accountMessageHandler"
+
 
     //firebase
     const val FIRE_STORE_FIELD_USER_ID = "userId"

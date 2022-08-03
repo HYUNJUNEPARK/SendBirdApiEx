@@ -23,7 +23,7 @@
                                 <PersistentState>
                                   <option name="values">
                                     <map>
-                                      <entry key="url" value="file:$USER_HOME$/Library/Android/sdk/icons/material/materialicons/settings/baseline_settings_24.xml" />
+                                      <entry key="url" value="file:$USER_HOME$/Library/Android/sdk/icons/material/materialicons/cancel_schedule_send/baseline_cancel_schedule_send_24.xml" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -33,7 +33,8 @@
                         </option>
                         <option name="values">
                           <map>
-                            <entry key="outputName" value="ic_baseline_settings_24" />
+                            <entry key="color" value="7d7b7b" />
+                            <entry key="outputName" value="ic_baseline_cancel_schedule_send_24" />
                           </map>
                         </option>
                       </PersistentState>

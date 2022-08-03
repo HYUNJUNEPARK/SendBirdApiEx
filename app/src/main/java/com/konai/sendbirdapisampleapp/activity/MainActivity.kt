@@ -1,6 +1,8 @@
 package com.konai.sendbirdapisampleapp.activity
 
 import android.os.Bundle
+import android.util.Log
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import com.konai.sendbirdapisampleapp.R
@@ -8,6 +10,11 @@ import com.konai.sendbirdapisampleapp.databinding.ActivityMainBinding
 import com.konai.sendbirdapisampleapp.fragment.KeyFragment
 import com.konai.sendbirdapisampleapp.fragment.ChannelListFragment
 import com.konai.sendbirdapisampleapp.fragment.FriendFragment
+import com.konai.sendbirdapisampleapp.strongbox.KeyStoreUtil
+import com.konai.sendbirdapisampleapp.util.Constants
+import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
+import com.konai.sendbirdapisampleapp.util.Extension.showToast
+import com.sendbird.android.channel.GroupChannel
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -23,6 +30,18 @@ class MainActivity : AppCompatActivity() {
 
         initFragment()
         initBottomNavigation()
+        initAlertDialog()
+    }
+
+    private fun initAlertDialog() {
+        if (!KeyStoreUtil().isKeyInKeyStore(USER_ID)) {
+            AlertDialog.Builder(this)
+                .setTitle("경고")
+                .setMessage("계정에 등록된 기기가 아닙니다. \n채널 생성/메시지 송신/메시지 복호화가 불가능합니다. ")
+                .setPositiveButton("확인") { _, _ -> }
+                .create()
+                .show()
+        }
     }
 
     private fun initFragment() {
