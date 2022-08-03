@@ -5,7 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.databinding.ActivityMainBinding
-import com.konai.sendbirdapisampleapp.fragment.BlankFragment
+import com.konai.sendbirdapisampleapp.fragment.KeyFragment
 import com.konai.sendbirdapisampleapp.fragment.ChannelListFragment
 import com.konai.sendbirdapisampleapp.fragment.FriendFragment
 
@@ -14,7 +14,7 @@ class MainActivity : AppCompatActivity() {
     private val fragmentManager = supportFragmentManager
     private var friendFragment: FriendFragment? = null
     private var channelListFragment: ChannelListFragment? = null
-    private var blankFragment: BlankFragment? = null
+    private var blankFragment: KeyFragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 R.id.blank -> {
                     if (blankFragment == null) {
-                        blankFragment = BlankFragment()
+                        blankFragment = KeyFragment()
                         fragmentManager.beginTransaction()
                             .add(R.id.fragmentContainer, blankFragment!!)
                             .commit()

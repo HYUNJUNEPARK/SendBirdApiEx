@@ -37,8 +37,8 @@ import java.security.PublicKey
 import java.security.interfaces.ECPublicKey
 
 class LoginActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityLoginBinding
     private var db: FirebaseFirestore? = null
+    private lateinit var binding: ActivityLoginBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,6 +100,7 @@ class LoginActivity : AppCompatActivity() {
                             }
                         }
                         catch (e: Exception) {
+                            binding.progressBarLayout.visibility = View.GONE
                             showToast("Can't try to search Ui kit app error : $e")
                             Log.e(TAG, "Can't try to search Ui kit app error : $e")
                             isExist = false
@@ -122,7 +123,6 @@ class LoginActivity : AppCompatActivity() {
             return
         }
 
-        //TODO
         binding.progressBarLayout.visibility = View.VISIBLE
 
         SendbirdChat.connect(userId) { user, e ->
@@ -132,6 +132,7 @@ class LoginActivity : AppCompatActivity() {
             if (e != null) {
                 showToast("로그인 에러 : $e")
                 Log.e(TAG, ": $e")
+                binding.progressBarLayout.visibility = View.GONE
                 return@connect
             }
 
@@ -141,11 +142,13 @@ class LoginActivity : AppCompatActivity() {
             }
             SendbirdChat.updateCurrentUserInfo(params) { exception ->
                 if (exception != null)  {
-                    Log.e(TAG, ": updateCurrentUserInfo Error : $exception")
+                    binding.progressBarLayout.visibility = View.GONE
+                    Log.e(TAG, "update Current UserInfo Error : $exception")
                     showToast("유저 닉네임 업데이트 에러 : $exception")
                     return@updateCurrentUserInfo
                 }
             }
+
             updatePublicKeyOnServer(USER_ID)
         }
     }
@@ -170,7 +173,7 @@ class LoginActivity : AppCompatActivity() {
             .addOnSuccessListener { result ->
                 //Firestore 에 어떤 데이터도 없을 때(따로 처리 안해주면 앱 크래시)
                 if (result.isEmpty) {
-                    Log.i(TAG, "Empty Firebase DB")
+                    Log.i(TAG, "Empty Firebase DB / 퍼블릭 키 업데이트")
                     updatePublicKeyToKeyStoreAndServer(userId)
                     return@addOnSuccessListener
                 }
@@ -190,6 +193,7 @@ class LoginActivity : AppCompatActivity() {
                 updatePublicKeyToKeyStoreAndServer(userId)
             }
             .addOnFailureListener { exception ->
+                binding.progressBarLayout.visibility = View.GONE
                 showToast("키 가져오기 실패")
                 Log.e(TAG, "Error getting documents from firebase DB : $exception")
             }
@@ -231,9 +235,10 @@ class LoginActivity : AppCompatActivity() {
         db!!.collection(FIRE_STORE_DOCUMENT_PUBLIC_KEY)
             .add(user)
             .addOnSuccessListener {
-                showToast("퍼블릭키 업로드")
+                showToast("퍼블릭키 업로드 성공")
             }
             .addOnFailureListener { e ->
+                binding.progressBarLayout.visibility = View.GONE
                 Log.e(TAG, "Error adding document", e)
                 showToast("퍼블릭키 업로드 실패")
                 finish()

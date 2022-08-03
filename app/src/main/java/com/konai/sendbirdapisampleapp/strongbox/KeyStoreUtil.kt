@@ -63,6 +63,10 @@ class KeyStoreUtil {
         return (keyStoreEntry as KeyStore.PrivateKeyEntry).privateKey
     }
 
+    fun isKeyInKeyStore(keyStoreAlias: String): Boolean {
+        return keyStore.containsAlias(keyStoreAlias)
+    }
+
 //Delete
 fun deleteKeyStoreKeyPair(keyStoreAlias: String) {
     try {
