@@ -68,8 +68,6 @@ class ChannelActivity : AppCompatActivity() {
 
         if(intent.action != CHANNEL_ACTIVITY_INTENT_ACTION) return
 
-
-
         db = Firebase.firestore
         channelURL = intent.getStringExtra(INTENT_NAME_CHANNEL_URL)!!
 

@@ -81,13 +81,13 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
             //TODO lastMessageTime Type string -> long
             for (idx in channels.indices) {
-                Log.d(TAG, "initChannelList: ${channels[idx].members.size}")
                 _channelList.add(
                     ChannelListModel(
                         name = channels[idx].name,
                         url = channels[idx].url,
                         lastMessage = channels[idx].lastMessage?.message,
-                        lastMessageTime = channels[idx].lastMessage?.createdAt
+                        lastMessageTime = channels[idx].lastMessage?.createdAt,
+                        memberSize = channels[idx].members.size
                     )
                 )
             }

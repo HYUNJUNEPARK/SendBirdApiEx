@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.konai.sendbirdapisampleapp.activity.ChannelActivity
+import com.konai.sendbirdapisampleapp.activity.MyChannelActivity
 import com.konai.sendbirdapisampleapp.databinding.ItemChatChannelListBinding
 import com.konai.sendbirdapisampleapp.model.ChannelListModel
 import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
@@ -25,6 +26,15 @@ class ChannelListAdapter(val context: Context) : RecyclerView.Adapter<ChannelLis
 
         init {
             binding.root.setOnClickListener {
+                //Go to MyChannel
+                if (_myData.memberSize == 1) {
+                    val intent = Intent(context, MyChannelActivity::class.java)
+                    intent.putExtra(INTENT_NAME_CHANNEL_URL, "${_myData.url}")
+                    intent.action = CHANNEL_ACTIVITY_INTENT_ACTION
+                    context.startActivity(intent)
+                    return@setOnClickListener
+                }
+                //Go to Group Channel
                 val intent = Intent(context, ChannelActivity::class.java)
                 intent.putExtra(INTENT_NAME_CHANNEL_URL, "${_myData.url}")
                 intent.action = CHANNEL_ACTIVITY_INTENT_ACTION
