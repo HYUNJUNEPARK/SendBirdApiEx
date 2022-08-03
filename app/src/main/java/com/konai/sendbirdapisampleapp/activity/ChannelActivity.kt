@@ -78,7 +78,6 @@ class ChannelActivity : AppCompatActivity() {
         if (!KeyStoreUtil().isKeyInKeyStore(USER_ID)) {
             binding.decryptionButton.isEnabled = false
         }
-
         readAllMessages()
         messageReceived()
     }
@@ -256,6 +255,7 @@ class ChannelActivity : AppCompatActivity() {
         }
     }
 
+    //TODO 문제가 있을것 같음 !!!!!! - MyChannelActivity
     private fun messageReceived() {
         SendbirdChat.addChannelHandler(
             RECEIVE_MESSAGE_HANDLER,
