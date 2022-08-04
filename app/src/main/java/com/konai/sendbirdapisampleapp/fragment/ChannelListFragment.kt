@@ -1,7 +1,6 @@
 package com.konai.sendbirdapisampleapp.fragment
 
 import android.content.Context.MODE_PRIVATE
-import android.content.SharedPreferences
 import android.util.Base64
 import android.util.Log
 import android.widget.Toast
@@ -44,15 +43,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
         initRecyclerView()
         initMessageHandler()
-
-        if (!KeyStoreUtil().isKeyInKeyStore(USER_ID)) {
-            binding.createChannelLayoutButton.isEnabled = false
-        }
-        else {
-            binding.createChannelLayoutButton.setOnClickListener {
-                onCreateChannelButtonClicked()
-            }
-        }
+        initCreateChannelButtonState()
     }
 
     override fun onResume() {
@@ -65,6 +56,16 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         SendbirdChat.removeChannelHandler(ALL_MESSAGE_RECEIVE_HANDLER)
     }
 
+//[START init]
+    private fun initRecyclerView() = with(binding) {
+        initChannelList()
+        val adapter = ChannelListAdapter(requireContext()).apply {
+            channelList = _channelList
+        }
+        chatListRecyclerView.adapter = adapter
+        chatListRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+    }
+
     private fun initMessageHandler() {
         SendbirdChat.addChannelHandler(
             ALL_MESSAGE_RECEIVE_HANDLER,
@@ -72,7 +73,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                 override fun onMessageReceived(channel: BaseChannel, message: BaseMessage) {
                     when (message) {
                         is UserMessage -> {
-                            showToast("상대방 메시지 수신")
+                            showToast("상대방 메시지 수신 : 채널 리스트 갱신")
                             initChannelList()
                         }
                     }
@@ -81,13 +82,15 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         )
     }
 
-    private fun initRecyclerView() {
-        initChannelList()
-
-        val adapter = ChannelListAdapter(requireContext())
-        adapter.channelList = _channelList
-        binding.chatListRecyclerView.adapter = adapter
-        binding.chatListRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+    private fun initCreateChannelButtonState() = with(binding) {
+        if (!KeyStoreUtil().isKeyInKeyStore(USER_ID)) {
+            createChannelLayoutButton.isEnabled = false
+        }
+        else {
+            createChannelLayoutButton.setOnClickListener {
+                onCreateChannelButtonClicked()
+            }
+        }
     }
 
     private fun initChannelList() {
@@ -106,8 +109,6 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
             if (channels!!.isEmpty()) return@next
 
             _channelList.clear() //to make the list empty
-
-            //TODO lastMessageTime Type string -> long
             for (idx in channels.indices) {
                 channels[idx].unreadMessageCount
                 _channelList.add(
@@ -120,15 +121,16 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                     )
                 )
             }
-
-            //TODO It will always be more efficient to use more specific change events if you can. Rely on `notifyDataSetChanged` as a last resort.
-            binding.chatListRecyclerView.adapter?.notifyDataSetChanged()
+            binding.chatListRecyclerView.adapter?.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can. Rely on `notifyDataSetChanged` as a last resort.
         }
     }
+//[END init]
 
-    //TODO dataBinding onClicked
+//[START Click event]
     private fun onCreateChannelButtonClicked() {
-        val invitedUserId = binding.userIdInputEditText.text.toString()
+        val invitedUserId = binding.userIdInputEditText.text.toString().ifEmpty { return }
+
+        //TODO USER CHECK
         val users: List<String> = listOf(USER_ID, invitedUserId)
         val params = GroupChannelCreateParams().apply {
             userIds = users
@@ -139,16 +141,40 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         }
         GroupChannel.createChannel(params) { channel, e ->
             if (e != null) {
-                showToast("$e")
+                showToast("channel create error : $e")
+                return@createChannel
             }
 
-            if (channel != null) {
-                Toast.makeText(requireContext(), "채널 생성", Toast.LENGTH_SHORT).show()
-                createChannelMetadataAndSharedKey(channel, invitedUserId)
+            if (channel != null && db != null) {
+                if (channel.name == "나와의 채팅") {
+                    showToast("등록되지 않은 사용자입니다.")
+                    return@createChannel
+                }
 
+                if (channel.members.size == 1) {
+                    showToast("등록되지 않은 사용자입니다.")
+                    channel.delete { exception ->
+                        if (exception != null) {
+                            Log.e(TAG, "can't delete dummy channel: $exception")
+                        }
+                    }
+                    return@createChannel
+                }
+                Toast.makeText(requireContext(), "채널 생성", Toast.LENGTH_SHORT).show()
+
+
+                //progress visible
+                //suspend 함수로 묶어버림
+                createChannelMetadataAndSharedKey(channel, invitedUserId)
                 initChannelList()
+                //progress invisible
+
+                //액티비티 이동
+
+
 
 //TODO 액티비티로 이동하면 처음 sp 값이 초기화가 안됨 -> 해결할 방법 필요함
+// hash 까지 모두 생성되고 나서 이동하는 걸로 수정
 //                val intent = Intent(requireContext(), ChannelActivity::class.java)
 //                intent.putExtra(INTENT_NAME_CHANNEL_URL, channel.url)
 //                intent.action = CHANNEL_ACTIVITY_INTENT_ACTION
@@ -157,16 +183,17 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         }
         binding.userIdInputEditText.text = null
     }
+//[END Click event]
 
     private fun createChannelMetadataAndSharedKey(channel: GroupChannel, invitedUserId: String) {
-        //SharedHash
+        //SharedHash : XY Point(Firestore)-> update hash (SP)
         val randomNumbers_byteArray = KeyProvider().getRandomNumbers() //키 생성용
         val randomNumbers_str = Base64.encodeToString(randomNumbers_byteArray, Base64.DEFAULT) //서버 업로드용
         val privateKey: PrivateKey = KeyStoreUtil().getPrivateKeyFromKeyStore(USER_ID)!!
 
         createSharedHash(privateKey, invitedUserId, randomNumbers_byteArray, channel.url)
 
-        //Meta data
+        //Meta data : sendbird channel meta data
         val metadata = mapOf(
             CHANNEL_META_DATA to randomNumbers_str
         )
@@ -182,9 +209,9 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         var affineX: BigInteger?
         var affineY: BigInteger?
 
-        db?.collection(FIRE_STORE_DOCUMENT_PUBLIC_KEY)
-            ?.get()
-            ?.addOnSuccessListener { result ->
+        db!!.collection(FIRE_STORE_DOCUMENT_PUBLIC_KEY)
+            .get()
+            .addOnSuccessListener { result ->
                 for (document in result) {
                     if (document.data[FIRE_STORE_FIELD_USER_ID] == invitedUserId) {
                         showToast("상대방 공개키 affineX/affineY 얻음")
@@ -196,22 +223,18 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                             publicKey,
                             randomNumbers
                         )
-
-                        //Shared preference
-                        val sharedPreferences = requireContext().getSharedPreferences(PREFERENCE_NAME_HASH, MODE_PRIVATE)
-                        val editor: SharedPreferences.Editor = sharedPreferences.edit()
                         val hash: String = Base64.encodeToString(sharedSecretHash, Base64.DEFAULT)
-                        editor.putString(preferenceKey, hash)
-                        editor.apply()
-                        //Shared preference
-
+                        requireContext().getSharedPreferences(PREFERENCE_NAME_HASH, MODE_PRIVATE).edit().apply {
+                            putString(preferenceKey, hash)
+                            apply()
+                        }
                         Log.d(TAG, "getSharedKey: $sharedSecretHash")
                     }
                 }
             }
-            ?.addOnFailureListener { exception ->
+            .addOnFailureListener { exception ->
                 showToast("키 가져오기 실패")
-                Log.e(TAG, "Error getting documents from firestore : $exception")
+                Log.e(TAG, "Error getting documents from firebase DB : $exception")
             }
     }
 }

@@ -251,9 +251,6 @@ class ChannelActivity : AppCompatActivity() {
                 Log.e(TAG, "Error getting documents from firebase DB : $exception")
             }
     }
-
-
-
 //[END Firestore: Public Key]
 
 //[START Read message]
