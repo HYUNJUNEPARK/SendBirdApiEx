@@ -50,7 +50,9 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
     override fun initView() {
         super.initView()
+
         initRecyclerView()
+
         initMessageHandler()
         initCreateChannelButtonState()
     }
@@ -67,13 +69,18 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
     }
 
 //[START init]
-    private fun initRecyclerView() = with(binding) {
-        initChannelList()
+    private fun initRecyclerView() {
+        launch {
+            showProgress()
+            initChannelList()
+            //dismissProgress()
+        }
         val adapter = ChannelListAdapter(requireContext()).apply {
             channelList = _channelList
         }
-        chatListRecyclerView.adapter = adapter
-        chatListRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+
+        binding.chatListRecyclerView.adapter = adapter
+        binding.chatListRecyclerView.layoutManager = LinearLayoutManager(requireContext())
     }
 
     private fun initMessageHandler() {
@@ -84,7 +91,11 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                     when (message) {
                         is UserMessage -> {
                             showToast("상대방 메시지 수신 : 채널 리스트 갱신")
-                            initChannelList()
+                            launch {
+                                showProgress()
+                                initChannelList()
+                                //dismissProgress()
+                            }
                         }
                     }
                 }
@@ -103,7 +114,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         }
     }
 
-    private fun initChannelList() {
+    private suspend fun initChannelList() = with(Dispatchers.IO){
         val query = GroupChannel.createMyGroupChannelListQuery(
             GroupChannelListQueryParams().apply {
                 includeEmpty = true
@@ -138,8 +149,6 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 //[START Click event]
     private fun onCreateChannelButtonClicked() {
         val invitedUserId = binding.userIdInputEditText.text.toString().ifEmpty { return }
-
-        //TODO USER CHECK
         val users: List<String> = listOf(USER_ID, invitedUserId)
         val params = GroupChannelCreateParams().apply {
             userIds = users
@@ -166,8 +175,6 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                         if (exception != null) {
                             Log.e(TAG, "can't delete dummy channel: $exception")
                         }
-
-
                     }
                     return@createChannel
                 }
@@ -179,29 +186,21 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                 launch {
                     showProgress()
                     createChannelMetadataAndSharedKey(channel, invitedUserId)
-                    dismissProgress()
+                    initChannelList()
+                    //dismissProgress()
                 }
-                initChannelList()
             }
         }
         binding.userIdInputEditText.text = null
     }
 
     private suspend fun createChannelMetadataAndSharedKey(channel: GroupChannel, invitedUserId: String) = withContext(Dispatchers.IO) {
-
         val privateKey: PrivateKey = KeyStoreUtil().getPrivateKeyFromKeyStore(USER_ID)!!
-
-        //SharedHash : XY Point(Firestore)-> update hash (SP)
-//        val randomNumbers_byteArray = KeyProvider().getRandomNumbers() //키 생성용
-//        val randomNumbers_str = Base64.encodeToString(randomNumbers_byteArray, Base64.DEFAULT) //서버 업로드용
-//        createSharedHash(privateKey, invitedUserId, randomNumbers_byteArray, channel.url)
-
-        KeyProvider().getRandomNumbers().let { randomNumber_bytearray ->
+        KeyProvider().getRandomNumbers().let { randomNumber_bytearray -> //키 생성용
             //hash
             createSharedHash(privateKey, invitedUserId,  randomNumber_bytearray, channel.url)
-
             //random number
-            Base64.encodeToString(randomNumber_bytearray, Base64.DEFAULT).let { randomNumber_str ->
+            Base64.encodeToString(randomNumber_bytearray, Base64.DEFAULT).let { randomNumber_str -> //서버 업로드용
                 val metadata = mapOf(
                     CHANNEL_META_DATA to randomNumber_str
                 )
@@ -257,6 +256,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
     private suspend fun showProgress() = withContext(coroutineContext) {
         with(binding) {
+            Log.d(TAG, "showProgress: ")
             progressBar.visibility = View.VISIBLE
             loginTextView.visibility = View.VISIBLE
         }
@@ -264,6 +264,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
     private suspend fun dismissProgress() = withContext(coroutineContext) {
         with(binding) {
+            Log.d(TAG, "dismissProgress: ")
             progressBar.visibility = View.INVISIBLE
             loginTextView.visibility = View.INVISIBLE
         }

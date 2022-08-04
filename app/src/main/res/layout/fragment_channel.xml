@@ -65,7 +65,7 @@
             android:id="@+id/loginTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="채널 생성 중..."
+            android:text="로딩 중..."
             android:visibility="invisible"
             android:textColor="@color/black"
             android:textStyle="bold"
