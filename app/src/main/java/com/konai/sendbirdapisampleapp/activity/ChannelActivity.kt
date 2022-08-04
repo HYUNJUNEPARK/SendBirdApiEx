@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Base64
 import android.util.Log
+import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
@@ -43,12 +44,14 @@ import com.sendbird.android.message.BaseMessage
 import com.sendbird.android.params.PreviousMessageListQueryParams
 import com.sendbird.android.params.UserMessageCreateParams
 import com.sendbird.android.user.Member
+import kotlinx.coroutines.*
 import java.math.BigInteger
 import java.security.Key
 import java.security.PrivateKey
 import java.security.PublicKey
+import kotlin.coroutines.CoroutineContext
 
-class ChannelActivity : AppCompatActivity() {
+class ChannelActivity : AppCompatActivity(), CoroutineScope {
     private var db: FirebaseFirestore? = null
     private var partnerId: String? = null
     private var partnerNickname: String? = null
@@ -59,6 +62,8 @@ class ChannelActivity : AppCompatActivity() {
     private lateinit var adapter: ChannelMessageAdapter
     private lateinit var channelURL: String
     private lateinit var hash: ByteArray
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.Main + Job()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,7 +84,11 @@ class ChannelActivity : AppCompatActivity() {
             binding.sendButton.isEnabled = false
             binding.sendButton.setImageResource(R.drawable.ic_baseline_cancel_schedule_send_24)
         }
-        readAllMessages()
+        launch {
+            showProgress()
+            readAllMessages()
+            dismissProgress()
+        }
     }
 
     override fun onResume() {
@@ -254,7 +263,7 @@ class ChannelActivity : AppCompatActivity() {
 //[END Firestore: Public Key]
 
 //[START Read message]
-    private fun readAllMessages() {
+    private suspend fun readAllMessages() {
         GroupChannel.getChannel(channelURL) { channel, e ->
             if (e != null) {
                 showToast("Get Channel Error : $e")
@@ -389,6 +398,18 @@ class ChannelActivity : AppCompatActivity() {
             postDelayed({
                 scrollToPosition(adapter!!.itemCount - 1)
             }, 300)
+        }
+    }
+
+    private suspend fun showProgress() = withContext(coroutineContext) {
+        with(binding) {
+            progressBar.visibility = View.VISIBLE
+        }
+    }
+
+    private suspend fun dismissProgress() = withContext(coroutineContext) {
+        with(binding) {
+            progressBar.visibility = View.GONE
         }
     }
 //[END Util]

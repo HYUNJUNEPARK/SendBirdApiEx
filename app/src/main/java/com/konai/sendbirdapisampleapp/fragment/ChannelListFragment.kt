@@ -42,6 +42,7 @@ import java.security.PrivateKey
 import java.security.PublicKey
 import kotlin.coroutines.CoroutineContext
 
+//TODO ERROR 같은 채팅방에 또 같은 사람을 초대하면 키를 중복으로 만들어버림 -> 앱 크래시
 class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragment_channel), CoroutineScope {
     private var _channelList: MutableList<ChannelListModel> = mutableListOf()
     private var channelURL: String? = null
@@ -52,7 +53,6 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         super.initView()
 
         initRecyclerView()
-
         initMessageHandler()
         initCreateChannelButtonState()
     }
@@ -147,6 +147,8 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 //[END init]
 
 //[START Click event]
+
+    //TODO ERROR 같은 채팅방에 또 같은 사람을 초대하면 키를 중복으로 만들어버림 -> 앱 크래시
     private fun onCreateChannelButtonClicked() {
         val invitedUserId = binding.userIdInputEditText.text.toString().ifEmpty { return }
         val users: List<String> = listOf(USER_ID, invitedUserId)
@@ -256,7 +258,6 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
     private suspend fun showProgress() = withContext(coroutineContext) {
         with(binding) {
-            Log.d(TAG, "showProgress: ")
             progressBar.visibility = View.VISIBLE
             loginTextView.visibility = View.VISIBLE
         }
@@ -264,7 +265,6 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
     private suspend fun dismissProgress() = withContext(coroutineContext) {
         with(binding) {
-            Log.d(TAG, "dismissProgress: ")
             progressBar.visibility = View.INVISIBLE
             loginTextView.visibility = View.INVISIBLE
         }
