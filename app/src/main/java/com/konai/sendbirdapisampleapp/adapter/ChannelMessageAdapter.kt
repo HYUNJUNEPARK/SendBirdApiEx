@@ -13,7 +13,7 @@ import com.konai.sendbirdapisampleapp.util.Constants.PARTNER_MESSAGE
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.util.Extension.convertLongToTime
 
-class ChannelMessageAdapter() : ListAdapter<MessageModel, RecyclerView.ViewHolder>(diffUtil) {
+class ChannelMessageAdapter: ListAdapter<MessageModel, RecyclerView.ViewHolder>(diffUtil) {
     inner class PartnerMessageViewHolder(private val binding: ItemPartnerMessageBinding): RecyclerView.ViewHolder(binding.root) {
         fun bind(message: MessageModel){
             binding.dateTextView.text = message.createdAt?.convertLongToTime()
@@ -50,12 +50,10 @@ class ChannelMessageAdapter() : ListAdapter<MessageModel, RecyclerView.ViewHolde
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when(currentList[position].sender) {
             USER_ID -> {
-                val holder = holder as MyMessageViewHolder
-                holder.bind(currentList[position])
+                (holder as MyMessageViewHolder).bind(currentList[position])
             }
             else -> {
-                val holder = holder as PartnerMessageViewHolder
-                holder.bind(currentList[position])
+                (holder as PartnerMessageViewHolder).bind(currentList[position])
             }
         }
     }

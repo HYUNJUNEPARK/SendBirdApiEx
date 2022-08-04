@@ -25,7 +25,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="20dp"
-                android:text="키 관리"
+                android:text="키 상태"
                 android:textColor="@color/black"
                 android:textSize="24sp"
                 android:textStyle="bold"
@@ -47,16 +47,18 @@
         <LinearLayout
             android:id="@+id/keyLayout"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_marginLeft="5dp"
             android:layout_marginRight="5dp"
             android:orientation="vertical"
+            app:layout_constraintBottom_toTopOf="@id/availableHashLayout"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/div1">
 
             <TextView
-                android:layout_width="wrap_content"
+                android:background="@color/gray"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="키스토어 키 상태"
                 android:textSize="18sp"
@@ -107,7 +109,8 @@
                 android:background="@color/gray" />
 
             <TextView
-                android:layout_width="wrap_content"
+                android:background="@color/gray"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="서버 키 상태"
                 android:textSize="18sp"
@@ -140,6 +143,7 @@
 
 
             <LinearLayout
+                android:background="@color/gray"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
@@ -162,34 +166,17 @@
 
             </LinearLayout>
 
-            <View
+            <ScrollView android:id="@+id/allHashSavedOnDeviceScrollView"
                 android:layout_width="match_parent"
-                android:layout_height="2dp"
-                android:layout_marginTop="5dp"
-                android:background="@color/gray" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:layout_height="match_parent"
+                android:scrollbarAlwaysDrawVerticalTrack="true"
+                android:scrollbarFadeDuration="0">
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="로그인 계정이 사용할 수 있는 해시"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/accountPublicKeyCountTextView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="10dp"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    tools:text="[ 10개 ]" />
-
-            </LinearLayout>
+                    android:id="@+id/allHashSavedOnDeviceTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+            </ScrollView>
 
             <View
                 android:layout_width="match_parent"
@@ -197,6 +184,46 @@
                 android:layout_marginTop="5dp"
                 android:background="@color/gray" />
         </LinearLayout>
+
+
+        <LinearLayout
+            android:id="@+id/availableHashLayout"
+            android:layout_width="match_parent"
+            android:background="@color/gray"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/availableHashScrollView"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="로그인 계정이 사용할 수 있는 해시"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+            <TextView android:id="@+id/availableHashNumberTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                tools:text="[ 10개 ]" />
+        </LinearLayout>
+
+        <ScrollView
+            android:id="@+id/availableHashScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <TextView
+                android:id="@+id/availableHashTextView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </ScrollView>
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

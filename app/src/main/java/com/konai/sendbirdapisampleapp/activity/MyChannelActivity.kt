@@ -1,5 +1,6 @@
 package com.konai.sendbirdapisampleapp.activity
 
+import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -34,9 +35,13 @@ class MyChannelActivity : AppCompatActivity() {
 
         initMessageRecyclerView()
         readAllMessages()
+
+        val sharedPreferences = getSharedPreferences(Constants.PREFERENCE_NAME_HASH, Context.MODE_PRIVATE)
+        Log.d(TAG, "onCreate: ${sharedPreferences.all.size}")
+
     }
 
-    //[START Init]
+//[START Init]
     private fun initMessageRecyclerView() {
         adapter = ChannelMessageAdapter()
         binding.recyclerView.adapter = adapter
@@ -44,7 +49,7 @@ class MyChannelActivity : AppCompatActivity() {
     }
 //[END Init]
 
-    //[START Read message]
+//[START Read message]
     private fun readAllMessages() {
         GroupChannel.getChannel(channelURL) { channel, e ->
             if (e != null) {
@@ -81,7 +86,7 @@ class MyChannelActivity : AppCompatActivity() {
     }
 //[END Read message]
 
-    //[START Click Event]
+//[START Click Event]
     fun onSendButtonClicked() {
         val userMessage: String = binding.messageEditText.text.toString()
         //val encryptedMessage = AESUtil().encryptionCBCMode(userMessage, hash)
@@ -91,13 +96,13 @@ class MyChannelActivity : AppCompatActivity() {
         GroupChannel.getChannel(channelURL) { groupChannel, channelException ->
             if (channelException != null) {
                 showToast("Error : $channelException")
-                Log.e(Constants.TAG, "getChannel Error: $channelException")
+                Log.e(TAG, "getChannel Error: $channelException")
                 return@getChannel
             }
             groupChannel?.sendUserMessage(params) { message, sendMessageException ->
                 if (sendMessageException != null) {
                     showToast("Error : $sendMessageException")
-                    Log.e(Constants.TAG, "sendUserMessage Error: $sendMessageException")
+                    Log.e(TAG, "sendUserMessage Error: $sendMessageException")
                     return@sendUserMessage
                 }
                 messageList.add(

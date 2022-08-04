@@ -50,7 +50,6 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
     override fun initView() {
         super.initView()
-
         initRecyclerView()
         initMessageHandler()
         initCreateChannelButtonState()
@@ -58,6 +57,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
     override fun onResume() {
         super.onResume()
+        initRecyclerView()
         initMessageHandler()
     }
 
@@ -120,7 +120,6 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
             _channelList.clear() //to make the list empty
             for (idx in channels.indices) {
-                channels[idx].unreadMessageCount
                 _channelList.add(
                     ChannelListModel(
                         name = channels[idx].name,
@@ -167,6 +166,8 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                         if (exception != null) {
                             Log.e(TAG, "can't delete dummy channel: $exception")
                         }
+
+
                     }
                     return@createChannel
                 }
@@ -185,30 +186,31 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         }
         binding.userIdInputEditText.text = null
     }
-//[END Click event]
-//    private suspend fun goToChannelActivity() = withContext(Dispatchers.Default) {
-//        val intent = Intent(requireContext(), ChannelActivity::class.java)
-//        intent.putExtra(INTENT_NAME_CHANNEL_URL, channelURL)
-//        intent.action = CHANNEL_ACTIVITY_INTENT_ACTION
-//        startActivity(intent)
-//    }
 
     private suspend fun createChannelMetadataAndSharedKey(channel: GroupChannel, invitedUserId: String) = withContext(Dispatchers.IO) {
-        //SharedHash : XY Point(Firestore)-> update hash (SP)
-        val randomNumbers_byteArray = KeyProvider().getRandomNumbers() //키 생성용
-        val randomNumbers_str = Base64.encodeToString(randomNumbers_byteArray, Base64.DEFAULT) //서버 업로드용
+
         val privateKey: PrivateKey = KeyStoreUtil().getPrivateKeyFromKeyStore(USER_ID)!!
 
-        createSharedHash(privateKey, invitedUserId, randomNumbers_byteArray, channel.url)
+        //SharedHash : XY Point(Firestore)-> update hash (SP)
+//        val randomNumbers_byteArray = KeyProvider().getRandomNumbers() //키 생성용
+//        val randomNumbers_str = Base64.encodeToString(randomNumbers_byteArray, Base64.DEFAULT) //서버 업로드용
+//        createSharedHash(privateKey, invitedUserId, randomNumbers_byteArray, channel.url)
 
-        //Meta data : sendbird channel meta data
-        val metadata = mapOf(
-            CHANNEL_META_DATA to randomNumbers_str
-        )
-        channel.createMetaData(metadata) { _, e ->
-            if (e != null) {
-                Log.e(TAG, "Creating channel metadata was failed : $e ")
-                return@createMetaData
+        KeyProvider().getRandomNumbers().let { randomNumber_bytearray ->
+            //hash
+            createSharedHash(privateKey, invitedUserId,  randomNumber_bytearray, channel.url)
+
+            //random number
+            Base64.encodeToString(randomNumber_bytearray, Base64.DEFAULT).let { randomNumber_str ->
+                val metadata = mapOf(
+                    CHANNEL_META_DATA to randomNumber_str
+                )
+                channel.createMetaData(metadata) { _, e ->
+                    if (e != null) {
+                        Log.e(TAG, "Creating channel metadata was failed : $e ")
+                        return@createMetaData
+                    }
+                }
             }
         }
     }

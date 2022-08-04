@@ -1,17 +1,14 @@
 package com.konai.sendbirdapisampleapp.strongbox
 
 object StrongBoxConstants {
-    var iv: ByteArray? = ByteArray(16)
+    val iv: ByteArray = ByteArray(16)
 
     const val CURVE_TYPE = "secp256r1"
-    const val KEY_ALGORITHM = "AES"
-    const val KEY_GEN_ALGORITHM = "EC"
-    const val CIPHER_ECB_ALGORITHM = "AES/ECB/PKCS5Padding"
-    const val CIPHER_CBC_ALGORITHM = "AES/CBC/PKCS7Padding"
-    const val KEY_AGREEMENT_ALGORITHM = "ECDH"
-    const val MESSAGE_DIGEST_ALGORITHM = "SHA-256"
-
+    const val KEY_ALGORITHM_AES = "AES"
+    const val KEY_GEN_ALGORITHM_EC = "EC"
+    const val CIPHER_AES_ECB_PADDING = "AES/ECB/PKCS5Padding"
+    const val CIPHER_AES_CBC_PADDING = "AES/CBC/PKCS7Padding"
+    const val KEY_AGREEMENT_ALGORITHM_ECDH = "ECDH"
+    const val MESSAGE_DIGEST_ALGORITHM_SHA_256 = "SHA-256"
     const val KEYSTORE_TYPE = "AndroidKeyStore"
-    const val KEYSTORE_MY_KEYPAIR_ALIAS = "mKey"
-    const val KEYSTORE_SECRET_KEY_ALIAS = "ssk"
 }

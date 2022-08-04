@@ -1,9 +1,9 @@
 package com.konai.sendbirdapisampleapp.strongbox
 
 import android.util.Base64
-import com.konai.sendbirdapisampleapp.strongbox.StrongBoxConstants.CIPHER_CBC_ALGORITHM
-import com.konai.sendbirdapisampleapp.strongbox.StrongBoxConstants.CIPHER_ECB_ALGORITHM
-import com.konai.sendbirdapisampleapp.strongbox.StrongBoxConstants.KEY_ALGORITHM
+import com.konai.sendbirdapisampleapp.strongbox.StrongBoxConstants.CIPHER_AES_CBC_PADDING
+import com.konai.sendbirdapisampleapp.strongbox.StrongBoxConstants.CIPHER_AES_ECB_PADDING
+import com.konai.sendbirdapisampleapp.strongbox.StrongBoxConstants.KEY_ALGORITHM_AES
 import com.konai.sendbirdapisampleapp.strongbox.StrongBoxConstants.iv
 import java.security.Key
 import javax.crypto.Cipher
@@ -15,7 +15,7 @@ class AESUtil {
     fun encryptionECBMode(userInputData: String, hash: ByteArray): String {
         val userInputData: ByteArray = userInputData.toByteArray()
         val key: Key = convertHashToKey(hash)
-        val cipher = Cipher.getInstance(CIPHER_ECB_ALGORITHM) //AES/ECB/PKCS5Padding
+        val cipher = Cipher.getInstance(CIPHER_AES_ECB_PADDING) //AES/ECB/PKCS5Padding
         cipher.init(
             Cipher.ENCRYPT_MODE,
             key
@@ -27,7 +27,7 @@ class AESUtil {
 
     fun decryptionECBMode(encryptedData: String, hash: ByteArray): String {
         val key: Key = convertHashToKey(hash)
-        val cipher = Cipher.getInstance(CIPHER_ECB_ALGORITHM) //AES/ECB/PKCS5Padding
+        val cipher = Cipher.getInstance(CIPHER_AES_ECB_PADDING) //AES/ECB/PKCS5Padding
         cipher.init(
             Cipher.DECRYPT_MODE,
             key
@@ -41,7 +41,7 @@ class AESUtil {
     fun encryptionCBCMode(userInputData: String, hash: ByteArray): String {
         val key: Key = convertHashToKey(hash)
         val userInputData: ByteArray = userInputData.toByteArray()
-        val cipher = Cipher.getInstance(CIPHER_CBC_ALGORITHM) //AES/CBC/PKCS7Padding
+        val cipher = Cipher.getInstance(CIPHER_AES_CBC_PADDING) //AES/CBC/PKCS7Padding
         cipher.init(
             Cipher.ENCRYPT_MODE,
             key,
@@ -55,7 +55,7 @@ class AESUtil {
 
     fun decryptionCBCMode(encryptedData: String, hash: ByteArray): String {
         val key: Key = convertHashToKey(hash)
-        val cipher = Cipher.getInstance(CIPHER_CBC_ALGORITHM) //AES/CBC/PKCS7Padding
+        val cipher = Cipher.getInstance(CIPHER_AES_CBC_PADDING) //AES/CBC/PKCS7Padding
         cipher.init(
             Cipher.DECRYPT_MODE,
             key,
@@ -68,6 +68,6 @@ class AESUtil {
 
     //common
     fun convertHashToKey(sharedSecretHash : ByteArray): Key {
-        return SecretKeySpec(sharedSecretHash, KEY_ALGORITHM)
+        return SecretKeySpec(sharedSecretHash, KEY_ALGORITHM_AES)
     }
 }
