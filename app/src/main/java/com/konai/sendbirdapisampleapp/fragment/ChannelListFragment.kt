@@ -1,23 +1,28 @@
 package com.konai.sendbirdapisampleapp.fragment
 
 import android.content.Context.MODE_PRIVATE
+import android.content.Intent
 import android.util.Base64
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.konai.sendbirdapisampleapp.R
+import com.konai.sendbirdapisampleapp.activity.ChannelActivity
 import com.konai.sendbirdapisampleapp.adapter.ChannelListAdapter
 import com.konai.sendbirdapisampleapp.databinding.FragmentChannelBinding
 import com.konai.sendbirdapisampleapp.model.ChannelListModel
 import com.konai.sendbirdapisampleapp.strongbox.KeyProvider
 import com.konai.sendbirdapisampleapp.strongbox.KeyStoreUtil
+import com.konai.sendbirdapisampleapp.util.Constants.ALL_MESSAGE_RECEIVE_HANDLER
+import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
 import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_META_DATA
 import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_DOCUMENT_PUBLIC_KEY
 import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_AFFINE_X
 import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_AFFINE_Y
 import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_USER_ID
+import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_CHANNEL_URL
 import com.konai.sendbirdapisampleapp.util.Constants.PREFERENCE_NAME_HASH
-import com.konai.sendbirdapisampleapp.util.Constants.ALL_MESSAGE_RECEIVE_HANDLER
 import com.konai.sendbirdapisampleapp.util.Constants.TAG
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.util.Extension.showToast
@@ -31,12 +36,17 @@ import com.sendbird.android.message.BaseMessage
 import com.sendbird.android.message.UserMessage
 import com.sendbird.android.params.GroupChannelCreateParams
 import com.sendbird.android.params.GroupChannelListQueryParams
+import kotlinx.coroutines.*
 import java.math.BigInteger
 import java.security.PrivateKey
 import java.security.PublicKey
+import kotlin.coroutines.CoroutineContext
 
-class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragment_channel) {
+class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragment_channel), CoroutineScope {
     private var _channelList: MutableList<ChannelListModel> = mutableListOf()
+    private var channelURL: String? = null
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.Main + Job()
 
     override fun initView() {
         super.initView()
@@ -161,31 +171,29 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                     return@createChannel
                 }
                 Toast.makeText(requireContext(), "채널 생성", Toast.LENGTH_SHORT).show()
+                channelURL = channel.url
 
+                if (channelURL == null) return@createChannel
 
-                //progress visible
-                //suspend 함수로 묶어버림
-                createChannelMetadataAndSharedKey(channel, invitedUserId)
+                launch {
+                    showProgress()
+                    createChannelMetadataAndSharedKey(channel, invitedUserId)
+                    dismissProgress()
+                }
                 initChannelList()
-                //progress invisible
-
-                //액티비티 이동
-
-
-
-//TODO 액티비티로 이동하면 처음 sp 값이 초기화가 안됨 -> 해결할 방법 필요함
-// hash 까지 모두 생성되고 나서 이동하는 걸로 수정
-//                val intent = Intent(requireContext(), ChannelActivity::class.java)
-//                intent.putExtra(INTENT_NAME_CHANNEL_URL, channel.url)
-//                intent.action = CHANNEL_ACTIVITY_INTENT_ACTION
-//                startActivity(intent)
             }
         }
         binding.userIdInputEditText.text = null
     }
 //[END Click event]
+//    private suspend fun goToChannelActivity() = withContext(Dispatchers.Default) {
+//        val intent = Intent(requireContext(), ChannelActivity::class.java)
+//        intent.putExtra(INTENT_NAME_CHANNEL_URL, channelURL)
+//        intent.action = CHANNEL_ACTIVITY_INTENT_ACTION
+//        startActivity(intent)
+//    }
 
-    private fun createChannelMetadataAndSharedKey(channel: GroupChannel, invitedUserId: String) {
+    private suspend fun createChannelMetadataAndSharedKey(channel: GroupChannel, invitedUserId: String) = withContext(Dispatchers.IO) {
         //SharedHash : XY Point(Firestore)-> update hash (SP)
         val randomNumbers_byteArray = KeyProvider().getRandomNumbers() //키 생성용
         val randomNumbers_str = Base64.encodeToString(randomNumbers_byteArray, Base64.DEFAULT) //서버 업로드용
@@ -229,6 +237,13 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                             apply()
                         }
                         Log.d(TAG, "getSharedKey: $sharedSecretHash")
+                        showToast("해시 저장 완료")
+
+                        val intent = Intent(requireContext(), ChannelActivity::class.java).apply {
+                            putExtra(INTENT_NAME_CHANNEL_URL, channelURL)
+                            action = CHANNEL_ACTIVITY_INTENT_ACTION
+                        }
+                        startActivity(intent)
                     }
                 }
             }
@@ -236,5 +251,19 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                 showToast("키 가져오기 실패")
                 Log.e(TAG, "Error getting documents from firebase DB : $exception")
             }
+    }
+
+    private suspend fun showProgress() = withContext(coroutineContext) {
+        with(binding) {
+            progressBar.visibility = View.VISIBLE
+            loginTextView.visibility = View.VISIBLE
+        }
+    }
+
+    private suspend fun dismissProgress() = withContext(coroutineContext) {
+        with(binding) {
+            progressBar.visibility = View.INVISIBLE
+            loginTextView.visibility = View.INVISIBLE
+        }
     }
 }
