@@ -1,5 +1,6 @@
 package com.konai.sendbirdapisampleapp.fragment
 
+import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.util.Base64
@@ -42,7 +43,6 @@ import java.security.PrivateKey
 import java.security.PublicKey
 import kotlin.coroutines.CoroutineContext
 
-//TODO ERROR 같은 채팅방에 또 같은 사람을 초대하면 키를 중복으로 만들어버림 -> 앱 크래시
 class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragment_channel), CoroutineScope {
     private var _channelList: MutableList<ChannelListModel> = mutableListOf()
     private var channelURL: String? = null
@@ -73,7 +73,6 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         launch {
             showProgress()
             initChannelList()
-            //dismissProgress()
         }
         val adapter = ChannelListAdapter(requireContext()).apply {
             channelList = _channelList
@@ -141,14 +140,12 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                     )
                 )
             }
-            binding.chatListRecyclerView.adapter?.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can. Rely on `notifyDataSetChanged` as a last resort.
+            binding.chatListRecyclerView.adapter?.notifyDataSetChanged()//TODO It will always be more efficient to use more specific change events if you can. Rely on `notifyDataSetChanged` as a last resort.
         }
     }
 //[END init]
 
 //[START Click event]
-
-    //TODO ERROR 같은 채팅방에 또 같은 사람을 초대하면 키를 중복으로 만들어버림 -> 앱 크래시
     private fun onCreateChannelButtonClicked() {
         val invitedUserId = binding.userIdInputEditText.text.toString().ifEmpty { return }
         val users: List<String> = listOf(USER_ID, invitedUserId)
@@ -180,16 +177,19 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                     }
                     return@createChannel
                 }
-                Toast.makeText(requireContext(), "채널 생성", Toast.LENGTH_SHORT).show()
                 channelURL = channel.url
-
                 if (channelURL == null) return@createChannel
+                requireContext().getSharedPreferences(PREFERENCE_NAME_HASH, Context.MODE_PRIVATE).let { sharedPreference ->
+                    if (sharedPreference.contains(channelURL)) {
+                        return@createChannel
+                    }
+                }
 
+                Toast.makeText(requireContext(), "채널 생성", Toast.LENGTH_SHORT).show()
                 launch {
                     showProgress()
                     createChannelMetadataAndSharedKey(channel, invitedUserId)
                     initChannelList()
-                    //dismissProgress()
                 }
             }
         }

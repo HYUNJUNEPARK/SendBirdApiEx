@@ -17,10 +17,10 @@ class KeyProvider {
     }
 
 
-    //TODO Error keyAgreement.init(myPrivateKey) - USE Android 12, API 31 Device
+    //TODO Error keyAgreement.init(myPrivateKey) -> USE Android 12, API 31 Device
     //InvalidKeyException: Keystore operation failed
     fun createSharedSecretHash(myPrivateKey: PrivateKey, partnerPublicKey: PublicKey, randomNumber: ByteArray): ByteArray {
-        val keyAgreement = KeyAgreement.getInstance(KEY_AGREEMENT_ALGORITHM_ECDH) //ECDH
+        val keyAgreement = KeyAgreement.getInstance(KEY_AGREEMENT_ALGORITHM_ECDH)
         keyAgreement.init(myPrivateKey)
         keyAgreement.doPhase(partnerPublicKey, true)
         val sharedSecret: ByteArray = keyAgreement.generateSecret()
