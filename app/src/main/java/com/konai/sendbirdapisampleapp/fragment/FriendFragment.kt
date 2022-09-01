@@ -44,11 +44,12 @@ class FriendFragment : BaseFragment<FragmentFriendBinding>(R.layout.fragment_fri
                 showToast("$e")
             }
             if (channel != null) {
-                val intent = Intent(requireContext(), MyChannelActivity::class.java)
-                intent.putExtra(INTENT_NAME_CHANNEL_URL, channel.url)
-                intent.putExtra(INTENT_NAME_USER_ID, USER_ID)
-                intent.putExtra(INTENT_NAME_USER_NICK, USER_NICKNAME)
-                intent.action = CHANNEL_ACTIVITY_INTENT_ACTION
+                val intent = Intent(requireContext(), MyChannelActivity::class.java).apply {
+                    putExtra(INTENT_NAME_CHANNEL_URL, channel.url)
+                    putExtra(INTENT_NAME_USER_ID, USER_ID)
+                    putExtra(INTENT_NAME_USER_NICK, USER_NICKNAME)
+                    action = CHANNEL_ACTIVITY_INTENT_ACTION
+                }
                 startActivity(intent)
             }
         }

@@ -26,21 +26,10 @@ class MainActivity : AppCompatActivity() {
             binding.mainActivity = this
             initFragment()
             initBottomNavigation()
-            initAlertDialog()
+            showAlertDialog()
         }
         catch (e: Exception) {
             e.printStackTrace()
-        }
-    }
-
-    private fun initAlertDialog() {
-        if (!KeyStoreUtil().isKeyInKeyStore(USER_ID)) {
-            AlertDialog.Builder(this)
-                .setTitle("경고")
-                .setMessage("계정에 등록된 기기가 아닙니다. \n채널 생성/메시지 송신/메시지 복호화가 불가능합니다. ")
-                .setPositiveButton("확인") { _, _ -> }
-                .create()
-                .show()
         }
     }
 
@@ -61,9 +50,12 @@ class MainActivity : AppCompatActivity() {
                             .add(R.id.fragmentContainer, friendFragment!!)
                             .commit()
                     }
-                    if (friendFragment != null) fragmentManager.beginTransaction().show(friendFragment!!).commit()
-                    if (channelListFragment != null) fragmentManager.beginTransaction().hide(channelListFragment!!).commit()
-                    if (blankFragment != null) fragmentManager.beginTransaction().hide(blankFragment!!).commit()
+                    if (friendFragment != null)
+                        fragmentManager.beginTransaction().show(friendFragment!!).commit()
+                    if (channelListFragment != null)
+                        fragmentManager.beginTransaction().hide(channelListFragment!!).commit()
+                    if (blankFragment != null)
+                        fragmentManager.beginTransaction().hide(blankFragment!!).commit()
                 }
                 R.id.channel -> {
                     if (channelListFragment == null) {
@@ -72,9 +64,12 @@ class MainActivity : AppCompatActivity() {
                             .add(R.id.fragmentContainer, channelListFragment!!)
                             .commit()
                     }
-                    if (friendFragment != null) fragmentManager.beginTransaction().hide(friendFragment!!).commit()
-                    if (channelListFragment != null) fragmentManager.beginTransaction().show(channelListFragment!!).commit()
-                    if (blankFragment != null) fragmentManager.beginTransaction().hide(blankFragment!!).commit()
+                    if (friendFragment != null)
+                        fragmentManager.beginTransaction().hide(friendFragment!!).commit()
+                    if (channelListFragment != null)
+                        fragmentManager.beginTransaction().show(channelListFragment!!).commit()
+                    if (blankFragment != null)
+                        fragmentManager.beginTransaction().hide(blankFragment!!).commit()
 
                 }
                 R.id.blank -> {
@@ -84,12 +79,26 @@ class MainActivity : AppCompatActivity() {
                             .add(R.id.fragmentContainer, blankFragment!!)
                             .commit()
                     }
-                    if (friendFragment != null) fragmentManager.beginTransaction().hide(friendFragment!!).commit()
-                    if (channelListFragment != null) fragmentManager.beginTransaction().hide(channelListFragment!!).commit()
-                    if (blankFragment != null) fragmentManager.beginTransaction().show(blankFragment!!).commit()
+                    if (friendFragment != null)
+                        fragmentManager.beginTransaction().hide(friendFragment!!).commit()
+                    if (channelListFragment != null)
+                        fragmentManager.beginTransaction().hide(channelListFragment!!).commit()
+                    if (blankFragment != null)
+                        fragmentManager.beginTransaction().show(blankFragment!!).commit()
                 }
             }
             true
+        }
+    }
+
+    private fun showAlertDialog() {
+        if (!KeyStoreUtil().isKeyInKeyStore(USER_ID)) {
+            AlertDialog.Builder(this)
+                .setTitle("경고")
+                .setMessage("계정에 등록된 기기가 아닙니다. \n채널 생성/메시지 송신/메시지 복호화가 불가능합니다. ")
+                .setPositiveButton("확인") { _, _ -> }
+                .create()
+                .show()
         }
     }
 }

@@ -92,7 +92,7 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
      *
      * 로그인 버튼 클릭 -> 사용자 센드버드 서버 접속
      */
-    fun signInButtonClick() {
+    fun signIn() {
         val userId = binding.userIdEditText.text.toString().ifEmpty { return }
         launch {
             showProgressBar()
@@ -167,7 +167,7 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
             if (ECKeyUtil.isECKeyPair(userId)) {
                 //1.1. 키스토어에서 publicKey 를 가져와 서버에 등록
                 enrollPublicKey(userId, publicKey = strongBox.getECPublicKey(userId))
-                //1.2. 로그인
+                //1.1.2. 로그인
                 startActivity(
                     Intent(this, MainActivity::class.java)
                 )

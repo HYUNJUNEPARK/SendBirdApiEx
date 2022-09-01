@@ -292,7 +292,8 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
                     )
                 }
                 adapter.submitList(encryptionMessageList)
-                adapter.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can.
+                adapter.notifyDataSetChanged()
+                //TODO It will always be more efficient to use more specific change events if you can.
             }
         }
     }
