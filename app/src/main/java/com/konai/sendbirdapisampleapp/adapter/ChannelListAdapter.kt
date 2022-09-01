@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.konai.sendbirdapisampleapp.activity.ChannelActivity
 import com.konai.sendbirdapisampleapp.activity.MyChannelActivity
 import com.konai.sendbirdapisampleapp.databinding.ItemChatChannelListBinding
-import com.konai.sendbirdapisampleapp.model.ChannelListModel
+import com.konai.sendbirdapisampleapp.models.ChannelListModel
 import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
 import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_CHANNEL_URL
 import com.konai.sendbirdapisampleapp.util.Extension.convertLongToTime

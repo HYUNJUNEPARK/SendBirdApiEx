@@ -1,10 +1,7 @@
 package com.konai.sendbirdapisampleapp.activity
 
 import android.content.Intent
-import android.content.pm.PackageInfo
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -14,16 +11,11 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.databinding.ActivityLoginBinding
-import com.konai.sendbirdapisampleapp.strongbox.KeyStoreUtil
-import com.konai.sendbirdapisampleapp.util.Constants.APP_ID
-import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_DOCUMENT_PUBLIC_KEY
-import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_AFFINE_X
-import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_AFFINE_Y
-import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_USER_ID
-import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_USER_ID
-import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_USER_NICK
-import com.konai.sendbirdapisampleapp.util.Constants.MY_APP_INTENT_ACTION
-import com.konai.sendbirdapisampleapp.util.Constants.SENDBIRD_UI_KIT_APP
+import com.konai.sendbirdapisampleapp.strongbox.ECKeyUtil
+import com.konai.sendbirdapisampleapp.strongbox.StrongBox
+import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_DOCUMENT_PUBLIC_KEY
+import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_FIELD_USER_ID
+import com.konai.sendbirdapisampleapp.util.Constants.SENDBIRD_API_KEY
 import com.konai.sendbirdapisampleapp.util.Constants.TAG
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.util.Constants.USER_NICKNAME
@@ -32,21 +24,37 @@ import com.sendbird.android.SendbirdChat
 import com.sendbird.android.exception.SendbirdException
 import com.sendbird.android.handler.InitResultHandler
 import com.sendbird.android.params.InitParams
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.security.PublicKey
-import java.security.interfaces.ECPublicKey
+import kotlin.coroutines.CoroutineContext
 
-class LoginActivity : AppCompatActivity() {
-    private var db: FirebaseFirestore? = null
+class LoginActivity : AppCompatActivity(), CoroutineScope {
+    private lateinit var strongBox: StrongBox
     private lateinit var binding: ActivityLoginBinding
+    private var db: FirebaseFirestore? = null
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.Main
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_login)
-        binding.loginActivity = this
+        try {
+            binding = DataBindingUtil.setContentView(this, R.layout.activity_login)
+            binding.loginActivity = this
+            strongBox = StrongBox.getInstance(this)
+            db = Firebase.firestore
 
-        db = Firebase.firestore
-        initializeSendBirdSdk()
-        initUiKitLaunchButtonState()
+            launch {
+                showProgressBar()
+                initSendBirdSdk()
+                dismissProgressBar()
+            }
+        }
+        catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     override fun onDestroy() {
@@ -56,193 +64,182 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        binding.progressBarLayout.visibility = View.GONE
+        launch {
+            dismissProgressBar()
+        }
     }
-//[START init]
-    private fun initializeSendBirdSdk() {
+
+    /**
+     * SendBirdSDK 초기화
+     */
+    private suspend fun initSendBirdSdk() = withContext(Dispatchers.IO) {
         SendbirdChat.init(
-            InitParams(APP_ID, this, useCaching = true),
+            InitParams(SENDBIRD_API_KEY, this@LoginActivity, useCaching = true),
             object : InitResultHandler {
-                override fun onMigrationStarted() {
-                    Log.i(TAG, "initializeChatSdk: Called when there's an update in Sendbird server.")
-                }
+                override fun onMigrationStarted() { }
                 override fun onInitFailed(e: SendbirdException) {
-                    Log.e(TAG,"initializeChatSdk : Called when initialize failed. $e \n SDK will still operate properly as if useLocalCaching is set to false.")
+                    e.printStackTrace()
                 }
                 override fun onInitSucceed() {
                     binding.loginButton.isEnabled = true
-                    showToast("Called when initialization is completed.")
-                    Log.i(TAG, "initializeChatSdk : Called when initialization is completed.")
                 }
             }
         )
     }
 
-    //1)editText 에 userId 와 2)디바이스에 uiKit 앱이 설치되어있어야 UiKitAppLaunchButton 활성화
-    private fun initUiKitLaunchButtonState() {
-        binding.userIdEditText.addTextChangedListener(
-            object: TextWatcher {
-                override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { }
-                override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { }
-                override fun afterTextChanged(p0: Editable?) {
-                    val userId = binding.userIdEditText.text
-                    val isUiKitAppOnMyDevice: () -> Boolean = {
-                        var isExist = false
-                        val packageManager = packageManager
-                        val packages: List<PackageInfo> = packageManager.getInstalledPackages(0)
-                        try {
-                            for (info: PackageInfo in packages) {
-                                if (info.packageName == SENDBIRD_UI_KIT_APP) {
-                                    isExist = true
-                                    break
-                                }
-                            }
-                        }
-                        catch (e: Exception) {
-                            binding.progressBarLayout.visibility = View.GONE
-                            showToast("Can't try to search Ui kit app error : $e")
-                            Log.e(TAG, "Can't try to search Ui kit app error : $e")
-                            isExist = false
-                        }
-                        isExist
-                    }
-                    binding.UiKitAppLaunchButton.isEnabled = userId.isNotEmpty() && isUiKitAppOnMyDevice()
-                }
-            }
-        )
-    }
-//[END init]
-
-//[START Click Event]
-    fun onLogInButtonClicked() {
+    /**
+     * signInButtonClick
+     *
+     * 로그인 버튼 클릭 -> 사용자 센드버드 서버 접속
+     */
+    fun signInButtonClick() {
         val userId = binding.userIdEditText.text.toString().ifEmpty { return }
-        if (db == null) {
-            showToast("firebase DB is not initialized")
-            Log.e(TAG, "firebase DB is not initialized")
-            return
+        launch {
+            showProgressBar()
         }
-
-        binding.progressBarLayout.visibility = View.VISIBLE
-
         SendbirdChat.connect(userId) { user, e ->
-            USER_NICKNAME = binding.nickNameEditText.text.toString().ifEmpty { userId }
-            USER_ID = user?.userId.toString()
-
             if (e != null) {
-                showToast("로그인 에러 : $e")
+                launch {
+                    dismissProgressBar()
+                }
                 Log.e(TAG, ": $e")
-                binding.progressBarLayout.visibility = View.GONE
                 return@connect
             }
 
-//TODO 닉네임 등록 코드 다른 곳으로 기능 이전(로그인 처리가 더 느려짐)
-//            update user nickname
-//            val params = UserUpdateParams().apply {
-//                nickname = USER_NICKNAME
-//            }
-//            SendbirdChat.updateCurrentUserInfo(params) { exception ->
-//                if (exception != null)  {
-//                    binding.progressBarLayout.visibility = View.GONE
-//                    Log.e(TAG, "update Current UserInfo Error : $exception")
-//                    showToast("유저 닉네임 업데이트 에러 : $exception")
-//                    return@updateCurrentUserInfo
-//                }
-//            }
+            USER_NICKNAME = binding.nickNameEditText.text.toString().ifEmpty { userId }
+            USER_ID = user?.userId.toString()
 
-            updatePublicKeyOnServer(USER_ID)
+            launch {
+                signInAlgorithm(USER_ID)
+            }
         }
     }
 
-    fun onUiKitLaunchButtonClicked() {
-        val userId = binding.userIdEditText.text.toString()
-        val userNick = binding.nickNameEditText.text.toString().ifEmpty { userId }
-        val intent = packageManager.getLaunchIntentForPackage(SENDBIRD_UI_KIT_APP)?.run {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            action = MY_APP_INTENT_ACTION
-            putExtra(INTENT_NAME_USER_ID, userId)
-            putExtra(INTENT_NAME_USER_NICK, userNick)
-        }
-        startActivity(intent)
-    }
-//[END Click Event]
-
-//[START Firestore: Public Key]
-    private fun updatePublicKeyOnServer(userId: String) {
-        db!!.collection(FIRE_STORE_DOCUMENT_PUBLIC_KEY)
+    /**
+     * signInAlgorithm
+     *
+     * 최초 등록자 여부, 서버 - PublicKey 등록 여부, KeyStore's ECKeyPair 여부에 따라 계정 등록 및 키 등록 알고리즘 실행
+     *
+     * @param userId 사용자 id. ECKeyPair 의 식별자로 사용
+     */
+    private suspend fun signInAlgorithm(userId: String) = withContext(Dispatchers.IO) {
+        db!!.collection(FIRESTORE_DOCUMENT_PUBLIC_KEY)
             .get()
             .addOnSuccessListener { result ->
-                //Firestore 에 어떤 데이터도 없을 때(따로 처리 안해주면 앱 크래시)
+                //1.Firestore 에 데이터가 없을 때 (따로 처리 안해주면 앱 크래시)
                 if (result.isEmpty) {
-                    Log.i(TAG, "Empty Firebase DB / 퍼블릭 키 업데이트")
-                    updatePublicKeyToKeyStoreAndServer(userId)
+                    generateECKeyPair(userId)
                     return@addOnSuccessListener
                 }
-
-                //Firestore 에 데이터가 하나라도 있을 때
+                //2.Firestore 에 데이터가 있을 때
                 for (document in result) {
-                    //1)로그인 하려는 사용자의 퍼블릭키가 업로드 되어 있을 때 -> 로그인
-                    if (document.data[FIRE_STORE_FIELD_USER_ID] == userId) {
+                    //2.1. 로그인하려는 사용자의 publicKey 가 서버에 등록되어 있을 때
+                    if (document.data[FIRESTORE_FIELD_USER_ID] == userId) {
                         Log.i(TAG, "서버에 퍼블릭키 있음")
-                        val intent = Intent(this, MainActivity::class.java)
-                        startActivity(intent)
+                        //2.1.1 로그인
+                        startActivity(
+                            Intent(this@LoginActivity, MainActivity::class.java)
+                        )
                         return@addOnSuccessListener
                     }
                 }
-                //2)로그인 하려는 사용자의 퍼블릭키가 없을 때 -> 키스토어/서버 키를 업로드 -> 로그인
-                Log.i(TAG, "서버에 퍼블릭키 없음")
-                updatePublicKeyToKeyStoreAndServer(userId)
-            }
-            .addOnFailureListener { exception ->
-                binding.progressBarLayout.visibility = View.GONE
-                showToast("키 가져오기 실패")
-                Log.e(TAG, "Error getting documents from firebase DB : $exception")
-            }
-    }
-
-    private fun updatePublicKeyToKeyStoreAndServer(userId: String) {
-        //키스토어에 키 있는 경우 -> 키스토어에서 퍼블릭 키를 가져와 서버 업데이트 -> 로그인
-        if (KeyStoreUtil().isKeyPairInKeyStore(userId)) {
-            Log.i(TAG, "키스토어에 키 있음")
-            KeyStoreUtil().getPublicKeyFromKeyStore(userId)?.let { publicKey ->
-                updatePublicKeyAffineXYToServer(userId, publicKey)
-                Log.i(TAG, "서버에 키 업로드 완료")
-                val intent = Intent(this, MainActivity::class.java)
-                startActivity(intent)
-                return
-            }
-        }
-        //키스토어 키 없는 경우 -> 키쌍 생성 후 키스토어에 업데이트 -> 키스토어에서 퍼블릭 키를 가져와 서버 업데이트 -> 로그인
-        else {
-            Log.i(TAG, "키스토어에 키 없음")
-            KeyStoreUtil().createKeyPairToKeyStore(userId)
-            KeyStoreUtil().getPublicKeyFromKeyStore(userId)?.let { publicKey ->
-                updatePublicKeyAffineXYToServer(userId, publicKey)
-                Log.i(TAG, "서버에 키 업로드 완료")
-                val intent = Intent(this, MainActivity::class.java)
-                startActivity(intent)
-                return
-            }
-        }
-    }
-
-    private fun updatePublicKeyAffineXYToServer(userId: String, publicKey: PublicKey) {
-        val ecPublicKey = publicKey as ECPublicKey
-        val user = hashMapOf(
-            FIRE_STORE_FIELD_USER_ID to userId,
-            FIRE_STORE_FIELD_AFFINE_X to ecPublicKey.w.affineX.toString(),
-            FIRE_STORE_FIELD_AFFINE_Y to ecPublicKey.w.affineY.toString()
-        )
-        db!!.collection(FIRE_STORE_DOCUMENT_PUBLIC_KEY)
-            .add(user)
-            .addOnSuccessListener {
-                showToast("퍼블릭키 업로드 성공")
+                //2.2. 로그인하려는 사용자의 publicKey 가 서버에 없을 때, 키스토어/서버 키를 업로드
+                generateECKeyPair(userId)
             }
             .addOnFailureListener { e ->
-                binding.progressBarLayout.visibility = View.GONE
-                Log.e(TAG, "Error adding document", e)
-                showToast("퍼블릭키 업로드 실패")
-                finish()
+                launch {
+                    dismissProgressBar()
+                }
+                e.printStackTrace()
             }
     }
-//[END Firestore: Public Key]
+
+    /**
+     * generateECKeyPair
+     *
+     * 키스토어에 사용자 ECKeyPair 등록 여부 따라 ECKeyPair 생성
+     *
+     * @param userId 사용자 id. ECKeyPair 의 식별자로 사용
+     */
+    private fun generateECKeyPair(userId: String) {
+        try {
+            //1. 키스토어에 키 있는 경우
+            if (ECKeyUtil.isECKeyPair(userId)) {
+                //1.1. 키스토어에서 publicKey 를 가져와 서버에 등록
+                enrollPublicKey(userId, publicKey = strongBox.getECPublicKey(userId))
+                //1.2. 로그인
+                startActivity(
+                    Intent(this, MainActivity::class.java)
+                )
+                return
+            }
+            //2. 키스토어 키 없는 경우
+            else {
+                //2.1. ECKeyPair 생성
+                strongBox.generateECKeyPair(userId)
+                //2.1.1. 키스토어에서 publicKey 를 가져와 서버에 등록
+                enrollPublicKey(userId, publicKey = strongBox.getECPublicKey(userId))
+                //2.1.1.1. 로그인
+                startActivity(
+                    Intent(this, MainActivity::class.java)
+                )
+                return
+            }
+        }
+        catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+    /**
+     * enrollPublicKey
+     *
+     * 사용자의 publicKey 로 부터 affineX, affineY 를 추출해 파이어베이스 DB에 저장
+     *
+     * @param userId publicKey 를 등록하려는 사용자의 id
+     * @param publicKey 사용자의 PublicKey
+     */
+    private fun enrollPublicKey(userId: String, publicKey: PublicKey) {
+        try {
+            ECKeyUtil.extractAffineXY(userId, publicKey).let { hashMap ->
+                db!!.collection(FIRESTORE_DOCUMENT_PUBLIC_KEY)
+                    .add(hashMap)
+                    .addOnSuccessListener {
+                        showToast("퍼블릭키 업로드 성공")
+                    }
+                    .addOnFailureListener { e ->
+                        binding.progressBarLayout.visibility = View.GONE
+                        Log.e(TAG, "Error adding document", e)
+                        showToast("퍼블릭키 업로드 실패")
+                        finish()
+                    }
+            }
+        }
+        catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private suspend fun showProgressBar() = withContext(coroutineContext) {
+        binding.progressBarLayout.visibility = View.VISIBLE
+    }
+
+    private suspend fun dismissProgressBar() = withContext(coroutineContext) {
+        binding.progressBarLayout.visibility = View.GONE
+    }
+
+
+//    //TODO 닉네임 등록/변경
+//    private fun enrollNickName() {
+//        val params = UserUpdateParams().apply {
+//            nickname = USER_NICKNAME
+//        }
+//        SendbirdChat.updateCurrentUserInfo(params) { exception ->
+//            if (exception != null) {
+//                binding.progressBarLayout.visibility = View.GONE
+//                Log.e(TAG, "update Current UserInfo Error : $exception")
+//                showToast("유저 닉네임 업데이트 에러 : $exception")
+//                return@updateCurrentUserInfo
+//            }
+//        }
+//    }
 }

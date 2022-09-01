@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
         <variable
             name="loginActivity"
             type="com.konai.sendbirdapisampleapp.activity.LoginActivity" />
@@ -25,30 +24,25 @@
                 android:id="@+id/userIdEditText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:hint="사용자 아이디 입력" />
+                android:hint="사용자 아이디 입력(필수)"
+                android:minWidth="48dp"
+                android:minHeight="48dp" />
 
             <EditText
                 android:id="@+id/nickNameEditText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:hint="사용자 닉네임 입력" />
+                android:hint="사용자 닉네임 입력(옵션)"
+                android:minWidth="48dp"
+                android:minHeight="48dp" />
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/loginButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:enabled="false"
-                android:onClick="@{()->loginActivity.onLogInButtonClicked()}"
+                android:onClick="@{()->loginActivity.signInButtonClick()}"
                 android:text="로그인" />
-
-            <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/UiKitAppLaunchButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="30dp"
-                android:enabled="false"
-                android:onClick="@{()->loginActivity.onUiKitLaunchButtonClicked()}"
-                android:text="ui kit app start" />
         </LinearLayout>
 
         <LinearLayout

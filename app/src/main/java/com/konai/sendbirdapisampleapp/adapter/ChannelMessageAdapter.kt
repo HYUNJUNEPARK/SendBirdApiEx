@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.konai.sendbirdapisampleapp.databinding.ItemMyMessageBinding
 import com.konai.sendbirdapisampleapp.databinding.ItemPartnerMessageBinding
-import com.konai.sendbirdapisampleapp.model.MessageModel
+import com.konai.sendbirdapisampleapp.models.MessageModel
 import com.konai.sendbirdapisampleapp.util.Constants.MY_MESSAGE
 import com.konai.sendbirdapisampleapp.util.Constants.PARTNER_MESSAGE
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID

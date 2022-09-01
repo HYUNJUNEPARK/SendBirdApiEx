@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.adapter.ChannelMessageAdapter
 import com.konai.sendbirdapisampleapp.databinding.ActivityMyChannelBinding
-import com.konai.sendbirdapisampleapp.model.MessageModel
+import com.konai.sendbirdapisampleapp.models.MessageModel
 import com.konai.sendbirdapisampleapp.util.Constants
 import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
 import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_CHANNEL_URL

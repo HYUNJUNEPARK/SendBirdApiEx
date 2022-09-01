@@ -12,16 +12,16 @@ import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.activity.ChannelActivity
 import com.konai.sendbirdapisampleapp.adapter.ChannelListAdapter
 import com.konai.sendbirdapisampleapp.databinding.FragmentChannelBinding
-import com.konai.sendbirdapisampleapp.model.ChannelListModel
-import com.konai.sendbirdapisampleapp.strongbox.KeyProvider
-import com.konai.sendbirdapisampleapp.strongbox.KeyStoreUtil
+import com.konai.sendbirdapisampleapp.models.ChannelListModel
+import com.konai.sendbirdapisampleapp.tmpstrongbox.KeyProvider
+import com.konai.sendbirdapisampleapp.tmpstrongbox.KeyStoreUtil
 import com.konai.sendbirdapisampleapp.util.Constants.ALL_MESSAGE_RECEIVE_HANDLER
 import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
 import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_META_DATA
-import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_DOCUMENT_PUBLIC_KEY
-import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_AFFINE_X
-import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_AFFINE_Y
-import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_USER_ID
+import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_DOCUMENT_PUBLIC_KEY
+import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_FIELD_AFFINE_X
+import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_FIELD_AFFINE_Y
+import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_FIELD_USER_ID
 import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_CHANNEL_URL
 import com.konai.sendbirdapisampleapp.util.Constants.PREFERENCE_NAME_HASH
 import com.konai.sendbirdapisampleapp.util.Constants.TAG
@@ -220,14 +220,14 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         var affineX: BigInteger?
         var affineY: BigInteger?
 
-        db!!.collection(FIRE_STORE_DOCUMENT_PUBLIC_KEY)
+        db!!.collection(FIRESTORE_DOCUMENT_PUBLIC_KEY)
             .get()
             .addOnSuccessListener { result ->
                 for (document in result) {
-                    if (document.data[FIRE_STORE_FIELD_USER_ID] == invitedUserId) {
+                    if (document.data[FIRESTORE_FIELD_USER_ID] == invitedUserId) {
                         showToast("상대방 공개키 affineX/affineY 얻음")
-                        affineX = BigInteger(document.data[FIRE_STORE_FIELD_AFFINE_X].toString())
-                        affineY = BigInteger(document.data[FIRE_STORE_FIELD_AFFINE_Y].toString())
+                        affineX = BigInteger(document.data[FIRESTORE_FIELD_AFFINE_X].toString())
+                        affineY = BigInteger(document.data[FIRESTORE_FIELD_AFFINE_Y].toString())
                         val publicKey: PublicKey = KeyStoreUtil().createPublicKeyByECPoint(affineX!!, affineY!!)
                         val sharedSecretHash: ByteArray = KeyProvider().createSharedSecretHash(
                             privateKey,

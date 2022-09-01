@@ -9,7 +9,7 @@ import com.konai.sendbirdapisampleapp.databinding.ActivityMainBinding
 import com.konai.sendbirdapisampleapp.fragment.ChannelListFragment
 import com.konai.sendbirdapisampleapp.fragment.FriendFragment
 import com.konai.sendbirdapisampleapp.fragment.KeyFragment
-import com.konai.sendbirdapisampleapp.strongbox.KeyStoreUtil
+import com.konai.sendbirdapisampleapp.tmpstrongbox.KeyStoreUtil
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
 
 class MainActivity : AppCompatActivity() {
@@ -21,12 +21,16 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-        binding.mainActivity = this
-
-        initFragment()
-        initBottomNavigation()
-        initAlertDialog()
+        try {
+            binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+            binding.mainActivity = this
+            initFragment()
+            initBottomNavigation()
+            initAlertDialog()
+        }
+        catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     private fun initAlertDialog() {

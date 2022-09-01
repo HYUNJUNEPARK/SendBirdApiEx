@@ -4,9 +4,9 @@ import android.content.Context
 import android.util.Log
 import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.databinding.FragmentBlankBinding
-import com.konai.sendbirdapisampleapp.strongbox.KeyStoreUtil
-import com.konai.sendbirdapisampleapp.util.Constants
-import com.konai.sendbirdapisampleapp.util.Constants.FIRE_STORE_FIELD_USER_ID
+import com.konai.sendbirdapisampleapp.tmpstrongbox.KeyStoreUtil
+import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_DOCUMENT_PUBLIC_KEY
+import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_FIELD_USER_ID
 import com.konai.sendbirdapisampleapp.util.Constants.PREFERENCE_NAME_HASH
 import com.konai.sendbirdapisampleapp.util.Constants.TAG
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
@@ -36,16 +36,15 @@ class KeyFragment : BaseFragment<FragmentBlankBinding>(R.layout.fragment_blank) 
         val availableHashSb = StringBuffer("")
         var availableHashNumber = 0
         //기기에 저장된 모든 해시
-        requireContext().getSharedPreferences(PREFERENCE_NAME_HASH, Context.MODE_PRIVATE)
-            .let { sharedPreference ->
-                devicePublicKeyCountTextView.text = sharedPreference.all.size.toString()
+        requireContext().getSharedPreferences(PREFERENCE_NAME_HASH, Context.MODE_PRIVATE).let { sharedPreference ->
+            devicePublicKeyCountTextView.text = sharedPreference.all.size.toString()
 
-                for (i in sharedPreference.all) {
-                    allHashSb.append("${i.key}\n\n")
-                    allChannelUrlList.add(i.key)
-                }
-                allHashSavedOnDeviceTextView.text = allHashSb.toString()
+            for (i in sharedPreference.all) {
+                allHashSb.append("${i.key}\n\n")
+                allChannelUrlList.add(i.key)
             }
+            allHashSavedOnDeviceTextView.text = allHashSb.toString()
+        }
 
         //로그인 계정이 사용할 수 있는 해시 -> 로그인 채널의 url == 기기에 저장된 hash 비교
         val query = GroupChannel.createMyGroupChannelListQuery(
@@ -91,7 +90,7 @@ class KeyFragment : BaseFragment<FragmentBlankBinding>(R.layout.fragment_blank) 
     }
 
     private fun initServerKeyStateIcon() {
-        db!!.collection(Constants.FIRE_STORE_DOCUMENT_PUBLIC_KEY)
+        db!!.collection(FIRESTORE_DOCUMENT_PUBLIC_KEY)
             .get()
             .addOnSuccessListener { result ->
                 if (result.isEmpty) {
@@ -99,7 +98,7 @@ class KeyFragment : BaseFragment<FragmentBlankBinding>(R.layout.fragment_blank) 
                     return@addOnSuccessListener
                 }
                 for (document in result) {
-                    if (document.data[FIRE_STORE_FIELD_USER_ID] == USER_ID) {
+                    if (document.data[FIRESTORE_FIELD_USER_ID] == USER_ID) {
                         binding.serverPublicKeyStateImageView.setImageResource(R.drawable.ic_baseline_check_circle_24)
                     }
                 }

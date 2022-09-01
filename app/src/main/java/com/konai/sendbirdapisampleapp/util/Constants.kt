@@ -5,10 +5,8 @@ object Constants {
     lateinit var USER_ID: String
     lateinit var USER_NICKNAME: String
     //build
-    const val APP_ID = "D4FCF442-A653-49B3-9D87-6134CD87CA81"
-    const val SENDBIRD_UI_KIT_APP = "com.konai.sendbirduikittestapp"
+    const val SENDBIRD_API_KEY = "D4FCF442-A653-49B3-9D87-6134CD87CA81"
     //intent
-    const val MY_APP_INTENT_ACTION = "com.konai.sendbirdapisampleapp.activity.ACTION"
     const val CHANNEL_ACTIVITY_INTENT_ACTION ="com.konai.sendbirdapisampleapp.adapter.Action"
     const val INTENT_NAME_USER_ID = "userId"
     const val INTENT_NAME_USER_NICK = "userNick"
@@ -23,10 +21,10 @@ object Constants {
     const val ALL_MESSAGE_RECEIVE_HANDLER = "allMessageHandler"
     const val LOGIN_ACCOUNT_MESSAGE_RECEIVE_HANDLER = "accountMessageHandler"
     //firebase
-    const val FIRE_STORE_FIELD_USER_ID = "userId"
-    const val FIRE_STORE_FIELD_AFFINE_X = "affineX"
-    const val FIRE_STORE_FIELD_AFFINE_Y = "affineY"
-    const val FIRE_STORE_DOCUMENT_PUBLIC_KEY = "publicKey"
+    const val FIRESTORE_FIELD_USER_ID = "userId"
+    const val FIRESTORE_FIELD_AFFINE_X = "affineX"
+    const val FIRESTORE_FIELD_AFFINE_Y = "affineY"
+    const val FIRESTORE_DOCUMENT_PUBLIC_KEY = "publicKey"
     //sendbird
     const val CHANNEL_META_DATA = "metadata"
     //shared preference
