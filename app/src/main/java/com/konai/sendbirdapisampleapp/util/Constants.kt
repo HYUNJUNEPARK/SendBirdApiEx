@@ -30,5 +30,5 @@ object Constants {
     //shared preference
     const val PREFERENCE_NAME_HASH = "hash"
     //etc
-    const val TAG = "applicationLog"
+    const val TAG = "testLog"
 }

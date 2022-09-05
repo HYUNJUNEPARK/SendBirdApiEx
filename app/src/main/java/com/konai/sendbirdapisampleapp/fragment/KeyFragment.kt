@@ -59,6 +59,8 @@ class KeyFragment : BaseFragment<FragmentBlankBinding>(R.layout.fragment_blank) 
                 showToast("$e")
                 return@next
             }
+
+
             if (channels!!.isEmpty()) return@next
 
             for (idx in channels.indices) {

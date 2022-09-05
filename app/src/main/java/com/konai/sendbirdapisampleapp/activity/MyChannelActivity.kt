@@ -38,7 +38,6 @@ class MyChannelActivity : AppCompatActivity() {
 
         val sharedPreferences = getSharedPreferences(Constants.PREFERENCE_NAME_HASH, Context.MODE_PRIVATE)
         Log.d(TAG, "onCreate: ${sharedPreferences.all.size}")
-
     }
 
 //[START Init]
@@ -80,7 +79,8 @@ class MyChannelActivity : AppCompatActivity() {
                     )
                 }
                 adapter.submitList(messageList)
-                adapter.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can.
+                adapter.notifyDataSetChanged()
+                //TODO It will always be more efficient to use more specific change events if you can.
             }
         }
     }
@@ -114,7 +114,8 @@ class MyChannelActivity : AppCompatActivity() {
                     )
                 )
                 adapter.submitList(messageList)
-                adapter.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can.
+                adapter.notifyDataSetChanged()
+                //TODO It will always be more efficient to use more specific change events if you can.
                 adjustRecyclerViewPosition()
             }
         }

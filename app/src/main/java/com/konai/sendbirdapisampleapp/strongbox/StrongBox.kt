@@ -118,7 +118,7 @@ class StrongBox {
         }
     }
 
-    //테스트 앱용
+    //오버로드 for 테스트 앱
     fun generateECKeyPair(keyStoreAlias: String) {
         //Android API 31 이상
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -158,7 +158,7 @@ class StrongBox {
         return androidKeyStore.getCertificate(ecKeyPairAlias).publicKey
     }
 
-    //테스트 앱에서 사용
+    //오버로드 for 테스트 앱
     fun getECPublicKey(keyStoreAlias: String): PublicKey {
         return androidKeyStore.getCertificate(keyStoreAlias).publicKey
     }
@@ -256,6 +256,56 @@ class StrongBox {
 
         return keyId
     }
+
+    //오버로드 for 테스트 앱
+    //userId 는 privateKey를 가져오기 위해 필요함
+    @Throws(Exception::class)
+    fun generateSharedSecretKey(
+        userId:String,
+        publicKey: PublicKey,
+        nonce: String
+    ): String {
+        val keyId: String = nonce
+        val random: ByteArray = Base64.decode(nonce, Base64.DEFAULT)
+
+        //TODO
+
+        val privateKey: PrivateKey
+        androidKeyStore.getEntry(userId, null).let { keyStoreEntry ->
+            privateKey = (keyStoreEntry as KeyStore.PrivateKeyEntry).privateKey
+        }
+
+        var sharedSecretKey: String
+        KeyAgreement.getInstance("ECDH").apply {
+            init(privateKey)
+            doPhase(publicKey, true)
+        }.generateSecret().let { _sharedSecret ->
+            val messageDigest = MessageDigest.getInstance(KeyProperties.DIGEST_SHA256).apply {
+                update(_sharedSecret)
+            }
+            val hash = messageDigest.digest(random)
+            SecretKeySpec(
+                hash,
+                KeyProperties.KEY_ALGORITHM_AES
+            ).let { secretKeySpec ->
+                sharedSecretKey = Base64.encodeToString(secretKeySpec.encoded, Base64.DEFAULT)
+            }
+            //TODO 메모리 초기화
+            //hash
+            //private
+        }
+        encryptedSharedPreferencesManager.putString(keyId, sharedSecretKey)
+
+        //TODO 메모리 초기화
+        //sharedSecretKey
+
+        return keyId
+    }
+
+
+
+
+
 
 //    fun generateSharedSecretKey(pointX: String, pointY: String, nonce: String): String? {
 //        var publicKey = assemble(pointX, pointY)

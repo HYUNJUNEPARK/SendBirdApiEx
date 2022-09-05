@@ -69,9 +69,7 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
         }
     }
 
-    /**
-     * SendBirdSDK 초기화
-     */
+    // SendBirdSDK 초기화
     private suspend fun initSendBirdSdk() = withContext(Dispatchers.IO) {
         SendbirdChat.init(
             InitParams(SENDBIRD_API_KEY, this@LoginActivity, useCaching = true),
@@ -166,7 +164,10 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
             //1. 키스토어에 키 있는 경우
             if (ECKeyUtil.isECKeyPair(userId)) {
                 //1.1. 키스토어에서 publicKey 를 가져와 서버에 등록
-                enrollPublicKey(userId, publicKey = strongBox.getECPublicKey(userId))
+                enrollPublicKey(
+                    userId,
+                    publicKey = strongBox.getECPublicKey(userId)
+                )
                 //1.1.2. 로그인
                 startActivity(
                     Intent(this, MainActivity::class.java)
@@ -178,7 +179,10 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
                 //2.1. ECKeyPair 생성
                 strongBox.generateECKeyPair(userId)
                 //2.1.1. 키스토어에서 publicKey 를 가져와 서버에 등록
-                enrollPublicKey(userId, publicKey = strongBox.getECPublicKey(userId))
+                enrollPublicKey(
+                    userId,
+                    publicKey = strongBox.getECPublicKey(userId)
+                )
                 //2.1.1.1. 로그인
                 startActivity(
                     Intent(this, MainActivity::class.java)
@@ -190,6 +194,7 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
             e.printStackTrace()
         }
     }
+
     /**
      * enrollPublicKey
      *
@@ -226,20 +231,4 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
     private suspend fun dismissProgressBar() = withContext(coroutineContext) {
         binding.progressBarLayout.visibility = View.GONE
     }
-
-
-//    //TODO 닉네임 등록/변경
-//    private fun enrollNickName() {
-//        val params = UserUpdateParams().apply {
-//            nickname = USER_NICKNAME
-//        }
-//        SendbirdChat.updateCurrentUserInfo(params) { exception ->
-//            if (exception != null) {
-//                binding.progressBarLayout.visibility = View.GONE
-//                Log.e(TAG, "update Current UserInfo Error : $exception")
-//                showToast("유저 닉네임 업데이트 에러 : $exception")
-//                return@updateCurrentUserInfo
-//            }
-//        }
-//    }
 }
