@@ -158,7 +158,11 @@ class StrongBox {
         return androidKeyStore.getCertificate(ecKeyPairAlias).publicKey
     }
 
-    //오버로드 for 테스트 앱
+    /**
+     *  테스트 앱을 위한 오버로딩 함수
+     *
+     *  @param keyStoreAlias 사용자 ID
+     */
     fun getECPublicKey(keyStoreAlias: String): PublicKey {
         return androidKeyStore.getCertificate(keyStoreAlias).publicKey
     }

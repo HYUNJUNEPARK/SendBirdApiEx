@@ -25,10 +25,8 @@ object ECKeyUtil {
         //TODO keyValue(ByteArray) -> Base64 String -> upload to server
         val encodedData = (publicKey as ECPublicKey).encoded
         val keyValue = Arrays.copyOfRange(encodedData, encodedData.size - 65, encodedData.size )
+
         //publickey 로 다시 바꾸는 과정에서 잘라야하는 데이터가 생길 수 있음
-
-
-
         (publicKey as ECPublicKey).let { ecPublicKey ->
             return hashMapOf(
                 "userId" to userId,

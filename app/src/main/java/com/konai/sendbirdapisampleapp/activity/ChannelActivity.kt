@@ -345,13 +345,14 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
             else {
                 val hash = Base64.decode(data, Base64.DEFAULT)
                 decryptionMessageList.clear()
-                for(message in encryptionMessageList) {
-                    decryptionMessageList.add(MessageModel(
-                        message = AESUtil().decryptionCBCMode(message.message!!, hash),
-                        sender = message.sender,
-                        messageId = message.messageId,
-                        createdAt = message.createdAt
-                    )
+                for (message in encryptionMessageList) {
+                    decryptionMessageList.add(
+                        MessageModel(
+                            message = AESUtil().decryptionCBCMode(message.message!!, hash),
+                            sender = message.sender,
+                            messageId = message.messageId,
+                            createdAt = message.createdAt
+                        )
                     )
                 }
                 adapter.submitList(decryptionMessageList)

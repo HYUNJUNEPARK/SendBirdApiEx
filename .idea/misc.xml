@@ -33,6 +33,7 @@
         <entry key="app/src/main/res/layout/ic_baseline_person_pin_24.xml" value="0.38333333333333336" />
         <entry key="app/src/main/res/layout/item_chat_channel_list.xml" value="0.33" />
         <entry key="app/src/main/res/layout/item_exception_message.xml" value="0.38229166666666664" />
+        <entry key="app/src/main/res/layout/item_friend.xml" value="0.38229166666666664" />
         <entry key="app/src/main/res/layout/item_my_chat.xml" value="0.38333333333333336" />
         <entry key="app/src/main/res/layout/item_my_chat_channel_list.xml" value="0.2564814814814815" />
         <entry key="app/src/main/res/layout/item_my_message.xml" value="0.1425925925925926" />

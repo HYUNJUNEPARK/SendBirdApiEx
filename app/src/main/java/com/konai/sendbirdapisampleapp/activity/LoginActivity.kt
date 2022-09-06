@@ -2,7 +2,6 @@ package com.konai.sendbirdapisampleapp.activity
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
@@ -16,7 +15,6 @@ import com.konai.sendbirdapisampleapp.strongbox.StrongBox
 import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_DOCUMENT_PUBLIC_KEY
 import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_FIELD_USER_ID
 import com.konai.sendbirdapisampleapp.util.Constants.SENDBIRD_API_KEY
-import com.konai.sendbirdapisampleapp.util.Constants.TAG
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.util.Constants.USER_NICKNAME
 import com.konai.sendbirdapisampleapp.util.Extension.showToast
@@ -69,6 +67,7 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
         }
     }
 
+
     // SendBirdSDK 초기화
     private suspend fun initSendBirdSdk() = withContext(Dispatchers.IO) {
         SendbirdChat.init(
@@ -100,7 +99,7 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
                 launch {
                     dismissProgressBar()
                 }
-                Log.e(TAG, ": $e")
+                e.printStackTrace()
                 return@connect
             }
 
@@ -133,7 +132,6 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
                 for (document in result) {
                     //2.1. 로그인하려는 사용자의 publicKey 가 서버에 등록되어 있을 때
                     if (document.data[FIRESTORE_FIELD_USER_ID] == userId) {
-                        Log.i(TAG, "서버에 퍼블릭키 있음")
                         //2.1.1 로그인
                         startActivity(
                             Intent(this@LoginActivity, MainActivity::class.java)
@@ -213,7 +211,7 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
                     }
                     .addOnFailureListener { e ->
                         binding.progressBarLayout.visibility = View.GONE
-                        Log.e(TAG, "Error adding document", e)
+                        e.printStackTrace()
                         showToast("퍼블릭키 업로드 실패")
                         finish()
                     }

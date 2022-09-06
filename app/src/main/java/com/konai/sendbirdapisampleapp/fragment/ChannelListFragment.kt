@@ -1,23 +1,22 @@
 package com.konai.sendbirdapisampleapp.fragment
 
-import android.content.Intent
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.konai.sendbirdapisampleapp.R
-import com.konai.sendbirdapisampleapp.activity.ChannelActivity
 import com.konai.sendbirdapisampleapp.adapter.ChannelListAdapter
 import com.konai.sendbirdapisampleapp.databinding.FragmentChannelBinding
+import com.konai.sendbirdapisampleapp.db.DBProvider
+import com.konai.sendbirdapisampleapp.db.KeyId
+import com.konai.sendbirdapisampleapp.db.KeyIdDatabase
 import com.konai.sendbirdapisampleapp.models.ChannelListModel
 import com.konai.sendbirdapisampleapp.strongbox.ECKeyUtil
 import com.konai.sendbirdapisampleapp.strongbox.StrongBox
 import com.konai.sendbirdapisampleapp.util.Constants.ALL_MESSAGE_RECEIVE_HANDLER
-import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
 import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_META_DATA
 import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_DOCUMENT_PUBLIC_KEY
 import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_FIELD_AFFINE_X
 import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_FIELD_AFFINE_Y
 import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_FIELD_USER_ID
-import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_CHANNEL_URL
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.util.Extension.showToast
 import com.sendbird.android.SendbirdChat
@@ -36,16 +35,19 @@ import kotlin.coroutines.CoroutineContext
 class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragment_channel), CoroutineScope {
     private var _channelList: MutableList<ChannelListModel> = mutableListOf()
     private lateinit var strongBox: StrongBox
+    private lateinit var localDB: KeyIdDatabase
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + Job()
 
     override fun initView() {
         super.initView()
+
         try {
             strongBox = StrongBox.getInstance(requireContext())
+            localDB = DBProvider.getInstance(requireContext())!!
             initRecyclerView()
             addMessageHandler()
-            createChannelButtonState()
+            showCreateChannelButtonState()
         }
         catch (e: Exception) {
             e.printStackTrace()
@@ -54,6 +56,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
     override fun onResume() {
         super.onResume()
+
         try {
             initRecyclerView()
             addMessageHandler()
@@ -65,22 +68,25 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
     override fun onStop() {
         super.onStop()
+
         SendbirdChat.removeChannelHandler(ALL_MESSAGE_RECEIVE_HANDLER)
     }
 
     private fun initRecyclerView() {
-        launch {
-            showProgressBar()
-            initChannelList()
-            dismissProgressBar()
-        }
         val adapter = ChannelListAdapter(requireContext()).apply {
             channelList = _channelList
         }
         binding.chatListRecyclerView.adapter = adapter
         binding.chatListRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-    }
 
+        launch {
+            showProgressBar()
+            //TODO 센드버드 SDK 는 기본적으로 비동기화 처리가 되어 있다고 문서에 적혀있는데 suspend 처리 안하고 launch { } 에 넣어도 되는건가?
+            //TODO suspend 처리하면 서버에서 가져온 채널 리스트는 로그에서 확인이 가능하나 UI 에는 표시가 안됨
+            fetchChannelList()
+            dismissProgressBar()
+        }
+    }
 
     //메시지가 수신될 때마다 채널 리스트를 갱신
     private fun addMessageHandler() {
@@ -93,7 +99,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                             showToast("상대방 메시지 수신 : 채널 리스트 갱신")
                             launch {
                                 showProgressBar()
-                                initChannelList()
+                                fetchChannelList()
                                 dismissProgressBar()
                             }
                         }
@@ -104,7 +110,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
     }
 
     //사용자 자신의 디바이스인 경우에만 채널 생성 버튼이 활성화됨
-    private fun createChannelButtonState() {
+    private fun showCreateChannelButtonState() {
         //키스토어에 사용자의 ECKeyPair 가 있을 때 (사용자 디바이스)
         if(!ECKeyUtil.isECKeyPair(USER_ID)) {
             binding.createChannelLayoutButton.isEnabled = false
@@ -123,7 +129,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
     }
 
     //사용자가 참여하고 있는 채널의 데이터를 센드버드 서버로부터 받아와 채널 리스트를 생성
-    private suspend fun initChannelList() = withContext(Dispatchers.IO){
+    private fun fetchChannelList() {
         val query = GroupChannel.createMyGroupChannelListQuery(
             GroupChannelListQueryParams().apply {
                 includeEmpty = true
@@ -136,8 +142,13 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                 showToast("$e")
                 return@next
             }
-            if (channels!!.isEmpty()) return@next
-            _channelList.clear() //to make the list empty
+
+            if (channels!!.isEmpty()) {
+                return@next
+            }
+
+            _channelList.clear() //To make the list empty
+
             for (idx in channels.indices) {
                 _channelList.add(
                     ChannelListModel(
@@ -149,10 +160,8 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                     )
                 )
             }
-            launch(Dispatchers.Main) {
-                binding.chatListRecyclerView.adapter?.notifyDataSetChanged()
-                //TODO It will always be more efficient to use more specific change events if you can. Rely on `notifyDataSetChanged` as a last resort.
-            }
+            binding.chatListRecyclerView.adapter?.notifyDataSetChanged()
+            //TODO It will always be more efficient to use more specific change events if you can. Rely on `notifyDataSetChanged` as a last resort.
         }
     }
 
@@ -172,8 +181,8 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                 e.printStackTrace()
                 return@createChannel
             }
-            if (channel == null) return@createChannel
 
+            if (channel == null) return@createChannel
 
             // 유효하지 않은 사용자를 입력해 멤버가 1인 채널이 생성되었지만
             // 그 채널이 기존에 만들어두었던 "나와의 채팅"의 채널을 재활용한 경우
@@ -181,6 +190,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                 showToast("등록되지 않은 사용자입니다.")
                 return@createChannel
             }
+
             // 유효하지 않은 사용자를 입력해 멤버가 1인 채널이 생성된 경우 -> 생성된 채널 삭제
             if (channel.members.size == 1) {
                 showToast("등록되지 않은 사용자입니다.")
@@ -190,81 +200,73 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                 return@createChannel
             }
 
-
-
-
-            //TODO 멤버는 2명이지만 채널에 해당하는 Key 가 있다면(중복 채널임) -> 추가 작업 없이 종료
-            //여기까지 넘어온 시점에서 멤버는 2명 ! 따라서 Room 에 channel.url 이 있는지만 확인하면 됨
-            //로컬 DB 접근이므로 Dispatcher.IO 스코프에서 작업
-
-
-
-
-
             launch {
                 showProgressBar()
-                generateSharedSecreteKey(channel, invitedUserId)
-                initChannelList()
+                generateSharedSecreteKey(channel, invitedUserId).let { keyId ->
+                    withContext(Dispatchers.IO) {
+                        localDB.keyIdDao().insert(
+                            KeyId(
+                                urlHash = channel.url,
+                                keyId = keyId
+                            )
+                        )
+                    }
+                }
                 dismissProgressBar()
+                fetchChannelList()
             }
 
             //정상적으로 채널과 SharedSecretKey 생성을 마쳤다면 ChannelActivity 로 이동
-            startActivity(
-                Intent(requireContext(), ChannelActivity::class.java).apply {
-                    putExtra(INTENT_NAME_CHANNEL_URL, channel.url)
-                    action = CHANNEL_ACTIVITY_INTENT_ACTION
-                }
-            )
+//            startActivity(
+//                Intent(requireContext(), ChannelActivity::class.java).apply {
+//                    putExtra(INTENT_NAME_CHANNEL_URL, channel.url)
+//                    action = CHANNEL_ACTIVITY_INTENT_ACTION
+//                }
+//            )
         }
         binding.userIdInputEditText.text = null
     }
 
     //SharedSecretKey 생성, 채널 메타데이터로 secureRandom 업로드
-    private suspend fun generateSharedSecreteKey(
-        channel: GroupChannel,
-        friendId: String
-    )= withContext(Dispatchers.IO) {
+    private suspend fun generateSharedSecreteKey(channel: GroupChannel, friendId: String): String {
         //SharedSecretKey 만들 때와 KeyId, 채널 메타데이터로 사용됨
         val secureRandom = strongBox.generateRandom(32)
 
-        db!!.collection(FIRESTORE_DOCUMENT_PUBLIC_KEY)
-            .get()
-            .addOnSuccessListener { result ->
-                for (document in result) {
-                    if (document.data[FIRESTORE_FIELD_USER_ID] == friendId) {
-                        val affineX = document.data[FIRESTORE_FIELD_AFFINE_X].toString()
-                        val affineY = document.data[FIRESTORE_FIELD_AFFINE_Y].toString()
-
-                        //SharedSecretKey 생성
-                        //USER_ID 는 privateKey 가 저장되어 있는 keyAlias
-                        strongBox.generateSharedSecretKey(
-                            USER_ID,
-                            publicKey = ECKeyUtil.coordinatePublicKey(affineX, affineY),
-                            nonce = secureRandom
-                        ).let { keyId ->
-
-
-                            //TODO 로컬 DB 생성 key:URL / Value:keyId
-                            //Key(channel.url) : Value(keyID)
-
-
-                            //채널 메타데이터로 secureRandom 업로드
-                            val metadata = mapOf(
-                                CHANNEL_META_DATA to keyId
-                            )
-                            channel.createMetaData(metadata) { _, e ->
-                                if (e != null) {
-                                    e.printStackTrace()
-                                    return@createMetaData
+        withContext(Dispatchers.IO) {
+            db!!.collection(FIRESTORE_DOCUMENT_PUBLIC_KEY)
+                .get()
+                .addOnSuccessListener { result ->
+                    for (document in result) {
+                        if (document.data[FIRESTORE_FIELD_USER_ID] == friendId) {
+                            //SharedSecretKey 생성
+                            //USER_ID 는 privateKey 가 저장되어 있는 keyAlias
+                            strongBox.generateSharedSecretKey(
+                                USER_ID,
+                                publicKey = ECKeyUtil.coordinatePublicKey(
+                                    affineX = document.data[FIRESTORE_FIELD_AFFINE_X].toString(),
+                                    affineY = document.data[FIRESTORE_FIELD_AFFINE_Y].toString()
+                                ),
+                                nonce = secureRandom
+                            ).let { keyId ->
+                                //채널 메타데이터로 secureRandom 업로드
+                                val metadata = mapOf(
+                                    CHANNEL_META_DATA to keyId
+                                )
+                                channel.createMetaData(metadata) { _, e ->
+                                    if (e != null) {
+                                        e.printStackTrace()
+                                        return@createMetaData
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
-            .addOnFailureListener { e ->
-                e.printStackTrace()
-            }
+                .addOnFailureListener { e ->
+                    e.printStackTrace()
+                }
+        }
+        return secureRandom
     }
 
     private suspend fun showProgressBar() = withContext(coroutineContext) {

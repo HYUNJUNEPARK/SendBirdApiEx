@@ -151,7 +151,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="기기에 저장된 해시"
+                    android:text="ESP 에 저장되어 있는 키"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
@@ -166,14 +166,15 @@
 
             </LinearLayout>
 
-            <ScrollView android:id="@+id/allHashSavedOnDeviceScrollView"
+            <ScrollView
+                android:id="@+id/allESPKeysScrollView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scrollbarAlwaysDrawVerticalTrack="true"
                 android:scrollbarFadeDuration="0">
 
                 <TextView
-                    android:id="@+id/allHashSavedOnDeviceTextView"
+                    android:id="@+id/allESPKeysTextView"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent" />
             </ScrollView>
@@ -198,7 +199,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="로그인 계정이 사용할 수 있는 해시"
+                android:text="로그인 계정한 사용할 수 있는 키"
                 android:textSize="18sp"
                 android:textStyle="bold" />
             <TextView android:id="@+id/availableHashNumberTextView"
