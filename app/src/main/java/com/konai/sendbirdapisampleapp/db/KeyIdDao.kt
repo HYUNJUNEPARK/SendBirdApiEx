@@ -9,14 +9,14 @@ interface KeyIdDao {
     fun getKeyId(urlHash: String): String
 
     @Query("SELECT * FROM $DB_NAME")
-    fun getAll(): List<KeyId>
+    fun getAll(): List<KeyIdEntity>
 
     @Delete
-    fun delete(keyId: KeyId)
+    fun delete(keyIdEntity: KeyIdEntity)
 
     @Update
-    fun update(keyId: KeyId)
+    fun update(keyIdEntity: KeyIdEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insert(keyId: KeyId)
+    fun insert(keyIdEntity: KeyIdEntity)
 }

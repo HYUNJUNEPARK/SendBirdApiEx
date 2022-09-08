@@ -6,7 +6,7 @@ import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.adapter.ChannelListAdapter
 import com.konai.sendbirdapisampleapp.databinding.FragmentChannelBinding
 import com.konai.sendbirdapisampleapp.db.DBProvider
-import com.konai.sendbirdapisampleapp.db.KeyId
+import com.konai.sendbirdapisampleapp.db.KeyIdEntity
 import com.konai.sendbirdapisampleapp.db.KeyIdDatabase
 import com.konai.sendbirdapisampleapp.models.ChannelListModel
 import com.konai.sendbirdapisampleapp.strongbox.ECKeyUtil
@@ -45,7 +45,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         try {
             strongBox = StrongBox.getInstance(requireContext())
             localDB = DBProvider.getInstance(requireContext())!!
-            initRecyclerView()
+            initAdapter()
             addMessageHandler()
             showCreateChannelButtonState()
         }
@@ -58,7 +58,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         super.onResume()
 
         try {
-            initRecyclerView()
+            initAdapter()
             addMessageHandler()
         }
         catch (e: Exception) {
@@ -72,7 +72,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         SendbirdChat.removeChannelHandler(ALL_MESSAGE_RECEIVE_HANDLER)
     }
 
-    private fun initRecyclerView() {
+    private fun initAdapter() {
         val adapter = ChannelListAdapter(requireContext()).apply {
             channelList = _channelList
         }
@@ -81,9 +81,11 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
         launch {
             showProgressBar()
+
             //TODO 센드버드 SDK 는 기본적으로 비동기화 처리가 되어 있다고 문서에 적혀있는데 suspend 처리 안하고 launch { } 에 넣어도 되는건가?
-            //TODO suspend 처리하면 서버에서 가져온 채널 리스트는 로그에서 확인이 가능하나 UI 에는 표시가 안됨
+            //suspend 처리하면 서버에서 가져온 채널 리스트는 로그에서 확인이 가능하나 UI 에는 표시가 안됨
             fetchChannelList()
+
             dismissProgressBar()
         }
     }
@@ -111,11 +113,11 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
     //사용자 자신의 디바이스인 경우에만 채널 생성 버튼이 활성화됨
     private fun showCreateChannelButtonState() {
-        //키스토어에 사용자의 ECKeyPair 가 있을 때 (사용자 디바이스)
-        if(!ECKeyUtil.isECKeyPair(USER_ID)) {
+        //1. 키스토어에 사용자의 ECKeyPair 가 없을 때 (타인 디바이스를 사용하는 경우)
+        if(ECKeyUtil.isECKeyPair(USER_ID).not()) {
             binding.createChannelLayoutButton.isEnabled = false
         }
-        //키스토어에 사용자의 ECKeyPair 가 없을 때 (타인 디바이스를 사용하는 경우)
+        //2. 키스토어에 사용자의 ECKeyPair 가 있을 때 (사용자 디바이스)
         else {
             binding.createChannelLayoutButton.setOnClickListener {
                 try {
@@ -205,7 +207,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                 generateSharedSecreteKey(channel, invitedUserId).let { keyId ->
                     withContext(Dispatchers.IO) {
                         localDB.keyIdDao().insert(
-                            KeyId(
+                            KeyIdEntity(
                                 urlHash = channel.url,
                                 keyId = keyId
                             )
@@ -239,16 +241,15 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                     for (document in result) {
                         if (document.data[FIRESTORE_FIELD_USER_ID] == friendId) {
                             //SharedSecretKey 생성
-                            //USER_ID 는 privateKey 가 저장되어 있는 keyAlias
                             strongBox.generateSharedSecretKey(
-                                USER_ID,
+                                USER_ID, //PrivateKey 가 저장되어 있는 keyAlias
                                 publicKey = ECKeyUtil.coordinatePublicKey(
                                     affineX = document.data[FIRESTORE_FIELD_AFFINE_X].toString(),
                                     affineY = document.data[FIRESTORE_FIELD_AFFINE_Y].toString()
                                 ),
                                 nonce = secureRandom
                             ).let { keyId ->
-                                //채널 메타데이터로 secureRandom 업로드
+                                //채널 메타데이터로 secureRandom 을 센드버드 서버에 업로드
                                 val metadata = mapOf(
                                     CHANNEL_META_DATA to keyId
                                 )

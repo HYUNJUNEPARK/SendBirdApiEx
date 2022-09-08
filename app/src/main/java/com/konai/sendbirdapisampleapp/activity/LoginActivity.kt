@@ -38,6 +38,7 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         try {
             binding = DataBindingUtil.setContentView(this, R.layout.activity_login)
             binding.loginActivity = this
@@ -66,7 +67,6 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
             dismissProgressBar()
         }
     }
-
 
     // SendBirdSDK 초기화
     private suspend fun initSendBirdSdk() = withContext(Dispatchers.IO) {

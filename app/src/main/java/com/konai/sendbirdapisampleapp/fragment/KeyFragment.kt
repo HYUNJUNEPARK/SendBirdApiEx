@@ -111,7 +111,7 @@ class KeyFragment : BaseFragment<FragmentBlankBinding>(R.layout.fragment_blank),
      */
     private suspend fun displayAvailableKeyIds()= withContext(Dispatchers.IO) {
         localDB.keyIdDao().getAll().let {
-            Log.d(TAG, "Local DB: $it")
+            //Log.d(TAG, "Local DB: $it")
         }
 
         //TODO 1 센드버드에서 로그인한 사용자가 참여하고 있는 채널의 URL 주소 로드
@@ -124,10 +124,9 @@ class KeyFragment : BaseFragment<FragmentBlankBinding>(R.layout.fragment_blank),
         )
         query.next { channel, e ->
             if (e != null) {
-                showToast("$e")
+                e.printStackTrace()
                 return@next
             }
-
             if (channel!!.isEmpty()) return@next
 
             for (idx in channel.indices) {
@@ -147,6 +146,9 @@ class KeyFragment : BaseFragment<FragmentBlankBinding>(R.layout.fragment_blank),
 
 
         //TODO 2 Local DB 에 있는 KeyId를 로드
+        localDB.keyIdDao().getAll().let {
+            Log.d(TAG, "local DB Key List : $it")
+        }
 
         //TODO 3 1,2 를 비교해서 일치하는 URL 주소를 카운팅
 

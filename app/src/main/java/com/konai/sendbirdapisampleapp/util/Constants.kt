@@ -14,9 +14,6 @@ object Constants {
     //Message Item ViewType
     const val MY_MESSAGE = 0
     const val PARTNER_MESSAGE = 1
-    //Channel Type
-    const val MY_PERSONAL_CHANNEL = 0
-    const val CONVERSATION_CHANNEL = 1
     //Message handler id
     const val ALL_MESSAGE_RECEIVE_HANDLER = "allMessageHandler"
     const val LOGIN_ACCOUNT_MESSAGE_RECEIVE_HANDLER = "accountMessageHandler"

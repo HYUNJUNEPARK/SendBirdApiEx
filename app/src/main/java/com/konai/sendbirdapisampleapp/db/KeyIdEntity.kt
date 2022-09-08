@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 import com.konai.sendbirdapisampleapp.db.DBProvider.DB_NAME
 
 @Entity(tableName = DB_NAME)
-data class KeyId(
+data class KeyIdEntity(
     @PrimaryKey
     var urlHash: String,
     @ColumnInfo

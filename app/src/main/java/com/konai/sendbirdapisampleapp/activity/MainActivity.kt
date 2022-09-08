@@ -21,6 +21,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         try {
             binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
             binding.mainActivity = this
@@ -95,7 +96,7 @@ class MainActivity : AppCompatActivity() {
         if (!KeyStoreUtil().isKeyInKeyStore(USER_ID)) {
             AlertDialog.Builder(this)
                 .setTitle("경고")
-                .setMessage("계정에 등록된 기기가 아닙니다. \n채널 생성/메시지 송신/메시지 복호화가 불가능합니다. ")
+                .setMessage("계정에 등록된 기기가 아닙니다. \n채널 생성/메시지 송신/메시지 복호화가 불가능합니다.")
                 .setPositiveButton("확인") { _, _ -> }
                 .create()
                 .show()
