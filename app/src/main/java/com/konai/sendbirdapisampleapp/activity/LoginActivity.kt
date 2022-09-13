@@ -32,7 +32,7 @@ import kotlin.coroutines.CoroutineContext
 class LoginActivity : AppCompatActivity(), CoroutineScope {
     private lateinit var strongBox: StrongBox
     private lateinit var binding: ActivityLoginBinding
-    private var db: FirebaseFirestore? = null
+    private var remoteDB: FirebaseFirestore? = null
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main
 
@@ -43,7 +43,7 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
             binding = DataBindingUtil.setContentView(this, R.layout.activity_login)
             binding.loginActivity = this
             strongBox = StrongBox.getInstance(this)
-            db = Firebase.firestore
+            remoteDB = Firebase.firestore
 
             launch {
                 showProgressBar()
@@ -58,7 +58,7 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
 
     override fun onDestroy() {
         super.onDestroy()
-        db = null
+        remoteDB = null
     }
 
     override fun onResume() {
@@ -120,7 +120,7 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
      * @param userId 사용자 id. ECKeyPair 의 식별자로 사용
      */
     private suspend fun signInAlgorithm(userId: String) = withContext(Dispatchers.IO) {
-        db!!.collection(FIRESTORE_DOCUMENT_PUBLIC_KEY)
+        remoteDB!!.collection(FIRESTORE_DOCUMENT_PUBLIC_KEY)
             .get()
             .addOnSuccessListener { result ->
                 //1.Firestore 에 데이터가 없을 때 (따로 처리 안해주면 앱 크래시)
@@ -176,6 +176,8 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
             else {
                 //2.1. ECKeyPair 생성
                 strongBox.generateECKeyPair(userId)
+
+                //TODO Coroutine 범위를 어떻게 잡아야 하는지?
                 //2.1.1. 키스토어에서 publicKey 를 가져와 서버에 등록
                 enrollPublicKey(
                     userId,
@@ -204,7 +206,7 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
     private fun enrollPublicKey(userId: String, publicKey: PublicKey) {
         try {
             ECKeyUtil.extractAffineXY(userId, publicKey).let { hashMap ->
-                db!!.collection(FIRESTORE_DOCUMENT_PUBLIC_KEY)
+                remoteDB!!.collection(FIRESTORE_DOCUMENT_PUBLIC_KEY)
                     .add(hashMap)
                     .addOnSuccessListener {
                         showToast("퍼블릭키 업로드 성공")

@@ -52,18 +52,16 @@ class MyChannelActivity : AppCompatActivity() {
     private fun readAllMessages() {
         GroupChannel.getChannel(channelURL) { channel, e ->
             if (e != null) {
-                showToast("Get Channel Error : $e")
-                Log.e(TAG, "Get Channel Error : $e")
+                e.printStackTrace()
                 return@getChannel
             }
 
             val query = channel!!.createPreviousMessageListQuery(
                 PreviousMessageListQueryParams() //Custom QueryParams if it's needed. use .apply {}
             )
-            query.load { messages, exception ->
-                if (exception != null) {
-                    Log.e(TAG, "Load Previous message Error : $exception")
-                    showToast("Load Message Error : $exception")
+            query.load { messages, e ->
+                if (e != null) {
+                    e.printStackTrace()
                     return@load
                 }
                 if (messages!!.isEmpty()) return@load
@@ -93,16 +91,14 @@ class MyChannelActivity : AppCompatActivity() {
         val params = UserMessageCreateParams(userMessage)
         binding.messageEditText.text = null
 
-        GroupChannel.getChannel(channelURL) { groupChannel, channelException ->
-            if (channelException != null) {
-                showToast("Error : $channelException")
-                Log.e(TAG, "getChannel Error: $channelException")
+        GroupChannel.getChannel(channelURL) { groupChannel, e ->
+            if (e != null) {
+                e.printStackTrace()
                 return@getChannel
             }
-            groupChannel?.sendUserMessage(params) { message, sendMessageException ->
-                if (sendMessageException != null) {
-                    showToast("Error : $sendMessageException")
-                    Log.e(TAG, "sendUserMessage Error: $sendMessageException")
+            groupChannel?.sendUserMessage(params) { message, e ->
+                if (e != null) {
+                    e.printStackTrace()
                     return@sendUserMessage
                 }
                 messageList.add(

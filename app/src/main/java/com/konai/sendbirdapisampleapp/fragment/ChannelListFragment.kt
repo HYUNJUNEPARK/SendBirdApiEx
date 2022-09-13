@@ -6,8 +6,8 @@ import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.adapter.ChannelListAdapter
 import com.konai.sendbirdapisampleapp.databinding.FragmentChannelBinding
 import com.konai.sendbirdapisampleapp.db.DBProvider
-import com.konai.sendbirdapisampleapp.db.KeyIdEntity
 import com.konai.sendbirdapisampleapp.db.KeyIdDatabase
+import com.konai.sendbirdapisampleapp.db.KeyIdEntity
 import com.konai.sendbirdapisampleapp.models.ChannelListModel
 import com.konai.sendbirdapisampleapp.strongbox.ECKeyUtil
 import com.konai.sendbirdapisampleapp.strongbox.StrongBox
@@ -82,7 +82,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         launch {
             showProgressBar()
 
-            //TODO 센드버드 SDK 는 기본적으로 비동기화 처리가 되어 있다고 문서에 적혀있는데 suspend 처리 안하고 launch { } 에 넣어도 되는건가?
+            //TODO 센드버드 SDK 는 기본적으로 비동기화 처리가 되어 있다고 문서에 적혀있긴한데 suspend 처리 안하고 launch { } 에 넣어도 되는건가?
             //suspend 처리하면 서버에서 가져온 채널 리스트는 로그에서 확인이 가능하나 UI 에는 표시가 안됨
             fetchChannelList()
 
@@ -100,9 +100,15 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                         is UserMessage -> {
                             showToast("상대방 메시지 수신 : 채널 리스트 갱신")
                             launch {
-                                showProgressBar()
-                                fetchChannelList()
-                                dismissProgressBar()
+                                try {
+                                    showProgressBar()
+                                    fetchChannelList()
+                                    dismissProgressBar()
+                                }
+                                catch (e: Exception) {
+                                    //채널 리스트 업데이트 실패한 경우
+                                    e.printStackTrace()
+                                }
                             }
                         }
                     }
@@ -141,7 +147,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         )
         query.next { channels, e ->
             if (e != null) {
-                showToast("$e")
+                e.printStackTrace()
                 return@next
             }
 
@@ -228,14 +234,15 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         }
         binding.userIdInputEditText.text = null
     }
-
+    //TODO javax.crypto.BadPaddingException:
+    //TODO 지금 송수신자의 sharedSecretKey가 일치하지 않아 앱이 죽는 것 같음
     //SharedSecretKey 생성, 채널 메타데이터로 secureRandom 업로드
     private suspend fun generateSharedSecreteKey(channel: GroupChannel, friendId: String): String {
         //SharedSecretKey 만들 때와 KeyId, 채널 메타데이터로 사용됨
         val secureRandom = strongBox.generateRandom(32)
 
         withContext(Dispatchers.IO) {
-            db!!.collection(FIRESTORE_DOCUMENT_PUBLIC_KEY)
+            remoteDB!!.collection(FIRESTORE_DOCUMENT_PUBLIC_KEY)
                 .get()
                 .addOnSuccessListener { result ->
                     for (document in result) {

@@ -1,10 +1,9 @@
 package com.konai.sendbirdapisampleapp.activity
 
-import android.content.Context
 import android.os.Bundle
-import android.util.Base64
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
@@ -22,7 +21,6 @@ import com.konai.sendbirdapisampleapp.models.MessageModel
 import com.konai.sendbirdapisampleapp.strongbox.ECKeyUtil
 import com.konai.sendbirdapisampleapp.strongbox.EncryptedSharedPreferencesManager
 import com.konai.sendbirdapisampleapp.strongbox.StrongBox
-import com.konai.sendbirdapisampleapp.tmpstrongbox.AESUtil
 import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
 import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_META_DATA
 import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_DOCUMENT_PUBLIC_KEY
@@ -31,7 +29,6 @@ import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_FIELD_AFFINE_Y
 import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_FIELD_USER_ID
 import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_CHANNEL_URL
 import com.konai.sendbirdapisampleapp.util.Constants.LOGIN_ACCOUNT_MESSAGE_RECEIVE_HANDLER
-import com.konai.sendbirdapisampleapp.util.Constants.PREFERENCE_NAME_HASH
 import com.konai.sendbirdapisampleapp.util.Constants.TAG
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.util.Constants.USER_NICKNAME
@@ -42,24 +39,23 @@ import com.sendbird.android.channel.GroupChannel
 import com.sendbird.android.handler.GroupChannelHandler
 import com.sendbird.android.message.BaseMessage
 import com.sendbird.android.params.PreviousMessageListQueryParams
+import com.sendbird.android.params.UserMessageCreateParams
 import com.sendbird.android.user.Member
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
 
 class ChannelActivity : AppCompatActivity(), CoroutineScope {
-    private var db: FirebaseFirestore? = null
+    private var remoteDB: FirebaseFirestore? = null
     private var friendId: String? = null
     private var friendNickname: String? = null
-    private var encryptionMessageList: MutableList<MessageModel> = mutableListOf()
-    private var decryptionMessageList: MutableList<MessageModel> = mutableListOf()
+    private var encryptedMessageList: MutableList<MessageModel> = mutableListOf()
+    private var decryptedMessageList: MutableList<MessageModel> = mutableListOf()
     private lateinit var binding: ActivityChannelBinding
     private lateinit var adapter: ChannelMessageAdapter
     private lateinit var channelURL: String
-    private lateinit var hash: ByteArray
-
-    lateinit var strongBox: StrongBox
-    lateinit var localDB: KeyIdDatabase
-    lateinit var encryptedSharedPreferencesManager: EncryptedSharedPreferencesManager
+    private lateinit var strongBox: StrongBox
+    private lateinit var localDB: KeyIdDatabase
+    private lateinit var espm: EncryptedSharedPreferencesManager
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + Job()
@@ -72,21 +68,36 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
 
             binding = DataBindingUtil.setContentView(this, R.layout.activity_channel)
             binding.channelActivity = this
-            db = Firebase.firestore
+            remoteDB = Firebase.firestore
             localDB = DBProvider.getInstance(this)!!
             strongBox = StrongBox.getInstance(this)
-            encryptedSharedPreferencesManager = EncryptedSharedPreferencesManager.getInstance(this)!!
+            espm = EncryptedSharedPreferencesManager.getInstance(this)!!
             channelURL = intent.getStringExtra(INTENT_NAME_CHANNEL_URL)!!
 
             //내 디바이스에 로그인한 경우
             if (isMyDevice()) {
                 initAdapter()
-                displayChannelMembersId()
-                launch {
-                    showProgress()
-                    confirmSharedSecretKey()
-                    //readAllMessages()
-                    dismissProgress()
+                displayMembersId()
+
+                CoroutineScope(Dispatchers.IO).launch {
+                    localDB.keyIdDao().getKeyId(channelURL).let { keyId ->
+                        //1. keyId 이미 있음. 채널 생성자 or 이미 채널에 한번 접근한적이 있는 채널에 초대 받은 사용자
+                        if (keyId != null) {
+                            CoroutineScope(Dispatchers.Main).launch {
+                                binding.decryptionButton.isEnabled = true
+                                binding.secretKeyStateImageView.setImageResource(R.drawable.ic_baseline_check_circle_24)
+                                readAllMessages()
+                            }
+                        }
+                        //2. keyId가 없음.
+                        else {
+                            CoroutineScope(Dispatchers.Main).launch {
+                                generateSharedSecretKey()
+                                //TODO ReadAllMsg
+                                readAllMessages()
+                            }
+                        }
+                    }
                 }
             }
             //다른 사람 디바이스에 로그인한 경우
@@ -94,7 +105,7 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
                 AlertDialog.Builder(this)
                     .setTitle("경고")
                     .setCancelable(false)
-                    .setMessage("계정에 등록된 기기가 아닙니다. \n채널 생성/메시지 송신/메시지 복호화가 불가능합니다. ")
+                    .setMessage("계정에 등록된 기기가 아닙니다. \n채널 생성/메시지 송신/메시지 복호화가 불가능합니다.")
                     .setPositiveButton("확인") { _, _ ->
                         finish()
                     }
@@ -119,7 +130,7 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
 
     override fun onDestroy() {
         super.onDestroy()
-        db = null
+        remoteDB = null
     }
 
     private fun initAdapter() {
@@ -129,7 +140,7 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
     }
 
     //채널에 참여 중인 사용자의 정보 UI 세팅
-    private fun displayChannelMembersId() {
+    private fun displayMembersId() {
         GroupChannel.getChannel(channelURL) { groupChannel, e ->
             if (e != null) {
                 e.printStackTrace()
@@ -166,104 +177,95 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
         }
         //다른 사람 디바이스에 로그인한 경우 예외 발생 -> 메시지 암호화/복호화 불가
         catch (e: Exception) {
+            e.printStackTrace()
             return false
         }
     }
 
+
+
+
+    //TODO javax.crypto.BadPaddingException:
+    //TODO 지금 송수신자의 sharedSecretKey가 일치하지 않아 앱이 죽는 것 같음
     //사용자가 대화 채널에 입장할 때 채널에 해당하는 SharedSecretKey 확인
-    private suspend fun confirmSharedSecretKey() = withContext(Dispatchers.IO) {
-        //val keyId: String? = localDB.keyIdDao().getKeyId(channelURL)
+    private suspend fun generateSharedSecretKey() = withContext(Dispatchers.IO) {
+        /*
+         1. localDB 에 url 키에 해당하는 KeyId 가 없음 -> 사용자가 채널에 초대되고 채널에 처음으로 접근한 상황
+         warning : Condition 'keyId == null' is always 'false'
+         디바이스 하나에서 테스트하면 당연히 위와 같은 결과가 나올 수 밖에 없음. 따라서 신경 안써도 되는 경고
+        */
+        remoteDB!!.collection(FIRESTORE_DOCUMENT_PUBLIC_KEY)
+            .get()
+            .addOnSuccessListener { result ->
+                //1.1 FirebaseDB 에서 상대방 PublicKey 를 가져옴
+                for (document in result) {
+                    if (document.data[FIRESTORE_FIELD_USER_ID] == friendId) {
+                        val publicKey = ECKeyUtil.coordinatePublicKey(
+                            affineX = document.data[FIRESTORE_FIELD_AFFINE_X].toString(),
+                            affineY = document.data[FIRESTORE_FIELD_AFFINE_Y].toString()
+                        )
+                        //1.2 센드버드 서버에서 채널 메타데이터를(keyId(secureRandom)) 가져 옴
+                        val data = listOf(CHANNEL_META_DATA)
+                        GroupChannel.getChannel(channelURL) { channel, e1 ->
+                            if (e1 != null) {
+                                e1.printStackTrace()
+                                return@getChannel
+                            }
+                            channel!!.getMetaData(data) { metaDataMap, e2 ->
+                                if (e2 != null) {
+                                    e2.printStackTrace()
+                                    return@getMetaData
+                                }
+                                val metadata = metaDataMap!!.values.toString()
+                                    .substring(1 until metaDataMap.values.toString().length)
 
-        localDB.keyIdDao().getKeyId(channelURL).let { keyId ->
-            /*1. localDB 에 url 키에 해당하는 KeyId 가 없음
-            사용자가 채널에 초대되고 채널에 처음으로 접근한 상황
-
-            warning : Condition 'keyId == null' is always 'false'
-            디바이스 하나에서 테스트하면 당연히 위와 같은 결과가 나올 수 밖에 없음. 따라서 신경 안써도 되는 경고 */
-            if (keyId == null) {
-                db!!.collection(FIRESTORE_DOCUMENT_PUBLIC_KEY)
-                    .get()
-                    .addOnSuccessListener { result ->
-                        for (document in result) {
-                            if (document.data[FIRESTORE_FIELD_USER_ID] == friendId) {
-                                //1.1 FirebaseDB 에서 상대방 PublicKey 를 가져옴
-                                val publicKey = ECKeyUtil.coordinatePublicKey(
-                                    affineX = document.data[FIRESTORE_FIELD_AFFINE_X].toString(),
-                                    affineY = document.data[FIRESTORE_FIELD_AFFINE_Y].toString()
-                                )
-                                //1.2 센드버드 서버에서 채널 메타데이터를(keyId(secureRandom)) 가져 옴
-                                val data = listOf(CHANNEL_META_DATA)
-                                GroupChannel.getChannel(channelURL) { channel, e1 ->
-                                    if (e1 != null) {
-                                        e1.printStackTrace()
-                                        return@getChannel
-                                    }
-                                    channel!!.getMetaData(data) { metaDataMap, e2 ->
-                                        if (e2 != null) {
-                                            e2.printStackTrace()
-                                            return@getMetaData
-                                        }
-                                        val metadata = metaDataMap!!.values.toString()
-                                            .substring(1 until metaDataMap.values.toString().length)
-                                        Log.d(TAG, "metadata: $metadata")
-
-                                        //1.3 sharedSecretKey 생성
-                                        strongBox.generateSharedSecretKey(
-                                            USER_ID,
-                                            publicKey,
+                                //1.3 sharedSecretKey 생성
+                                strongBox.generateSharedSecretKey(
+                                    USER_ID,
+                                    publicKey,
+                                    metadata
+                                ).let { sharedSecretKey ->
+                                    //2.4 ESP 에 sharedSecretKey 등록
+                                    /*
+                                    EncryptedSharedPreferences
+                                    =======================================
+                                    KeyId(Secure Random) | SharedSecretKey |
+                                    =======================================
+                                    */
+                                    espm.putString(
+                                        metadata,
+                                        sharedSecretKey
+                                    )
+                                }
+                                /*
+                                LocalDB
+                                ====================================
+                                Channel URL | KeyId(Secure Random) |
+                                ====================================
+                                */
+                                //TODO CoroutineScope 없애도 될 듯 ?
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    localDB.keyIdDao().insert(
+                                        KeyIdEntity(
+                                            channelURL,
                                             metadata
-                                        ).let { sharedSecretKey ->
-
-                                            //2.4 ESP 에 sharedSecretKey 등록
-                                            /*
-                                            EncryptedSharedPreferences
-                                            =======================================
-                                            KeyId(Secure Random) | SharedSecretKey |
-                                            =======================================
-                                            */
-                                            encryptedSharedPreferencesManager.putString(
-                                                metadata,
-                                                sharedSecretKey
-                                            )
-                                        }
-
-                                        /*
-                                        Local DB
-                                        ====================================
-                                        Channel URL | KeyId(Secure Random) |
-                                        ====================================
-                                        */
-                                        CoroutineScope(Dispatchers.IO).launch {
-                                            localDB.keyIdDao().insert(
-                                                KeyIdEntity(
-                                                    channelURL,
-                                                    metadata
-                                                )
-                                            )
-                                        }
-                                    }
+                                        )
+                                    )
+                                }
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    Toast.makeText(this@ChannelActivity, "키 생성 성공", Toast.LENGTH_SHORT).show()
+                                    binding.decryptionButton.isEnabled = true
+                                    binding.secretKeyStateImageView.setImageResource(R.drawable.ic_baseline_check_circle_24)
                                 }
                             }
                         }
                     }
-                    .addOnFailureListener { e ->
-                        e.printStackTrace()
-                        showToast("키 가져오기 실패")
-                    }
-            }
-            /*2. localDB 에 url 키에 해당하는 KeyId 가 있음
-            사용자가 채널을 만든 상황 or
-            채널에 초대받은 사용자가 해당 채널에 처음 접근한게 아닌 상황*/
-            else {
-                CoroutineScope(Dispatchers.Main).launch {
-                    AlertDialog.Builder(this@ChannelActivity)
-                        .setCancelable(false)
-                        .setMessage("SharedSecretKey 가 확인되었습니다.")
-                        .setPositiveButton("확인") { _, _ -> }
-                        .create()
                 }
             }
-        }
+            .addOnFailureListener { e ->
+                e.printStackTrace()
+                return@addOnFailureListener
+            }
     }
 
     //해당 채널 메시지가 오면 호출되는 핸들러
@@ -274,7 +276,7 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
                 override fun onMessageReceived(channel: BaseChannel, message: BaseMessage) {
                     when (channel.url) {
                         channelURL -> {
-                            encryptionMessageList.add(
+                            encryptedMessageList.add(
                                 MessageModel(
                                     message = message.message,
                                     sender = message.sender!!.userId,
@@ -282,7 +284,7 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
                                     createdAt = message.createdAt
                                 )
                             )
-                            adapter.submitList(encryptionMessageList)
+                            adapter.submitList(encryptedMessageList)
                             adapter.notifyDataSetChanged()
                             //TODO It will always be more efficient to use more specific change events if you can.
                         }
@@ -292,8 +294,7 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
         )
     }
 
-//[START Read message]
-    private fun readAllMessages() {
+    private suspend fun readAllMessages() = withContext(Dispatchers.IO) {
         GroupChannel.getChannel(channelURL) { channel, e1 ->
             if (e1 != null) {
                 e1.printStackTrace()
@@ -310,14 +311,12 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
                 }
 
                 //채널에 이전 메시지가 없을 떄
-                if (messages!!.isEmpty()) {
-                    return@load
-                }
+                if (messages!!.isEmpty()) return@load
 
                 //채널에 이전 메시지가 있을 때
-                encryptionMessageList.clear()
+                encryptedMessageList.clear()
                 for (message in messages) {
-                    encryptionMessageList.add(
+                    encryptedMessageList.add(
                         MessageModel(
                             message = message.message,
                             sender = message.sender!!.userId,
@@ -326,133 +325,114 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
                         )
                     )
                 }
-                adapter.submitList(encryptionMessageList)
-                adapter.notifyDataSetChanged()
-                //TODO It will always be more efficient to use more specific change events if you can.
+                adapter.submitList(encryptedMessageList)
+                CoroutineScope(Dispatchers.Main).launch {
+                    adapter.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can.
+                }
             }
         }
     }
-//[END Read message]
 
-
-
-
-    
-
-
-
-//[START Click Event]
+    //메시지 암호화 버튼 클릭 이벤트
     fun sendMessage() {
         //Local DB 에서 keyId 꺼내기
         CoroutineScope(Dispatchers.IO).launch {
             //1.URL 에 해당하는 KeyId 를 가져옴
             localDB.keyIdDao().getKeyId(channelURL).let { keyId ->
-                //메시지 암호화
+                //2. 메시지 암호화
                 strongBox.encrypt(
                     message = binding.messageEditText.text.toString(),
                     keyId = keyId
                 ).let { encryptedMessage ->
                     Log.d(TAG, "sendMessage: $encryptedMessage")
+                    //3. 센드버드 서버에 암호화된 메시지 전송
+                    val params = UserMessageCreateParams(encryptedMessage)
+                    GroupChannel.getChannel(channelURL) { groupChannel, e1 ->
+                        if (e1 != null) {
+                            e1.printStackTrace()
+                            return@getChannel
+                        }
+                        groupChannel?.sendUserMessage(params) { message, e2 ->
+                            if (e2 != null) {
+                                e2.printStackTrace()
+                                return@sendUserMessage
+                            }
+                            //4. 전송 완료된 메시지 UI에 띄우기
+                            encryptedMessageList.add(
+                                MessageModel(
+                                    message = message?.message,
+                                    sender = message?.sender?.userId,
+                                    messageId = message?.messageId,
+                                    createdAt = message?.createdAt
+                                )
+                            )
+                        }
+                        adapter.submitList(encryptedMessageList)
+                        adapter.notifyDataSetChanged()
+                        //TODO It will always be more efficient to use more specific change events if you can.
+                        adjustRecyclerViewPosition()
+                    }
                 }
             }
         }
-        
-    
-    
-    
-//        val userMessage: String = binding.messageEditText.text.toString()
-//        val encryptedMessage = AESUtil().encryptionCBCMode(userMessage, hash)
-//        val params = UserMessageCreateParams(encryptedMessage)
-//        binding.messageEditText.text = null
-
-//        GroupChannel.getChannel(channelURL) { groupChannel, e1 ->
-//            if (e1 != null) {
-//                e1.printStackTrace()
-//                return@getChannel
-//            }
-//            groupChannel?.sendUserMessage(params) { message, e2 ->
-//                if (e2 != null) {
-//                    e2.printStackTrace()
-//                    return@sendUserMessage
-//                }
-//                encryptionMessageList.add(
-//                    MessageModel(
-//                        message = message?.message,
-//                        sender = message?.sender?.userId,
-//                        messageId = message?.messageId,
-//                        createdAt = message?.createdAt
-//                    )
-//                )
-//                adapter.submitList(encryptionMessageList)
-//                adapter.notifyDataSetChanged()
-//                //TODO It will always be more efficient to use more specific change events if you can.
-//                adjustRecyclerViewPosition()
-//            }
-//
-//        }
     }
 
-    fun onDecryptionButtonClicked() {
-        showToast("복호화")
-        val sharedPreferences = getSharedPreferences(PREFERENCE_NAME_HASH, Context.MODE_PRIVATE)
-        sharedPreferences.getString(channelURL, "empty hash").let { data ->
-            if (data == "empty hash") {
-                showToast("Can't get proper hash from shared preferences")
-                Log.e(TAG, "Can't get proper hash from shared preferences : ChannelActivity")
-                return
-            }
-            else {
-                val hash = Base64.decode(data, Base64.DEFAULT)
-                decryptionMessageList.clear()
-                for (message in encryptionMessageList) {
-                    decryptionMessageList.add(
+    //메시지 복호화 버튼 클릭 이벤트
+    fun decryptMessage() {
+        CoroutineScope(Dispatchers.IO).launch {
+            //1. localDB 에서 key(channelURL) 로 value(keyId) 꺼내옴
+            localDB.keyIdDao().getKeyId(channelURL).let { keyId ->
+                decryptedMessageList.clear()
+                for (message in encryptedMessageList) {
+                    decryptedMessageList.add(
+                        //2. keyId 와 암호화된 메시지를 파라미터로 전달해 메시지 복호화
                         MessageModel(
-                            message = AESUtil().decryptionCBCMode(message.message!!, hash),
+                            message = strongBox.decrypt(
+                                message = message.message!!,
+                                keyId = keyId
+                            ),
                             sender = message.sender,
                             messageId = message.messageId,
                             createdAt = message.createdAt
                         )
                     )
                 }
-                adapter.submitList(decryptionMessageList)
-                adapter.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can.
-                adjustRecyclerViewPosition()
             }
         }
+        //3. 복호화된 메시지를 UI에 띄움
+        adapter.submitList(decryptedMessageList)
+        adapter.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can.
+        adjustRecyclerViewPosition()
     }
 
-    fun onDeleteChannelButtonClicked() {
+    //채널 삭제 버튼 클릭 이벤트
+    fun deleteChannel() {
         AlertDialog.Builder(this)
             .setTitle("채널 삭제")
             .setMessage("채널을 삭제하시겠습니까? \n삭제한 채널과 대화내용은 다시 복구 할 수 없습니다.")
             .setPositiveButton("취소") { _, _ -> }
             .setNegativeButton("삭제") { _, _ ->
                 //delete channel
-                GroupChannel.getChannel(channelURL) { channel, e ->
-                    if (e != null) {
-                        showToast("Get Channel Error: $e")
-                        Log.e(TAG, "Get Channel Error: $e")
+                GroupChannel.getChannel(channelURL) { channel, e1 ->
+                    if (e1 != null) {
+                        e1.printStackTrace()
                         return@getChannel
                     }
-                    channel?.delete { exception->
-                        if (exception != null) {
+                    channel?.delete { e2->
+                        if (e2 != null) {
                             // cf. error code 400108 : Not authorized. To delete the channel, the user should be an operator.
-                            showToast("Delete Error: $exception")
-                            Log.e(TAG, "Delete Error: $exception" )
+                            e2.printStackTrace()
                             return@delete
                         }
                         showToast("채널이 삭제되었습니다.")
                     }
                 }
-                //close channel activity
-                finish()
+                finish() //close channel activity
             }
             .create()
             .show()
     }
-//[END Click Event]
 
-//[START Util]
     //리사이클러뷰 위치 조정
     private fun adjustRecyclerViewPosition() {
         binding.recyclerView.run {
@@ -469,5 +449,4 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
     private suspend fun dismissProgress() = withContext(coroutineContext) {
         binding.progressBar.visibility = View.GONE
     }
-//[END Util]
 }

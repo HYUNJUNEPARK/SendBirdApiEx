@@ -16,7 +16,7 @@ abstract class BaseFragment<T: ViewDataBinding>(@LayoutRes private val layoutId:
     private var _binding: T? = null
     val binding
         get() = _binding!!
-    var db: FirebaseFirestore? = null
+    var remoteDB: FirebaseFirestore? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         _binding = DataBindingUtil.inflate(inflater, layoutId, container, false)
@@ -35,11 +35,11 @@ abstract class BaseFragment<T: ViewDataBinding>(@LayoutRes private val layoutId:
 
     override fun onDestroy() {
         super.onDestroy()
-        db = null
+        remoteDB = null
         _binding = null
     }
 
     protected open fun initView() {
-        db = Firebase.firestore
+        remoteDB = Firebase.firestore
     }
 }

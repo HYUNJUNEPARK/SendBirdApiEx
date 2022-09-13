@@ -29,7 +29,7 @@ class KeyFragment : BaseFragment<FragmentBlankBinding>(R.layout.fragment_blank),
     override fun initView() {
         super.initView()
 
-        if (db == null) {
+        if (remoteDB == null) {
             showToast("Firebase DB initialize error")
             return
         }
@@ -54,7 +54,7 @@ class KeyFragment : BaseFragment<FragmentBlankBinding>(R.layout.fragment_blank),
 
     //서버(Firebase DB)에 로그인한 사용자의 publicKey 가 등록되어 있는지 확인
     private suspend fun showServerKeyState()= withContext(Dispatchers.IO) {
-        db!!.collection(FIRESTORE_DOCUMENT_PUBLIC_KEY)
+        remoteDB!!.collection(FIRESTORE_DOCUMENT_PUBLIC_KEY)
             .get()
             .addOnSuccessListener { result ->
                 //1. 서버 Empty
