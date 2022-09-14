@@ -9,15 +9,16 @@ import com.konai.sendbirdapisampleapp.databinding.ActivityMainBinding
 import com.konai.sendbirdapisampleapp.fragment.ChannelListFragment
 import com.konai.sendbirdapisampleapp.fragment.FriendFragment
 import com.konai.sendbirdapisampleapp.fragment.KeyFragment
-import com.konai.sendbirdapisampleapp.tmpstrongbox.KeyStoreUtil
+import com.konai.sendbirdapisampleapp.strongbox.StrongBox
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityMainBinding
-    private val fragmentManager = supportFragmentManager
+    private var blankFragment: KeyFragment? = null
     private var friendFragment: FriendFragment? = null
     private var channelListFragment: ChannelListFragment? = null
-    private var blankFragment: KeyFragment? = null
+    private val fragmentManager = supportFragmentManager
+    private lateinit var binding: ActivityMainBinding
+    private lateinit var strongBox: StrongBox
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,11 +26,15 @@ class MainActivity : AppCompatActivity() {
         try {
             binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
             binding.mainActivity = this
+            strongBox = StrongBox.getInstance(this)
             initFragment()
             initBottomNavigation()
-            showAlertDialog()
-        }
-        catch (e: Exception) {
+
+            //다른 사람의 디바이스에 로그인한 경우 메시지를 띄움
+            if (!strongBox.isEcKey(USER_ID)) {
+                showAlertDialog()
+            }
+        } catch (e: Exception) {
             e.printStackTrace()
         }
     }
@@ -65,13 +70,15 @@ class MainActivity : AppCompatActivity() {
                             .add(R.id.fragmentContainer, channelListFragment!!)
                             .commit()
                     }
-                    if (friendFragment != null)
+                    if (friendFragment != null) {
                         fragmentManager.beginTransaction().hide(friendFragment!!).commit()
-                    if (channelListFragment != null)
+                    }
+                    if (channelListFragment != null) {
                         fragmentManager.beginTransaction().show(channelListFragment!!).commit()
-                    if (blankFragment != null)
+                    }
+                    if (blankFragment != null) {
                         fragmentManager.beginTransaction().hide(blankFragment!!).commit()
-
+                    }
                 }
                 R.id.blank -> {
                     if (blankFragment == null) {
@@ -80,12 +87,15 @@ class MainActivity : AppCompatActivity() {
                             .add(R.id.fragmentContainer, blankFragment!!)
                             .commit()
                     }
-                    if (friendFragment != null)
+                    if (friendFragment != null) {
                         fragmentManager.beginTransaction().hide(friendFragment!!).commit()
-                    if (channelListFragment != null)
+                    }
+                    if (channelListFragment != null) {
                         fragmentManager.beginTransaction().hide(channelListFragment!!).commit()
-                    if (blankFragment != null)
+                    }
+                    if (blankFragment != null) {
                         fragmentManager.beginTransaction().show(blankFragment!!).commit()
+                    }
                 }
             }
             true
@@ -93,13 +103,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showAlertDialog() {
-        if (!KeyStoreUtil().isKeyInKeyStore(USER_ID)) {
-            AlertDialog.Builder(this)
-                .setTitle("경고")
-                .setMessage("계정에 등록된 기기가 아닙니다. \n채널 생성/메시지 송신/메시지 복호화가 불가능합니다.")
-                .setPositiveButton("확인") { _, _ -> }
-                .create()
-                .show()
-        }
+        AlertDialog.Builder(this)
+            .setTitle("경고")
+            .setMessage("계정에 등록된 기기가 아닙니다. \n채널 생성/메시지 송신/메시지 복호화가 불가능합니다.")
+            .setPositiveButton("확인") { _, _ -> }
+            .create()
+            .show()
+
     }
 }

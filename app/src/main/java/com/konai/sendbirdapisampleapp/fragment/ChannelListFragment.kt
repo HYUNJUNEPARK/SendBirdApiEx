@@ -1,5 +1,6 @@
 package com.konai.sendbirdapisampleapp.fragment
 
+import android.util.Log
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.konai.sendbirdapisampleapp.R
@@ -17,6 +18,7 @@ import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_DOCUMENT_PUBLIC_K
 import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_FIELD_AFFINE_X
 import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_FIELD_AFFINE_Y
 import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_FIELD_USER_ID
+import com.konai.sendbirdapisampleapp.util.Constants.TAG
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.util.Extension.showToast
 import com.sendbird.android.SendbirdChat
@@ -98,12 +100,13 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                 override fun onMessageReceived(channel: BaseChannel, message: BaseMessage) {
                     when (message) {
                         is UserMessage -> {
+
                             showToast("상대방 메시지 수신 : 채널 리스트 갱신")
                             launch {
                                 try {
-                                    showProgressBar()
+                                    //showProgressBar()
                                     fetchChannelList()
-                                    dismissProgressBar()
+                                    //dismissProgressBar()
                                 }
                                 catch (e: Exception) {
                                     //채널 리스트 업데이트 실패한 경우
@@ -218,10 +221,13 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                                 keyId = keyId
                             )
                         )
+                        withContext(Dispatchers.Main) {
+                            //TODO 예외 발생하는지 확인
+                            fetchChannelList()
+                            dismissProgressBar()
+                        }
                     }
                 }
-                dismissProgressBar()
-                fetchChannelList()
             }
 
             //정상적으로 채널과 SharedSecretKey 생성을 마쳤다면 ChannelActivity 로 이동
@@ -242,6 +248,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         val secureRandom = strongBox.generateRandom(32)
 
         withContext(Dispatchers.IO) {
+            //firebaseDB
             remoteDB!!.collection(FIRESTORE_DOCUMENT_PUBLIC_KEY)
                 .get()
                 .addOnSuccessListener { result ->

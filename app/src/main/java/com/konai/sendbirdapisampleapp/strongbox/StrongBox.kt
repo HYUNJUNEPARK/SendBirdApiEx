@@ -5,6 +5,8 @@ import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
+import android.util.Log
+import com.konai.sendbirdapisampleapp.util.Constants.TAG
 import java.security.*
 import java.security.spec.*
 import javax.crypto.Cipher
@@ -34,7 +36,7 @@ import javax.crypto.spec.SecretKeySpec
 class StrongBox {
     companion object {
         private var instance: StrongBox? = null
-        private lateinit var encryptedSharedPreferencesManager: EncryptedSharedPreferencesManager
+        private lateinit var espm: EncryptedSharedPreferencesManager
         private lateinit var context: Context
 
         /**
@@ -51,8 +53,7 @@ class StrongBox {
         fun getInstance(context: Context): StrongBox {
             return instance ?: synchronized(this) {
                 instance ?: StrongBox().also { strongBox ->
-                    encryptedSharedPreferencesManager =
-                        EncryptedSharedPreferencesManager.getInstance(context)!!
+                    espm = EncryptedSharedPreferencesManager.getInstance(context)!!
                     this.context = context
                     instance = strongBox
                 }
@@ -77,7 +78,7 @@ class StrongBox {
     @Throws(Exception::class)
     fun resetStrongBox() {
         deleteECKeyPair()
-        encryptedSharedPreferencesManager.removeAll()
+        espm.removeAll()
     }
 
     /**
@@ -144,7 +145,6 @@ class StrongBox {
             //SDK 사용 불가
         }
     }
-
 
     /**
      * 생성된 EC 키 쌍 중 공개키를 반환
@@ -253,7 +253,7 @@ class StrongBox {
             //hash
             //private
         }
-        encryptedSharedPreferencesManager.putString(keyId, sharedSecretKey)
+        espm.putString(keyId, sharedSecretKey)
 
         //TODO 메모리 초기화
         //sharedSecretKey
@@ -262,7 +262,7 @@ class StrongBox {
     }
 
     //오버로드 for 테스트 앱
-    //userId 는 privateKey를 가져오기 위해 필요함
+    //userId 는 privateKey 를 가져오기 위해 필요함
     @Throws(Exception::class)
     fun generateSharedSecretKey(
         userId:String,
@@ -271,8 +271,6 @@ class StrongBox {
     ): String {
         val keyId: String = nonce
         val random: ByteArray = Base64.decode(nonce, Base64.DEFAULT)
-
-        //TODO
 
         val privateKey: PrivateKey
         androidKeyStore.getEntry(userId, null).let { keyStoreEntry ->
@@ -298,7 +296,7 @@ class StrongBox {
             //hash
             //private
         }
-        encryptedSharedPreferencesManager.putString(keyId, sharedSecretKey)
+        espm.putString(keyId, sharedSecretKey)
 
         //TODO 메모리 초기화
         //sharedSecretKey
@@ -306,29 +304,10 @@ class StrongBox {
         return keyId
     }
 
-
-
-
-
-
-//    fun generateSharedSecretKey(pointX: String, pointY: String, nonce: String): String? {
-//        var publicKey = assemble(pointX, pointY)
-//        if (publicKey != null) {
-//            return generateSharedSecretKey(publicKey, nonce)
-//        }
-//
-//        return null
-//    }
-//
-//    fun generateSharedSecretKey(publicKey: String, nonce: String): String? {
-//        if (publicKey.startsWith("04", false)) {
-//            val pointX = publicKey.substring(1 .. 33)
-//            val pointY = publicKey.substring(33)
-//            return generateSharedSecretKey(pointX, pointY, nonce)
-//        }
-//
-//        return null
-//    }
+    //테스트를 위해 만들어 둔 함수
+    fun isEcKey(userId:String): Boolean {
+        return androidKeyStore.containsAlias(userId)
+    }
 
     /**
      * keyId에 해당하는 비밀 키를 삭제
@@ -339,7 +318,7 @@ class StrongBox {
      * 비밀 키 삭제 실패 시 false 반환
      */
     fun deleteSharedSecretKey(keyId: String): Boolean {
-        encryptedSharedPreferencesManager.apply {
+        espm.apply {
             try {
                 remove(keyId)
             }
@@ -366,8 +345,10 @@ class StrongBox {
     @Throws(Exception::class)
     fun encrypt(message: String, keyId: String): String {
         var encodedSharedSecretKey: String? =
-            if (encryptedSharedPreferencesManager.getString(keyId, "") == "") null
-            else encryptedSharedPreferencesManager.getString(keyId, "")
+            if (espm.getString(keyId, "") == "") null
+            else espm.getString(keyId, "")
+
+        Log.d(TAG, "encodedSharedSecretKey : $encodedSharedSecretKey")
 
         val encryptedMessage: String
         Base64.decode(encodedSharedSecretKey, Base64.DEFAULT).let { decodedKey ->
@@ -389,7 +370,7 @@ class StrongBox {
             }
         }
         //TODO 메모리 초기화
-        //encodedSharedSecretKey = generateRandom(32)
+        //encodedSharedSecretKey
 
         return encryptedMessage
     }
@@ -406,8 +387,10 @@ class StrongBox {
     @Throws(Exception::class)
     fun decrypt(message: String, keyId: String): String {
         var encodedSharedSecretKey: String? =
-            if (encryptedSharedPreferencesManager.getString(keyId, "") == "") null
-            else encryptedSharedPreferencesManager.getString(keyId, "")
+            if (espm.getString(keyId, "") == "") null
+            else espm.getString(keyId, "")
+
+        Log.d(TAG, "decrypt encodedSharedSecretKey : $encodedSharedSecretKey")
 
         var decryptedMessage: ByteArray
         Base64.decode(encodedSharedSecretKey, Base64.DEFAULT).let { decodedKey ->
@@ -429,7 +412,7 @@ class StrongBox {
             }
         }
         //TODO 메모리 초기화
-        //encodedSharedSecretKey = generateRandom(32)
+        //encodedSharedSecretKey
 
         return String(decryptedMessage)
     }

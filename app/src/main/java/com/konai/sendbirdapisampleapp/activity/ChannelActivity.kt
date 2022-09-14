@@ -74,7 +74,41 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
             espm = EncryptedSharedPreferencesManager.getInstance(this)!!
             channelURL = intent.getStringExtra(INTENT_NAME_CHANNEL_URL)!!
 
-            //내 디바이스에 로그인한 경우
+
+
+            //1.2 센드버드 서버에서 채널 메타데이터를(keyId(secureRandom)) 가져 옴
+            val data = listOf(CHANNEL_META_DATA)
+            GroupChannel.getChannel(channelURL) { channel, e1 ->
+                if (e1 != null) {
+                    e1.printStackTrace()
+                    return@getChannel
+                }
+                channel!!.getMetaData(data) { map, e2 ->
+                    if (e2 != null) {
+                        e2.printStackTrace()
+                        return@getMetaData
+                    }
+                    //TODO [ ] 가 포함되어있음
+
+                    //TODO 1.
+                    //map.values
+                    //map.get(CHANNEL_META_DATA)
+                    //map.toString()
+                    val metadata = map!!.values.toString()
+                        .substring(1 until map.values.toString().length)
+                    Log.d(TAG, "map.value : ${map.values}")
+                    Log.d(TAG, "map.get(CHANNEL_META_DATA) : ${map.get(CHANNEL_META_DATA)}")
+                    Log.d(TAG, "map.toString() : ${map.toString()}")
+                    Log.d(TAG, "metadata1 : $metadata ")
+                }
+            }
+
+
+
+
+
+
+                    //내 디바이스에 로그인한 경우
             if (isMyDevice()) {
                 initAdapter()
                 displayMembersId()
@@ -93,7 +127,6 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
                         else {
                             CoroutineScope(Dispatchers.Main).launch {
                                 generateSharedSecretKey()
-                                //TODO ReadAllMsg
                                 readAllMessages()
                             }
                         }
@@ -182,9 +215,6 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
         }
     }
 
-
-
-
     //TODO javax.crypto.BadPaddingException:
     //TODO 지금 송수신자의 sharedSecretKey가 일치하지 않아 앱이 죽는 것 같음
     //사용자가 대화 채널에 입장할 때 채널에 해당하는 SharedSecretKey 확인
@@ -211,13 +241,19 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
                                 e1.printStackTrace()
                                 return@getChannel
                             }
-                            channel!!.getMetaData(data) { metaDataMap, e2 ->
+                            channel!!.getMetaData(data) { map, e2 ->
                                 if (e2 != null) {
                                     e2.printStackTrace()
                                     return@getMetaData
                                 }
-                                val metadata = metaDataMap!!.values.toString()
-                                    .substring(1 until metaDataMap.values.toString().length)
+
+                                var metadata = map!!.get("metadata") ?: ""
+                                if (metadata.isEmpty()) {
+                                    return@getMetaData
+                                }
+//                                metadata = metadata!!.substring(0 .. metadata.length - 2)
+//                                val metadata = map!!.values.toString()
+//                                    .substring(1 until map.values.toString().length)
 
                                 //1.3 sharedSecretKey 생성
                                 strongBox.generateSharedSecretKey(
@@ -233,7 +269,7 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
                                     =======================================
                                     */
                                     espm.putString(
-                                        metadata,
+                                        channelURL,
                                         sharedSecretKey
                                     )
                                 }

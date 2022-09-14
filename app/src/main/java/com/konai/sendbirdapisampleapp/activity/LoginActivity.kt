@@ -46,9 +46,7 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
             remoteDB = Firebase.firestore
 
             launch {
-                showProgressBar()
                 initSendBirdSdk()
-                dismissProgressBar()
             }
         }
         catch (e: Exception) {
@@ -61,17 +59,14 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
         remoteDB = null
     }
 
-    override fun onResume() {
-        super.onResume()
-        launch {
-            dismissProgressBar()
-        }
-    }
-
-    // SendBirdSDK 초기화
+    //SendBirdSDK 초기화
     private suspend fun initSendBirdSdk() = withContext(Dispatchers.IO) {
         SendbirdChat.init(
-            InitParams(SENDBIRD_API_KEY, this@LoginActivity, useCaching = true),
+            InitParams(
+                SENDBIRD_API_KEY,
+                this@LoginActivity,
+                useCaching = true
+            ),
             object : InitResultHandler {
                 override fun onMigrationStarted() { }
                 override fun onInitFailed(e: SendbirdException) {
@@ -84,11 +79,7 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
         )
     }
 
-    /**
-     * signInButtonClick
-     *
-     * 로그인 버튼 클릭 -> 사용자 센드버드 서버 접속
-     */
+    //로그인 버튼 클릭 -> 사용자 센드버드 서버 로그인
     fun signIn() {
         val userId = binding.userIdEditText.text.toString().ifEmpty { return }
         launch {
@@ -113,11 +104,8 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
     }
 
     /**
-     * signInAlgorithm
-     *
-     * 최초 등록자 여부, 서버 - PublicKey 등록 여부, KeyStore's ECKeyPair 여부에 따라 계정 등록 및 키 등록 알고리즘 실행
-     *
-     * @param userId 사용자 id. ECKeyPair 의 식별자로 사용
+     * 최초 등록자인지, 서버 PublicKey 등록 상태, KeyStore ECKeyPair 등록 상태에 따라 계정 등록 및 키 등록 알고리즘 실행
+     * @param userId 사용자 id. ECKeyPair 식별자
      */
     private suspend fun signInAlgorithm(userId: String) = withContext(Dispatchers.IO) {
         remoteDB!!.collection(FIRESTORE_DOCUMENT_PUBLIC_KEY)
@@ -196,9 +184,7 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
     }
 
     /**
-     * enrollPublicKey
-     *
-     * 사용자의 publicKey 로 부터 affineX, affineY 를 추출해 파이어베이스 DB에 저장
+     * 사용자의 publicKey 로 부터 affineX, affineY 를 생성해 Firebase DB에 업로드
      *
      * @param userId publicKey 를 등록하려는 사용자의 id
      * @param publicKey 사용자의 PublicKey
