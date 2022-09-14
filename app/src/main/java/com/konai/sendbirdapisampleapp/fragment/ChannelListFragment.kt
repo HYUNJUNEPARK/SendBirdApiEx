@@ -1,9 +1,12 @@
 package com.konai.sendbirdapisampleapp.fragment
 
+import android.content.Intent
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.konai.sendbirdapisampleapp.R
+import com.konai.sendbirdapisampleapp.activity.ChannelActivity
 import com.konai.sendbirdapisampleapp.adapter.ChannelListAdapter
 import com.konai.sendbirdapisampleapp.databinding.FragmentChannelBinding
 import com.konai.sendbirdapisampleapp.db.DBProvider
@@ -13,14 +16,15 @@ import com.konai.sendbirdapisampleapp.models.ChannelListModel
 import com.konai.sendbirdapisampleapp.strongbox.ECKeyUtil
 import com.konai.sendbirdapisampleapp.strongbox.StrongBox
 import com.konai.sendbirdapisampleapp.util.Constants.ALL_MESSAGE_RECEIVE_HANDLER
+import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
 import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_META_DATA
 import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_DOCUMENT_PUBLIC_KEY
 import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_FIELD_AFFINE_X
 import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_FIELD_AFFINE_Y
 import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_FIELD_USER_ID
+import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_CHANNEL_URL
 import com.konai.sendbirdapisampleapp.util.Constants.TAG
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
-import com.konai.sendbirdapisampleapp.util.Extension.showToast
 import com.sendbird.android.SendbirdChat
 import com.sendbird.android.channel.BaseChannel
 import com.sendbird.android.channel.GroupChannel
@@ -45,10 +49,13 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         super.initView()
 
         try {
+            binding.progressBarLayout.visibility = View.VISIBLE
             strongBox = StrongBox.getInstance(requireContext())
             localDB = DBProvider.getInstance(requireContext())!!
             initAdapter()
-            addMessageHandler()
+            launch {
+                addMessageHandler()
+            }
             showCreateChannelButtonState()
         }
         catch (e: Exception) {
@@ -61,7 +68,9 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
         try {
             initAdapter()
-            addMessageHandler()
+            launch {
+                addMessageHandler()
+            }
         }
         catch (e: Exception) {
             e.printStackTrace()
@@ -70,9 +79,9 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
     override fun onStop() {
         super.onStop()
-
         SendbirdChat.removeChannelHandler(ALL_MESSAGE_RECEIVE_HANDLER)
     }
+
 
     private fun initAdapter() {
         val adapter = ChannelListAdapter(requireContext()).apply {
@@ -82,43 +91,74 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         binding.chatListRecyclerView.layoutManager = LinearLayoutManager(requireContext())
 
         launch {
-            showProgressBar()
-
-            //TODO 센드버드 SDK 는 기본적으로 비동기화 처리가 되어 있다고 문서에 적혀있긴한데 suspend 처리 안하고 launch { } 에 넣어도 되는건가?
-            //suspend 처리하면 서버에서 가져온 채널 리스트는 로그에서 확인이 가능하나 UI 에는 표시가 안됨
             fetchChannelList()
-
-            dismissProgressBar()
         }
     }
 
     //메시지가 수신될 때마다 채널 리스트를 갱신
-    private fun addMessageHandler() {
+    private suspend fun addMessageHandler() = withContext(Dispatchers.IO) {
         SendbirdChat.addChannelHandler(
             ALL_MESSAGE_RECEIVE_HANDLER,
             object : GroupChannelHandler() {
                 override fun onMessageReceived(channel: BaseChannel, message: BaseMessage) {
                     when (message) {
                         is UserMessage -> {
-
-                            showToast("상대방 메시지 수신 : 채널 리스트 갱신")
-                            launch {
+                            Toast.makeText(requireContext(), "상대방 메시지 수신 : 채널 리스트 갱신", Toast.LENGTH_SHORT).show()
                                 try {
-                                    //showProgressBar()
-                                    fetchChannelList()
-                                    //dismissProgressBar()
+
+                                    fetchLatestChannel(message.channelUrl, message.message, message.createdAt)
+//                                    launch {
+//                                        //TODO 순서만 바꿔주면 되는데 notifyDataSetChanged()는 무거움 다른 함수 필요
+//                                        //fetchChannelList()
+//                                    }
                                 }
                                 catch (e: Exception) {
-                                    //채널 리스트 업데이트 실패한 경우
                                     e.printStackTrace()
                                 }
-                            }
                         }
                     }
                 }
             }
         )
     }
+
+
+    private fun fetchLatestChannel(url:String, latestMessage:String, sendAt:Long) {
+        //TODO sendAt, lastMessage 도 넣어서 UI를 갱신해 줘야함
+        var idx = 0
+        Log.d(TAG, "url: $url")
+
+        for (i in _channelList) {
+            Log.d(TAG, "channelList: $i")
+        }
+
+        for (channel in _channelList) {
+            if(channel.url == url) {
+                Log.d(TAG, "fetchLatestChannel idx: $idx")
+                _channelList[idx].lastMessage = latestMessage //
+                _channelList[idx].lastMessageTime = sendAt //TODO 이거 타입변환 해야할듯
+
+
+                binding.chatListRecyclerView.adapter!!.notifyItemMoved(idx, 0)
+
+                //순서바꾸기 ?
+                val tt = _channelList[0]
+                _channelList[0] = _channelList[idx]
+                _channelList[idx] = tt
+                //TODO _channelList 를 갱신해야함
+                return
+            }
+            idx ++
+        }
+        Log.d(TAG, "newChannel: $idx")
+        //새로운 채널에서 온 메시지 -> 가장 상당에 배치시킴
+        //TODO out of idx exception
+        //TODO _channelList 를 갱신해야함
+        binding.chatListRecyclerView.adapter!!.notifyItemInserted(0)
+    }
+
+
+
 
     //사용자 자신의 디바이스인 경우에만 채널 생성 버튼이 활성화됨
     private fun showCreateChannelButtonState() {
@@ -139,13 +179,13 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         }
     }
 
-    //사용자가 참여하고 있는 채널의 데이터를 센드버드 서버로부터 받아와 채널 리스트를 생성
-    private fun fetchChannelList() {
+    //사용자가 참여하고 있는 채널 데이터를 센드버드 서버로부터 받아와 채널 리스트를 생성
+    private suspend fun fetchChannelList() = withContext(Dispatchers.IO) {
         val query = GroupChannel.createMyGroupChannelListQuery(
             GroupChannelListQueryParams().apply {
-                includeEmpty = true
-                myMemberStateFilter = MyMemberStateFilter.JOINED
-                order = GroupChannelListQueryOrder.LATEST_LAST_MESSAGE
+                includeEmpty = false //비어있는 채팅방은 허용 안함
+                myMemberStateFilter = MyMemberStateFilter.JOINED //사용자가 참여하고 있는 채널
+                order = GroupChannelListQueryOrder.LATEST_LAST_MESSAGE //가장 최근 채널 순으로 정렬
             }
         )
         query.next { channels, e ->
@@ -172,7 +212,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                 )
             }
             binding.chatListRecyclerView.adapter?.notifyDataSetChanged()
-            //TODO It will always be more efficient to use more specific change events if you can. Rely on `notifyDataSetChanged` as a last resort.
+            binding.progressBarLayout.visibility = View.GONE
         }
     }
 
@@ -198,13 +238,13 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
             // 유효하지 않은 사용자를 입력해 멤버가 1인 채널이 생성되었지만
             // 그 채널이 기존에 만들어두었던 "나와의 채팅"의 채널을 재활용한 경우
             if (channel.name == "나와의 채팅") {
-                showToast("등록되지 않은 사용자입니다.")
+                Toast.makeText(requireContext(), "등록되지 않은 사용자입니다.", Toast.LENGTH_SHORT).show()
                 return@createChannel
             }
 
             // 유효하지 않은 사용자를 입력해 멤버가 1인 채널이 생성된 경우 -> 생성된 채널 삭제
             if (channel.members.size == 1) {
-                showToast("등록되지 않은 사용자입니다.")
+                Toast.makeText(requireContext(), "등록되지 않은 사용자입니다.", Toast.LENGTH_SHORT).show()
                 channel.delete { e ->
                     e?.printStackTrace()
                 }
@@ -212,7 +252,6 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
             }
 
             launch {
-                showProgressBar()
                 generateSharedSecreteKey(channel, invitedUserId).let { keyId ->
                     withContext(Dispatchers.IO) {
                         localDB.keyIdDao().insert(
@@ -221,11 +260,16 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                                 keyId = keyId
                             )
                         )
-                        withContext(Dispatchers.Main) {
-                            //TODO 예외 발생하는지 확인
-                            fetchChannelList()
-                            dismissProgressBar()
-                        }
+                        fetchChannelList()
+                        //TODO TEST Check
+                        //정상적으로 채널과 SharedSecretKey 생성을 마쳤다면 ChannelActivity 로 이동
+                        startActivity(
+                            Intent(requireContext(), ChannelActivity::class.java).apply {
+                                putExtra(INTENT_NAME_CHANNEL_URL, channel.url)
+                                action = CHANNEL_ACTIVITY_INTENT_ACTION
+                            }
+                        )
+
                     }
                 }
             }
@@ -240,8 +284,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         }
         binding.userIdInputEditText.text = null
     }
-    //TODO javax.crypto.BadPaddingException:
-    //TODO 지금 송수신자의 sharedSecretKey가 일치하지 않아 앱이 죽는 것 같음
+
     //SharedSecretKey 생성, 채널 메타데이터로 secureRandom 업로드
     private suspend fun generateSharedSecreteKey(channel: GroupChannel, friendId: String): String {
         //SharedSecretKey 만들 때와 KeyId, 채널 메타데이터로 사용됨
@@ -282,15 +325,5 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                 }
         }
         return secureRandom
-    }
-
-    private suspend fun showProgressBar() = withContext(coroutineContext) {
-        binding.progressBar.visibility = View.VISIBLE
-        binding.loginTextView.visibility = View.VISIBLE
-    }
-
-    private suspend fun dismissProgressBar() = withContext(coroutineContext) {
-        binding.progressBar.visibility = View.INVISIBLE
-        binding.loginTextView.visibility = View.INVISIBLE
     }
 }

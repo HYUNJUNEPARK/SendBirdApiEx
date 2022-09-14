@@ -2,7 +2,9 @@ package com.konai.sendbirdapisampleapp.activity
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import com.google.firebase.firestore.FirebaseFirestore
@@ -15,6 +17,7 @@ import com.konai.sendbirdapisampleapp.strongbox.StrongBox
 import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_DOCUMENT_PUBLIC_KEY
 import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_FIELD_USER_ID
 import com.konai.sendbirdapisampleapp.util.Constants.SENDBIRD_API_KEY
+import com.konai.sendbirdapisampleapp.util.Constants.TAG
 import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.util.Constants.USER_NICKNAME
 import com.konai.sendbirdapisampleapp.util.Extension.showToast
@@ -81,15 +84,11 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
 
     //로그인 버튼 클릭 -> 사용자 센드버드 서버 로그인
     fun signIn() {
+        binding.progressBarLayout.visibility = View.VISIBLE
         val userId = binding.userIdEditText.text.toString().ifEmpty { return }
-        launch {
-            showProgressBar()
-        }
         SendbirdChat.connect(userId) { user, e ->
             if (e != null) {
-                launch {
-                    dismissProgressBar()
-                }
+                binding.progressBarLayout.visibility = View.GONE
                 e.printStackTrace()
                 return@connect
             }
@@ -120,7 +119,7 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
                 for (document in result) {
                     //2.1. 로그인하려는 사용자의 publicKey 가 서버에 등록되어 있을 때
                     if (document.data[FIRESTORE_FIELD_USER_ID] == userId) {
-                        //2.1.1 로그인
+                        binding.progressBarLayout.visibility = View.GONE
                         startActivity(
                             Intent(this@LoginActivity, MainActivity::class.java)
                         )
@@ -131,18 +130,13 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
                 generateECKeyPair(userId)
             }
             .addOnFailureListener { e ->
-                launch {
-                    dismissProgressBar()
-                }
+                binding.progressBarLayout.visibility = View.GONE
                 e.printStackTrace()
             }
     }
 
     /**
-     * generateECKeyPair
-     *
      * 키스토어에 사용자 ECKeyPair 등록 여부 따라 ECKeyPair 생성
-     *
      * @param userId 사용자 id. ECKeyPair 의 식별자로 사용
      */
     private fun generateECKeyPair(userId: String) {
@@ -154,7 +148,8 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
                     userId,
                     publicKey = strongBox.getECPublicKey(userId)
                 )
-                //1.1.2. 로그인
+                binding.progressBarLayout.visibility = View.GONE
+                //1.1.2. 로그인(액티비티 이동)
                 startActivity(
                     Intent(this, MainActivity::class.java)
                 )
@@ -165,13 +160,13 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
                 //2.1. ECKeyPair 생성
                 strongBox.generateECKeyPair(userId)
 
-                //TODO Coroutine 범위를 어떻게 잡아야 하는지?
                 //2.1.1. 키스토어에서 publicKey 를 가져와 서버에 등록
                 enrollPublicKey(
                     userId,
                     publicKey = strongBox.getECPublicKey(userId)
                 )
-                //2.1.1.1. 로그인
+                binding.progressBarLayout.visibility = View.GONE
+                //2.1.1.1. 로그인(액티비티 이동)
                 startActivity(
                     Intent(this, MainActivity::class.java)
                 )
@@ -185,7 +180,6 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
 
     /**
      * 사용자의 publicKey 로 부터 affineX, affineY 를 생성해 Firebase DB에 업로드
-     *
      * @param userId publicKey 를 등록하려는 사용자의 id
      * @param publicKey 사용자의 PublicKey
      */
@@ -195,12 +189,11 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
                 remoteDB!!.collection(FIRESTORE_DOCUMENT_PUBLIC_KEY)
                     .add(hashMap)
                     .addOnSuccessListener {
-                        showToast("퍼블릭키 업로드 성공")
+                        Toast.makeText(this, "퍼블릭키 업로드", Toast.LENGTH_SHORT).show()
                     }
                     .addOnFailureListener { e ->
                         binding.progressBarLayout.visibility = View.GONE
                         e.printStackTrace()
-                        showToast("퍼블릭키 업로드 실패")
                         finish()
                     }
             }
@@ -208,13 +201,5 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
         catch (e: Exception) {
             e.printStackTrace()
         }
-    }
-
-    private suspend fun showProgressBar() = withContext(coroutineContext) {
-        binding.progressBarLayout.visibility = View.VISIBLE
-    }
-
-    private suspend fun dismissProgressBar() = withContext(coroutineContext) {
-        binding.progressBarLayout.visibility = View.GONE
     }
 }

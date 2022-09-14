@@ -1,6 +1,7 @@
 package com.konai.sendbirdapisampleapp.fragment
 
 import android.util.Log
+import android.widget.Toast
 import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.databinding.FragmentBlankBinding
 import com.konai.sendbirdapisampleapp.db.DBProvider
@@ -71,7 +72,7 @@ class KeyFragment : BaseFragment<FragmentBlankBinding>(R.layout.fragment_blank),
                 }
             }
             .addOnFailureListener { e ->
-                showToast("서버키 상태 로드 실패")
+                Toast.makeText(requireContext(), "서버 PublicKey 상태 확인 실패", Toast.LENGTH_SHORT).show()
                 e.printStackTrace()
             }
     }
