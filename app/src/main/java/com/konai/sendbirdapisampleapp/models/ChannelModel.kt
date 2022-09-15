@@ -1,6 +1,6 @@
 package com.konai.sendbirdapisampleapp.models
 
-data class ChannelListModel(
+data class ChannelModel(
     var name: String?,
     var url: String?,
     var lastMessage: String?,

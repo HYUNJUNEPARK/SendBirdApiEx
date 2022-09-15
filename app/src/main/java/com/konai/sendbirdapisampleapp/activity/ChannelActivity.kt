@@ -1,7 +1,6 @@
 package com.konai.sendbirdapisampleapp.activity
 
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -10,6 +9,16 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.konai.sendbirdapisampleapp.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
+import com.konai.sendbirdapisampleapp.Constants.CHANNEL_META_DATA
+import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_DOCUMENT_PUBLIC_KEY
+import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_FIELD_AFFINE_X
+import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_FIELD_AFFINE_Y
+import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_FIELD_USER_ID
+import com.konai.sendbirdapisampleapp.Constants.INTENT_NAME_CHANNEL_URL
+import com.konai.sendbirdapisampleapp.Constants.LOGIN_ACCOUNT_MESSAGE_RECEIVE_HANDLER
+import com.konai.sendbirdapisampleapp.Constants.USER_ID
+import com.konai.sendbirdapisampleapp.Constants.USER_NICKNAME
 import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.adapter.MessageAdapter
 import com.konai.sendbirdapisampleapp.databinding.ActivityChannelBinding
@@ -20,17 +29,6 @@ import com.konai.sendbirdapisampleapp.models.MessageModel
 import com.konai.sendbirdapisampleapp.strongbox.ECKeyUtil
 import com.konai.sendbirdapisampleapp.strongbox.EncryptedSharedPreferencesManager
 import com.konai.sendbirdapisampleapp.strongbox.StrongBox
-import com.konai.sendbirdapisampleapp.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
-import com.konai.sendbirdapisampleapp.Constants.CHANNEL_META_DATA
-import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_DOCUMENT_PUBLIC_KEY
-import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_FIELD_AFFINE_X
-import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_FIELD_AFFINE_Y
-import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_FIELD_USER_ID
-import com.konai.sendbirdapisampleapp.Constants.INTENT_NAME_CHANNEL_URL
-import com.konai.sendbirdapisampleapp.Constants.LOGIN_ACCOUNT_MESSAGE_RECEIVE_HANDLER
-import com.konai.sendbirdapisampleapp.Constants.TAG
-import com.konai.sendbirdapisampleapp.Constants.USER_ID
-import com.konai.sendbirdapisampleapp.Constants.USER_NICKNAME
 import com.sendbird.android.SendbirdChat
 import com.sendbird.android.channel.BaseChannel
 import com.sendbird.android.channel.GroupChannel
