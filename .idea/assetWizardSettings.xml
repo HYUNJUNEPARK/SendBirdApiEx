@@ -67,8 +67,10 @@
                                           <PersistentState>
                                             <option name="values">
                                               <map>
-                                                <entry key="color" value="0e11d8" />
-                                                <entry key="imagePath" value="/private/var/folders/xv/_5tv3n_53z359z5vtkhprxwnqd8qbc/T/baseline_mail_lock_24.xml" />
+                                                <entry key="color" value="ffffff" />
+                                                <entry key="imagePath" value="/private/var/folders/xv/_5tv3n_53z359z5vtkhprxwnqd8qbc/T/baseline_mail_24.xml" />
+                                                <entry key="scalingPercent" value="72" />
+                                                <entry key="trimmed" value="true" />
                                               </map>
                                             </option>
                                           </PersistentState>
@@ -79,7 +81,7 @@
                                           <PersistentState>
                                             <option name="values">
                                               <map>
-                                                <entry key="url" value="file:$USER_HOME$/Library/Android/sdk/icons/material/materialicons/mail_lock/baseline_mail_lock_24.xml" />
+                                                <entry key="url" value="file:$USER_HOME$/Library/Android/sdk/icons/material/materialicons/mail/baseline_mail_24.xml" />
                                               </map>
                                             </option>
                                           </PersistentState>
@@ -91,6 +93,7 @@
                                             <option name="values">
                                               <map>
                                                 <entry key="color" value="000000" />
+                                                <entry key="trimmed" value="true" />
                                               </map>
                                             </option>
                                           </PersistentState>
@@ -122,6 +125,8 @@
                                   </option>
                                   <option name="values">
                                     <map>
+                                      <entry key="backgroundAssetType" value="COLOR" />
+                                      <entry key="backgroundColor" value="1a1e1c" />
                                       <entry key="foregroundAssetType" value="CLIP_ART" />
                                     </map>
                                   </option>

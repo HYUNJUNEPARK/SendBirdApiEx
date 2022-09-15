@@ -6,7 +6,7 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import android.util.Log
-import com.konai.sendbirdapisampleapp.util.Constants.TAG
+import com.konai.sendbirdapisampleapp.Constants.TAG
 import java.security.*
 import java.security.spec.*
 import javax.crypto.Cipher
@@ -389,9 +389,6 @@ class StrongBox {
         var encodedSharedSecretKey: String? =
             if (espm.getString(keyId, "") == "") null
             else espm.getString(keyId, "")
-
-        Log.d(TAG, "decrypt encodedSharedSecretKey : $encodedSharedSecretKey")
-
         var decryptedMessage: ByteArray
         Base64.decode(encodedSharedSecretKey, Base64.DEFAULT).let { decodedKey ->
             SecretKeySpec(

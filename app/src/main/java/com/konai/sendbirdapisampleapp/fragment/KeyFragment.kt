@@ -5,14 +5,13 @@ import android.widget.Toast
 import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.databinding.FragmentBlankBinding
 import com.konai.sendbirdapisampleapp.db.DBProvider
-import com.konai.sendbirdapisampleapp.db.KeyIdDatabase
+import com.konai.sendbirdapisampleapp.db.keyid.KeyIdDatabase
 import com.konai.sendbirdapisampleapp.strongbox.EncryptedSharedPreferencesManager
 import com.konai.sendbirdapisampleapp.strongbox.StrongBox
-import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_DOCUMENT_PUBLIC_KEY
-import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_FIELD_USER_ID
-import com.konai.sendbirdapisampleapp.util.Constants.TAG
-import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
-import com.konai.sendbirdapisampleapp.util.Extension.showToast
+import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_DOCUMENT_PUBLIC_KEY
+import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_FIELD_USER_ID
+import com.konai.sendbirdapisampleapp.Constants.TAG
+import com.konai.sendbirdapisampleapp.Constants.USER_ID
 import com.sendbird.android.channel.GroupChannel
 import com.sendbird.android.channel.query.GroupChannelListQueryOrder
 import com.sendbird.android.channel.query.MyMemberStateFilter
@@ -31,7 +30,7 @@ class KeyFragment : BaseFragment<FragmentBlankBinding>(R.layout.fragment_blank),
         super.initView()
 
         if (remoteDB == null) {
-            showToast("Firebase DB initialize error")
+            Log.e(TAG, "Firebase DB initialize error")
             return
         }
 

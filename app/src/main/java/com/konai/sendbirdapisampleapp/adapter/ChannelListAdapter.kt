@@ -2,6 +2,7 @@ package com.konai.sendbirdapisampleapp.adapter
 
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -9,9 +10,10 @@ import com.konai.sendbirdapisampleapp.activity.ChannelActivity
 import com.konai.sendbirdapisampleapp.activity.MyChannelActivity
 import com.konai.sendbirdapisampleapp.databinding.ItemChatChannelListBinding
 import com.konai.sendbirdapisampleapp.models.ChannelListModel
-import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
-import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_CHANNEL_URL
-import com.konai.sendbirdapisampleapp.util.Extension.convertLongToTime
+import com.konai.sendbirdapisampleapp.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
+import com.konai.sendbirdapisampleapp.Constants.INTENT_NAME_CHANNEL_URL
+import com.konai.sendbirdapisampleapp.Constants.TAG
+import com.konai.sendbirdapisampleapp.Extension.convertLongToTime
 
 class ChannelListAdapter(val context: Context) : RecyclerView.Adapter<ChannelListAdapter.MyHolder>() {
     var channelList = mutableListOf<ChannelListModel>()

@@ -10,7 +10,7 @@ import com.konai.sendbirdapisampleapp.fragment.ChannelListFragment
 import com.konai.sendbirdapisampleapp.fragment.FriendFragment
 import com.konai.sendbirdapisampleapp.fragment.KeyFragment
 import com.konai.sendbirdapisampleapp.strongbox.StrongBox
-import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
+import com.konai.sendbirdapisampleapp.Constants.USER_ID
 
 class MainActivity : AppCompatActivity() {
     private var blankFragment: KeyFragment? = null

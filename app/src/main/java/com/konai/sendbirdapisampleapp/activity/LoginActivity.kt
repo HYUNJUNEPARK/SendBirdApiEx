@@ -2,7 +2,6 @@ package com.konai.sendbirdapisampleapp.activity
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -14,13 +13,11 @@ import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.databinding.ActivityLoginBinding
 import com.konai.sendbirdapisampleapp.strongbox.ECKeyUtil
 import com.konai.sendbirdapisampleapp.strongbox.StrongBox
-import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_DOCUMENT_PUBLIC_KEY
-import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_FIELD_USER_ID
-import com.konai.sendbirdapisampleapp.util.Constants.SENDBIRD_API_KEY
-import com.konai.sendbirdapisampleapp.util.Constants.TAG
-import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
-import com.konai.sendbirdapisampleapp.util.Constants.USER_NICKNAME
-import com.konai.sendbirdapisampleapp.util.Extension.showToast
+import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_DOCUMENT_PUBLIC_KEY
+import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_FIELD_USER_ID
+import com.konai.sendbirdapisampleapp.Constants.SENDBIRD_API_KEY
+import com.konai.sendbirdapisampleapp.Constants.USER_ID
+import com.konai.sendbirdapisampleapp.Constants.USER_NICKNAME
 import com.sendbird.android.SendbirdChat
 import com.sendbird.android.exception.SendbirdException
 import com.sendbird.android.handler.InitResultHandler

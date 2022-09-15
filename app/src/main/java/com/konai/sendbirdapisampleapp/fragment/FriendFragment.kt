@@ -4,13 +4,12 @@ import android.content.Intent
 import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.activity.MyChannelActivity
 import com.konai.sendbirdapisampleapp.databinding.FragmentFriendBinding
-import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
-import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_CHANNEL_URL
-import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_USER_ID
-import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_USER_NICK
-import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
-import com.konai.sendbirdapisampleapp.util.Constants.USER_NICKNAME
-import com.konai.sendbirdapisampleapp.util.Extension.showToast
+import com.konai.sendbirdapisampleapp.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
+import com.konai.sendbirdapisampleapp.Constants.INTENT_NAME_CHANNEL_URL
+import com.konai.sendbirdapisampleapp.Constants.INTENT_NAME_USER_ID
+import com.konai.sendbirdapisampleapp.Constants.INTENT_NAME_USER_NICK
+import com.konai.sendbirdapisampleapp.Constants.USER_ID
+import com.konai.sendbirdapisampleapp.Constants.USER_NICKNAME
 import com.sendbird.android.channel.GroupChannel
 import com.sendbird.android.params.GroupChannelCreateParams
 
@@ -41,8 +40,10 @@ class FriendFragment : BaseFragment<FragmentFriendBinding>(R.layout.fragment_fri
         }
         GroupChannel.createChannel(params) { channel, e ->
             if (e != null) {
-                showToast("$e")
+                e.printStackTrace()
+                return@createChannel
             }
+
             if (channel != null) {
                 val intent = Intent(requireContext(), MyChannelActivity::class.java).apply {
                     putExtra(INTENT_NAME_CHANNEL_URL, channel.url)

@@ -10,21 +10,21 @@ import com.konai.sendbirdapisampleapp.activity.ChannelActivity
 import com.konai.sendbirdapisampleapp.adapter.ChannelListAdapter
 import com.konai.sendbirdapisampleapp.databinding.FragmentChannelBinding
 import com.konai.sendbirdapisampleapp.db.DBProvider
-import com.konai.sendbirdapisampleapp.db.KeyIdDatabase
-import com.konai.sendbirdapisampleapp.db.KeyIdEntity
+import com.konai.sendbirdapisampleapp.db.keyid.KeyIdDatabase
+import com.konai.sendbirdapisampleapp.db.keyid.KeyIdEntity
 import com.konai.sendbirdapisampleapp.models.ChannelListModel
 import com.konai.sendbirdapisampleapp.strongbox.ECKeyUtil
 import com.konai.sendbirdapisampleapp.strongbox.StrongBox
-import com.konai.sendbirdapisampleapp.util.Constants.ALL_MESSAGE_RECEIVE_HANDLER
-import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
-import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_META_DATA
-import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_DOCUMENT_PUBLIC_KEY
-import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_FIELD_AFFINE_X
-import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_FIELD_AFFINE_Y
-import com.konai.sendbirdapisampleapp.util.Constants.FIRESTORE_FIELD_USER_ID
-import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_CHANNEL_URL
-import com.konai.sendbirdapisampleapp.util.Constants.TAG
-import com.konai.sendbirdapisampleapp.util.Constants.USER_ID
+import com.konai.sendbirdapisampleapp.Constants.ALL_MESSAGE_RECEIVE_HANDLER
+import com.konai.sendbirdapisampleapp.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
+import com.konai.sendbirdapisampleapp.Constants.CHANNEL_META_DATA
+import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_DOCUMENT_PUBLIC_KEY
+import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_FIELD_AFFINE_X
+import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_FIELD_AFFINE_Y
+import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_FIELD_USER_ID
+import com.konai.sendbirdapisampleapp.Constants.INTENT_NAME_CHANNEL_URL
+import com.konai.sendbirdapisampleapp.Constants.TAG
+import com.konai.sendbirdapisampleapp.Constants.USER_ID
 import com.sendbird.android.SendbirdChat
 import com.sendbird.android.channel.BaseChannel
 import com.sendbird.android.channel.GroupChannel
@@ -42,14 +42,17 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
     private var _channelList: MutableList<ChannelListModel> = mutableListOf()
     private lateinit var strongBox: StrongBox
     private lateinit var localDB: KeyIdDatabase
+    private lateinit var adapter: ChannelListAdapter
+
     override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Main + Job()
+        get() = Dispatchers.Main
 
     override fun initView() {
         super.initView()
 
         try {
             binding.progressBarLayout.visibility = View.VISIBLE
+            adapter = ChannelListAdapter(requireContext())
             strongBox = StrongBox.getInstance(requireContext())
             localDB = DBProvider.getInstance(requireContext())!!
             initAdapter()
@@ -84,12 +87,9 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
 
     private fun initAdapter() {
-        val adapter = ChannelListAdapter(requireContext()).apply {
-            channelList = _channelList
-        }
+        adapter.channelList = _channelList
         binding.chatListRecyclerView.adapter = adapter
         binding.chatListRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-
         launch {
             fetchChannelList()
         }
@@ -103,18 +103,29 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                 override fun onMessageReceived(channel: BaseChannel, message: BaseMessage) {
                     when (message) {
                         is UserMessage -> {
-                            Toast.makeText(requireContext(), "상대방 메시지 수신 : 채널 리스트 갱신", Toast.LENGTH_SHORT).show()
-                                try {
-
-                                    fetchLatestChannel(message.channelUrl, message.message, message.createdAt)
-//                                    launch {
-//                                        //TODO 순서만 바꿔주면 되는데 notifyDataSetChanged()는 무거움 다른 함수 필요
-//                                        //fetchChannelList()
-//                                    }
+                            //Use withIndex() instead of manual index increment
+                            for ((idx, channel) in _channelList.withIndex()) {
+                                //기존 채널 리스트에 새로운 메시지가 온 경우
+                                if(message.channelUrl == channel.url) {
+                                    Toast.makeText(requireContext(), "메시지 수신 : 채널 리스트 갱신", Toast.LENGTH_SHORT).show()
+                                    fetchLatestChannel(
+                                        idx = idx,
+                                        lastMessage = message.message,
+                                        lastMessageTime = message.createdAt
+                                    )
+                                    return
                                 }
-                                catch (e: Exception) {
-                                    e.printStackTrace()
-                                }
+                            }
+                            //새롭게 초대받은 채널에 첫 메시지가 도착한 상황 -> 해당 채널을 채널 리스트 최상단에 위치 시킴
+                            fetchNewChannel(
+                                ChannelListModel(
+                                    name = channel.name,
+                                    url = channel.url,
+                                    lastMessage = message.message,
+                                    lastMessageTime = message.createdAt,
+                                    memberSize = 2
+                                )
+                            )
                         }
                     }
                 }
@@ -123,44 +134,49 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
     }
 
 
-    private fun fetchLatestChannel(url:String, latestMessage:String, sendAt:Long) {
-        //TODO sendAt, lastMessage 도 넣어서 UI를 갱신해 줘야함
-        var idx = 0
-        Log.d(TAG, "url: $url")
+    /**
+     * 새로운 메시지가 도착했을 때 채널리스트의 순서 변경.
+     * 메시지가 도착한 채널이 제일 상단으로 이동함
+     *
+     * @param url 메시지가 도착한 채널 url
+     * @param lastMessage 메시지 내용
+     * @param lastMessageTime 메시지 송신 시간
+     */
+    //TODO Coroutine ?
+    private fun fetchLatestChannel(idx: Int, lastMessage: String, lastMessageTime: Long) {
+        //1.2 도착한 메시지, 송신 시간 갱신
+        //TODO 순서는 정상적으로 바뀌나 메시지와 시간 UI 업데이트가 되지 않음
+        adapter.channelList[idx].lastMessage = lastMessage
+        adapter.channelList[idx].lastMessageTime = lastMessageTime
+//        _channelList[idx].lastMessage = lastMessage
+//        _channelList[idx].lastMessageTime = lastMessageTime
+        Log.d(TAG, "새로 갱신 된 채널 정보 : ${adapter.channelList[idx]}")
 
-        for (i in _channelList) {
-            Log.d(TAG, "channelList: $i")
+
+        //1.3 _channelList 에 있는 아이템 순서 갱신
+        val tmp = adapter.channelList[0]
+        adapter.channelList[0] = adapter.channelList[idx]
+        adapter.channelList[idx] = tmp
+        //adapter.channelList = _channelList
+
+        //1.4 인덱스 idx 에 있는 아이템을 인덱스 0 자리로 이동
+        adapter.notifyItemMoved(idx, 0)
+
+        for (channelModel in adapter.channelList) {
+            Log.d(TAG, "바뀐 후 채널 순서(이름) : ${channelModel.name}")
         }
-
-        for (channel in _channelList) {
-            if(channel.url == url) {
-                Log.d(TAG, "fetchLatestChannel idx: $idx")
-                _channelList[idx].lastMessage = latestMessage //
-                _channelList[idx].lastMessageTime = sendAt //TODO 이거 타입변환 해야할듯
-
-
-                binding.chatListRecyclerView.adapter!!.notifyItemMoved(idx, 0)
-
-                //순서바꾸기 ?
-                val tt = _channelList[0]
-                _channelList[0] = _channelList[idx]
-                _channelList[idx] = tt
-                //TODO _channelList 를 갱신해야함
-                return
-            }
-            idx ++
-        }
-        Log.d(TAG, "newChannel: $idx")
-        //새로운 채널에서 온 메시지 -> 가장 상당에 배치시킴
-        //TODO out of idx exception
-        //TODO _channelList 를 갱신해야함
-        binding.chatListRecyclerView.adapter!!.notifyItemInserted(0)
+        return
     }
 
 
+    //새롭게 초대받은 채널에 첫 메시지가 도착한 상황 -> 해당 채널을 채널 리스트 최상단에 위치 시킴
+    private fun fetchNewChannel(channel: ChannelListModel) {
+        Toast.makeText(requireContext(), "메시지 수신 : 채널 리스트 갱신", Toast.LENGTH_SHORT).show()
+        adapter.channelList.add(0, channel)
+        adapter.notifyItemInserted(0)
+    }
 
-
-    //사용자 자신의 디바이스인 경우에만 채널 생성 버튼이 활성화됨
+    //사용자 자신의 디바이스인 경우에만 채널 생성 버튼이 활성화
     private fun showCreateChannelButtonState() {
         //1. 키스토어에 사용자의 ECKeyPair 가 없을 때 (타인 디바이스를 사용하는 경우)
         if(ECKeyUtil.isECKeyPair(USER_ID).not()) {
@@ -211,7 +227,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                     )
                 )
             }
-            binding.chatListRecyclerView.adapter?.notifyDataSetChanged()
+            adapter.notifyDataSetChanged()
             binding.progressBarLayout.visibility = View.GONE
         }
     }
@@ -233,7 +249,9 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                 return@createChannel
             }
 
-            if (channel == null) return@createChannel
+            if (channel == null) {
+                return@createChannel
+            }
 
             // 유효하지 않은 사용자를 입력해 멤버가 1인 채널이 생성되었지만
             // 그 채널이 기존에 만들어두었던 "나와의 채팅"의 채널을 재활용한 경우
@@ -245,8 +263,8 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
             // 유효하지 않은 사용자를 입력해 멤버가 1인 채널이 생성된 경우 -> 생성된 채널 삭제
             if (channel.members.size == 1) {
                 Toast.makeText(requireContext(), "등록되지 않은 사용자입니다.", Toast.LENGTH_SHORT).show()
-                channel.delete { e ->
-                    e?.printStackTrace()
+                channel.delete { exception ->
+                    exception?.printStackTrace()
                 }
                 return@createChannel
             }
@@ -299,7 +317,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                         if (document.data[FIRESTORE_FIELD_USER_ID] == friendId) {
                             //SharedSecretKey 생성
                             strongBox.generateSharedSecretKey(
-                                USER_ID, //PrivateKey 가 저장되어 있는 keyAlias
+                                userId = USER_ID, //PrivateKey 가 저장되어 있는 keyAlias
                                 publicKey = ECKeyUtil.coordinatePublicKey(
                                     affineX = document.data[FIRESTORE_FIELD_AFFINE_X].toString(),
                                     affineY = document.data[FIRESTORE_FIELD_AFFINE_Y].toString()

@@ -7,21 +7,20 @@ import android.util.Log
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.konai.sendbirdapisampleapp.R
-import com.konai.sendbirdapisampleapp.adapter.ChannelMessageAdapter
+import com.konai.sendbirdapisampleapp.adapter.MessageAdapter
 import com.konai.sendbirdapisampleapp.databinding.ActivityMyChannelBinding
 import com.konai.sendbirdapisampleapp.models.MessageModel
-import com.konai.sendbirdapisampleapp.util.Constants
-import com.konai.sendbirdapisampleapp.util.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
-import com.konai.sendbirdapisampleapp.util.Constants.INTENT_NAME_CHANNEL_URL
-import com.konai.sendbirdapisampleapp.util.Constants.TAG
-import com.konai.sendbirdapisampleapp.util.Extension.showToast
+import com.konai.sendbirdapisampleapp.Constants
+import com.konai.sendbirdapisampleapp.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
+import com.konai.sendbirdapisampleapp.Constants.INTENT_NAME_CHANNEL_URL
+import com.konai.sendbirdapisampleapp.Constants.TAG
 import com.sendbird.android.channel.GroupChannel
 import com.sendbird.android.params.PreviousMessageListQueryParams
 import com.sendbird.android.params.UserMessageCreateParams
 
 class MyChannelActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMyChannelBinding
-    private lateinit var adapter: ChannelMessageAdapter
+    private lateinit var adapter: MessageAdapter
     private lateinit var channelURL: String
     private var messageList: MutableList<MessageModel> = mutableListOf()
 
@@ -42,7 +41,7 @@ class MyChannelActivity : AppCompatActivity() {
 
 //[START Init]
     private fun initMessageRecyclerView() {
-        adapter = ChannelMessageAdapter()
+        adapter = MessageAdapter()
         binding.recyclerView.adapter = adapter
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
     }

@@ -2,6 +2,7 @@ package com.konai.sendbirdapisampleapp.db
 
 import android.content.Context
 import androidx.room.Room
+import com.konai.sendbirdapisampleapp.db.keyid.KeyIdDatabase
 
 /*
 LOCAL DB(ROOM)
