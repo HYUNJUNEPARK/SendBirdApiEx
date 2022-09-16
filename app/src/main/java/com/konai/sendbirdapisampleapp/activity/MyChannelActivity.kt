@@ -4,11 +4,11 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.konai.sendbirdapisampleapp.Constants.INTENT_ACTION_MY_CHANNEL
 import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.adapter.MessageAdapter
 import com.konai.sendbirdapisampleapp.databinding.ActivityMyChannelBinding
 import com.konai.sendbirdapisampleapp.models.MessageModel
-import com.konai.sendbirdapisampleapp.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
 import com.konai.sendbirdapisampleapp.Constants.INTENT_NAME_CHANNEL_URL
 import com.sendbird.android.channel.GroupChannel
 import com.sendbird.android.params.PreviousMessageListQueryParams
@@ -16,9 +16,10 @@ import com.sendbird.android.params.UserMessageCreateParams
 
 class MyChannelActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMyChannelBinding
+    private var messageList: MutableList<MessageModel> = mutableListOf()
+
     private lateinit var adapter: MessageAdapter
     private lateinit var channelURL: String
-    private var messageList: MutableList<MessageModel> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,21 +27,23 @@ class MyChannelActivity : AppCompatActivity() {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_my_channel)
         binding.myChannelActivity = this
 
-        if (intent.action != CHANNEL_ACTIVITY_INTENT_ACTION) return
+        if (intent.action != INTENT_ACTION_MY_CHANNEL) {
+            return
+        }
         channelURL = intent.getStringExtra(INTENT_NAME_CHANNEL_URL)!!
 
         initAdapter()
         readAllMessages()
     }
 
+    //END
     private fun initAdapter() {
         adapter = MessageAdapter()
         binding.recyclerView.adapter = adapter
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
     }
 
-
-//[START Read message]
+    //END
     private fun readAllMessages() {
         GroupChannel.getChannel(channelURL) { channel, e ->
             if (e != null) {
@@ -75,6 +78,7 @@ class MyChannelActivity : AppCompatActivity() {
         }
     }
 
+    //END
     fun onSendButtonClicked() {
         val userMessage: String = binding.messageEditText.text.toString()
         val params = UserMessageCreateParams(userMessage)
@@ -106,6 +110,7 @@ class MyChannelActivity : AppCompatActivity() {
         }
     }
 
+    //END
     private fun adjustRecyclerViewPosition() {
         binding.recyclerView.run { //리사이클러뷰 위치 조정
             postDelayed({

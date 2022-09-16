@@ -5,12 +5,12 @@ import android.view.View
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.konai.sendbirdapisampleapp.Constants.ALL_MESSAGE_RECEIVE_HANDLER
-import com.konai.sendbirdapisampleapp.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
 import com.konai.sendbirdapisampleapp.Constants.CHANNEL_META_DATA
 import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_DOCUMENT_PUBLIC_KEY
 import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_FIELD_AFFINE_X
 import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_FIELD_AFFINE_Y
 import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_FIELD_USER_ID
+import com.konai.sendbirdapisampleapp.Constants.INTENT_ACTION_GROUP_CHANNEL
 import com.konai.sendbirdapisampleapp.Constants.INTENT_NAME_CHANNEL_URL
 import com.konai.sendbirdapisampleapp.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.R
@@ -261,7 +261,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                         startActivity(
                             Intent(requireContext(), ChannelActivity::class.java).apply {
                                 putExtra(INTENT_NAME_CHANNEL_URL, channel.url)
-                                action = CHANNEL_ACTIVITY_INTENT_ACTION
+                                action = INTENT_ACTION_GROUP_CHANNEL
                             }
                         )
 

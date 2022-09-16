@@ -1,6 +1,7 @@
 package com.konai.sendbirdapisampleapp.activity
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -9,14 +10,16 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.konai.sendbirdapisampleapp.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
 import com.konai.sendbirdapisampleapp.Constants.CHANNEL_META_DATA
 import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_DOCUMENT_PUBLIC_KEY
 import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_FIELD_AFFINE_X
 import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_FIELD_AFFINE_Y
 import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_FIELD_USER_ID
+import com.konai.sendbirdapisampleapp.Constants.INTENT_ACTION_GROUP_CHANNEL
+import com.konai.sendbirdapisampleapp.Constants.INTENT_ACTION_MY_CHANNEL
 import com.konai.sendbirdapisampleapp.Constants.INTENT_NAME_CHANNEL_URL
 import com.konai.sendbirdapisampleapp.Constants.LOGIN_ACCOUNT_MESSAGE_RECEIVE_HANDLER
+import com.konai.sendbirdapisampleapp.Constants.TAG
 import com.konai.sendbirdapisampleapp.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.Constants.USER_NICKNAME
 import com.konai.sendbirdapisampleapp.R
@@ -47,6 +50,10 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
     private var encryptedMessageList: MutableList<MessageModel> = mutableListOf()
     private var decryptedMessageList: MutableList<MessageModel> = mutableListOf()
     private lateinit var binding: ActivityChannelBinding
+
+    private var messageList: MutableList<MessageModel> = mutableListOf()
+    //private lateinit var myChannelActivityBinding: ActivityMyChannelBinding
+
     private lateinit var adapter: MessageAdapter
     private lateinit var channelURL: String
     private lateinit var strongBox: StrongBox
@@ -59,12 +66,38 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        try {
-            //정상적이지 않은 방법으로 ChannelActivity 에 접근한 경우
-            if(intent.action != CHANNEL_ACTIVITY_INTENT_ACTION) {
-                return
+        //TODO initial 겹치는 게 있음
+        when (intent.action) {
+            INTENT_ACTION_MY_CHANNEL -> {
+                Log.d(TAG, "onCreate: 개인 채널 활성화")
+                activateMyChannel()
             }
+            INTENT_ACTION_GROUP_CHANNEL -> {
+                Log.d(TAG, "onCreate: 그룹 채널 활성화")
+                activateGroupChannel()
+            }
+            else -> return
+        }
+    }
 
+    private fun activateMyChannel() {
+        try {
+            binding = DataBindingUtil.setContentView(this, R.layout.activity_channel)
+            binding.channelActivity = this
+            channelURL = intent.getStringExtra(INTENT_NAME_CHANNEL_URL)!!
+
+            initAdapter()
+            CoroutineScope(Dispatchers.Main).launch {
+                readAllMessages()
+            }
+        }
+        catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun activateGroupChannel() {
+        try {
             binding = DataBindingUtil.setContentView(this, R.layout.activity_channel)
             binding.channelActivity = this
             remoteDB = Firebase.firestore
@@ -72,7 +105,6 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
             strongBox = StrongBox.getInstance(this)
             espm = EncryptedSharedPreferencesManager.getInstance(this)!!
             channelURL = intent.getStringExtra(INTENT_NAME_CHANNEL_URL)!!
-
 
             //내 디바이스에 로그인한 경우
             if (isMyDevice()) {
@@ -288,99 +320,191 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
         )
     }
 
+    //TODO 중복코드가 너무 많음
     private suspend fun readAllMessages() = withContext(Dispatchers.IO) {
-        try {
-            GroupChannel.getChannel(channelURL) { channel, e1 ->
-                if (e1 != null) {
-                    e1.printStackTrace()
-                    return@getChannel
-                }
+        when (intent.action) {
+            INTENT_ACTION_MY_CHANNEL -> {
+                try {
+                    GroupChannel.getChannel(channelURL) { channel, e ->
+                        if (e != null) {
+                            e.printStackTrace()
+                            return@getChannel
+                        }
 
-                val query = channel!!.createPreviousMessageListQuery(
-                    PreviousMessageListQueryParams() //Custom QueryParams if it's needed. use .apply {}
-                )
-                query.load { messages, e2 ->
-                    if (e2 != null) {
-                        e2.printStackTrace()
-                        return@load
-                    }
-
-                    //채널에 이전 메시지가 없을 떄
-                    if (messages!!.isEmpty()) {
-                        return@load
-                    }
-
-                    //채널에 이전 메시지가 있을 때
-                    encryptedMessageList.clear()
-                    for (message in messages) {
-                        encryptedMessageList.add(
-                            MessageModel(
-                                message = message.message,
-                                sender = message.sender!!.userId,
-                                messageId = message.messageId,
-                                createdAt = message.createdAt
-                            )
+                        val query = channel!!.createPreviousMessageListQuery(
+                            PreviousMessageListQueryParams() //Custom QueryParams if it's needed. use .apply {}
                         )
-                    }
-                    adapter.submitList(encryptedMessageList)
-                    CoroutineScope(Dispatchers.Main).launch {
-                        adapter.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can.
+                        query.load { messages, e ->
+                            if (e != null) {
+                                e.printStackTrace()
+                                return@load
+                            }
+                            if (messages!!.isEmpty()) return@load
+                            messageList.clear()
+                            for (message in messages) {
+                                messageList.add(
+                                    MessageModel(
+                                        message = message.message,
+                                        sender = message.sender!!.userId,
+                                        messageId = message.messageId,
+                                        createdAt = message.createdAt
+                                    )
+                                )
+                            }
+                            adapter.submitList(messageList)
+                            adapter.notifyDataSetChanged()
+                            //TODO It will always be more efficient to use more specific change events if you can.
+                        }
                     }
                 }
+                catch (e: Exception) {
+                    e.printStackTrace()
+                    Toast.makeText(this@ChannelActivity, "메시지를 읽어오는데 실패했습니다.", Toast.LENGTH_SHORT).show()
+                }
+
             }
-        }
-        catch (e: Exception) {
-            e.printStackTrace()
-            Toast.makeText(this@ChannelActivity, "메시지를 읽어오는데 실패했습니다.", Toast.LENGTH_SHORT).show()
-        }
+            INTENT_ACTION_GROUP_CHANNEL -> {
+                try {
+                    GroupChannel.getChannel(channelURL) { channel, e1 ->
+                        if (e1 != null) {
+                            e1.printStackTrace()
+                            return@getChannel
+                        }
 
-    }
-
-    //메시지 암호화 버튼 클릭 이벤트
-    fun sendMessage() {
-        try {
-            //Local DB 에서 keyId 꺼내기
-            CoroutineScope(Dispatchers.IO).launch {
-                //1.URL 에 해당하는 KeyId 를 가져옴
-                localDB.keyIdDao().getKeyId(channelURL).let { keyId ->
-                    //2. 메시지 암호화
-                    strongBox.encrypt(
-                        message = binding.messageEditText.text.toString(),
-                        keyId = keyId
-                    ).let { encryptedMessage ->
-                        //3. 센드버드 서버에 암호화된 메시지 전송
-                        val params = UserMessageCreateParams(encryptedMessage)
-                        GroupChannel.getChannel(channelURL) { groupChannel, e1 ->
-                            if (e1 != null) {
-                                e1.printStackTrace()
-                                return@getChannel
+                        val query = channel!!.createPreviousMessageListQuery(
+                            PreviousMessageListQueryParams() //Custom QueryParams if it's needed. use .apply {}
+                        )
+                        query.load { messages, e2 ->
+                            if (e2 != null) {
+                                e2.printStackTrace()
+                                return@load
                             }
-                            groupChannel?.sendUserMessage(params) { message, e2 ->
-                                if (e2 != null) {
-                                    e2.printStackTrace()
-                                    return@sendUserMessage
-                                }
-                                //4. 전송 완료된 메시지 UI에 띄우기
+
+                            //채널에 이전 메시지가 없을 떄
+                            if (messages!!.isEmpty()) {
+                                return@load
+                            }
+
+                            //채널에 이전 메시지가 있을 때
+                            encryptedMessageList.clear()
+                            for (message in messages) {
                                 encryptedMessageList.add(
                                     MessageModel(
-                                        message = message?.message,
-                                        sender = message?.sender?.userId,
-                                        messageId = message?.messageId,
-                                        createdAt = message?.createdAt
+                                        message = message.message,
+                                        sender = message.sender!!.userId,
+                                        messageId = message.messageId,
+                                        createdAt = message.createdAt
                                     )
                                 )
                             }
                             adapter.submitList(encryptedMessageList)
-                            adapter.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can.
+                            CoroutineScope(Dispatchers.Main).launch {
+                                adapter.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can.
+                            }
+                        }
+                    }
+                }
+                catch (e: Exception) {
+                    e.printStackTrace()
+                    Toast.makeText(this@ChannelActivity, "메시지를 읽어오는데 실패했습니다.", Toast.LENGTH_SHORT).show()
+                }
+            }
+            else -> {
+
+            }
+        }
+
+
+
+
+    }
+    //메시지 암호화 버튼 클릭 이벤트
+    fun sendMessage() {
+        when (intent.action) {
+            INTENT_ACTION_MY_CHANNEL -> {
+                try {
+                    val userMessage: String = binding.messageEditText.text.toString()
+                    val params = UserMessageCreateParams(userMessage)
+                    binding.messageEditText.text = null
+
+                    GroupChannel.getChannel(channelURL) { groupChannel, e ->
+                        if (e != null) {
+                            e.printStackTrace()
+                            return@getChannel
+                        }
+                        groupChannel?.sendUserMessage(params) { message, e ->
+                            if (e != null) {
+                                e.printStackTrace()
+                                return@sendUserMessage
+                            }
+                            messageList.add(
+                                MessageModel(
+                                    message = message?.message,
+                                    sender = message?.sender?.userId,
+                                    messageId = message?.messageId,
+                                    createdAt = message?.createdAt
+                                )
+                            )
+                            adapter.submitList(messageList)
+                            adapter.notifyDataSetChanged()
+                            //TODO It will always be more efficient to use more specific change events if you can.
                             adjustRecyclerViewPosition()
                         }
                     }
                 }
+                catch (e: Exception) {
+                    e.printStackTrace()
+                    Toast.makeText(this, "메시지 전송에 실패했습니다.", Toast.LENGTH_SHORT).show()
+                }
+
             }
-        }
-        catch (e: Exception) {
-            e.printStackTrace()
-            Toast.makeText(this, "메시지 전송에 실패했습니다.", Toast.LENGTH_SHORT).show()
+            INTENT_ACTION_GROUP_CHANNEL -> {
+                try {
+                    //Local DB 에서 keyId 꺼내기
+                    CoroutineScope(Dispatchers.IO).launch {
+                        //1.URL 에 해당하는 KeyId 를 가져옴
+                        localDB.keyIdDao().getKeyId(channelURL).let { keyId ->
+                            //2. 메시지 암호화
+                            strongBox.encrypt(
+                                message = binding.messageEditText.text.toString(),
+                                keyId = keyId
+                            ).let { encryptedMessage ->
+                                //3. 센드버드 서버에 암호화된 메시지 전송
+                                val params = UserMessageCreateParams(encryptedMessage)
+                                GroupChannel.getChannel(channelURL) { groupChannel, e1 ->
+                                    if (e1 != null) {
+                                        e1.printStackTrace()
+                                        return@getChannel
+                                    }
+                                    groupChannel?.sendUserMessage(params) { message, e2 ->
+                                        if (e2 != null) {
+                                            e2.printStackTrace()
+                                            return@sendUserMessage
+                                        }
+                                        //4. 전송 완료된 메시지 UI에 띄우기
+                                        encryptedMessageList.add(
+                                            MessageModel(
+                                                message = message?.message,
+                                                sender = message?.sender?.userId,
+                                                messageId = message?.messageId,
+                                                createdAt = message?.createdAt
+                                            )
+                                        )
+                                    }
+                                    adapter.submitList(encryptedMessageList)
+                                    adapter.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can.
+                                    adjustRecyclerViewPosition()
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (e: Exception) {
+                    e.printStackTrace()
+                    Toast.makeText(this, "메시지 전송에 실패했습니다.", Toast.LENGTH_SHORT).show()
+                }
+            }
+            else -> return
         }
     }
 
@@ -419,9 +543,6 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
             adapter.submitList(decryptedMessageList)
             adapter.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can.
             adjustRecyclerViewPosition()
-
-
-
     }
 
     //채널 삭제 버튼 클릭 이벤트

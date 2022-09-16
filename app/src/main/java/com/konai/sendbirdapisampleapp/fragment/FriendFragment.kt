@@ -1,15 +1,15 @@
 package com.konai.sendbirdapisampleapp.fragment
 
 import android.content.Intent
-import com.konai.sendbirdapisampleapp.R
-import com.konai.sendbirdapisampleapp.activity.MyChannelActivity
-import com.konai.sendbirdapisampleapp.databinding.FragmentFriendBinding
-import com.konai.sendbirdapisampleapp.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
+import com.konai.sendbirdapisampleapp.Constants.INTENT_ACTION_MY_CHANNEL
 import com.konai.sendbirdapisampleapp.Constants.INTENT_NAME_CHANNEL_URL
 import com.konai.sendbirdapisampleapp.Constants.INTENT_NAME_USER_ID
 import com.konai.sendbirdapisampleapp.Constants.INTENT_NAME_USER_NICK
 import com.konai.sendbirdapisampleapp.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.Constants.USER_NICKNAME
+import com.konai.sendbirdapisampleapp.R
+import com.konai.sendbirdapisampleapp.activity.ChannelActivity
+import com.konai.sendbirdapisampleapp.databinding.FragmentFriendBinding
 import com.sendbird.android.channel.GroupChannel
 import com.sendbird.android.params.GroupChannelCreateParams
 
@@ -45,11 +45,11 @@ class FriendFragment : BaseFragment<FragmentFriendBinding>(R.layout.fragment_fri
             }
 
             if (channel != null) {
-                val intent = Intent(requireContext(), MyChannelActivity::class.java).apply {
+                val intent = Intent(requireContext(), ChannelActivity::class.java).apply {
                     putExtra(INTENT_NAME_CHANNEL_URL, channel.url)
                     putExtra(INTENT_NAME_USER_ID, USER_ID)
                     putExtra(INTENT_NAME_USER_NICK, USER_NICKNAME)
-                    action = CHANNEL_ACTIVITY_INTENT_ACTION
+                    action = INTENT_ACTION_MY_CHANNEL
                 }
                 startActivity(intent)
             }
