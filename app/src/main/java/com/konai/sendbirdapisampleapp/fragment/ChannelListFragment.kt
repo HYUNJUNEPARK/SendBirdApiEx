@@ -1,20 +1,9 @@
 package com.konai.sendbirdapisampleapp.fragment
 
 import android.content.Intent
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.konai.sendbirdapisampleapp.R
-import com.konai.sendbirdapisampleapp.activity.ChannelActivity
-import com.konai.sendbirdapisampleapp.adapter.ChannelListAdapter
-import com.konai.sendbirdapisampleapp.databinding.FragmentChannelBinding
-import com.konai.sendbirdapisampleapp.db.DBProvider
-import com.konai.sendbirdapisampleapp.db.keyid.KeyIdDatabase
-import com.konai.sendbirdapisampleapp.db.keyid.KeyIdEntity
-import com.konai.sendbirdapisampleapp.models.ChannelModel
-import com.konai.sendbirdapisampleapp.strongbox.ECKeyUtil
-import com.konai.sendbirdapisampleapp.strongbox.StrongBox
 import com.konai.sendbirdapisampleapp.Constants.ALL_MESSAGE_RECEIVE_HANDLER
 import com.konai.sendbirdapisampleapp.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
 import com.konai.sendbirdapisampleapp.Constants.CHANNEL_META_DATA
@@ -23,8 +12,17 @@ import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_FIELD_AFFINE_X
 import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_FIELD_AFFINE_Y
 import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_FIELD_USER_ID
 import com.konai.sendbirdapisampleapp.Constants.INTENT_NAME_CHANNEL_URL
-import com.konai.sendbirdapisampleapp.Constants.TAG
 import com.konai.sendbirdapisampleapp.Constants.USER_ID
+import com.konai.sendbirdapisampleapp.R
+import com.konai.sendbirdapisampleapp.activity.ChannelActivity
+import com.konai.sendbirdapisampleapp.adapter.ChannelAdapter
+import com.konai.sendbirdapisampleapp.databinding.FragmentChannelBinding
+import com.konai.sendbirdapisampleapp.db.DBProvider
+import com.konai.sendbirdapisampleapp.db.keyid.KeyIdDatabase
+import com.konai.sendbirdapisampleapp.db.keyid.KeyIdEntity
+import com.konai.sendbirdapisampleapp.models.ChannelModel
+import com.konai.sendbirdapisampleapp.strongbox.ECKeyUtil
+import com.konai.sendbirdapisampleapp.strongbox.StrongBox
 import com.sendbird.android.SendbirdChat
 import com.sendbird.android.channel.BaseChannel
 import com.sendbird.android.channel.GroupChannel
@@ -35,14 +33,16 @@ import com.sendbird.android.message.BaseMessage
 import com.sendbird.android.message.UserMessage
 import com.sendbird.android.params.GroupChannelCreateParams
 import com.sendbird.android.params.GroupChannelListQueryParams
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
 
 class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragment_channel), CoroutineScope {
-    //private var _channelList: MutableList<ChannelListModel> = mutableListOf()
     private lateinit var strongBox: StrongBox
     private lateinit var localDB: KeyIdDatabase
-    private lateinit var adapter: ChannelListAdapter
+    private lateinit var adapter: ChannelAdapter
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main
 
@@ -51,7 +51,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
         try {
             binding.progressBarLayout.visibility = View.VISIBLE
-            adapter = ChannelListAdapter(requireContext())
+            adapter = ChannelAdapter(requireContext())
             strongBox = StrongBox.getInstance(requireContext())
             localDB = DBProvider.getInstance(requireContext())!!
             initAdapter()
@@ -83,7 +83,6 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         super.onStop()
         SendbirdChat.removeChannelHandler(ALL_MESSAGE_RECEIVE_HANDLER)
     }
-
 
     private fun initAdapter() {
         binding.chatListRecyclerView.adapter = adapter
@@ -130,7 +129,6 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         }
     }
 
-
     //메시지가 수신될 때마다 채널 리스트를 갱신
     private suspend fun addMessageHandler() = withContext(Dispatchers.IO) {
         SendbirdChat.addChannelHandler(
@@ -140,7 +138,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                     when (message) {
                         is UserMessage -> {
                             for ((idx, channel) in adapter.channelList.withIndex()) {//Use withIndex() instead of manual index increment
-                                //기존 채널 리스트에 새로운 메시지가 온 경우
+                                //1. 기존 채널 리스트에 새로운 메시지가 온 경우
                                 if(message.channelUrl == channel.url) {
                                     Toast.makeText(requireContext(), "메시지 수신 : 채널 리스트 갱신", Toast.LENGTH_SHORT).show()
                                     fetchLatestChannel(
@@ -151,7 +149,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                                     return
                                 }
                             }
-                            //새롭게 초대받은 채널에 첫 메시지가 도착한 상황 -> 해당 채널을 채널 리스트 최상단에 위치 시킴
+                            //2. 새롭게 초대받은 채널에 첫 메시지가 도착한 상황 -> 해당 채널을 채널 리스트 최상단에 위치 시킴
                             fetchNewChannel(
                                 ChannelModel(
                                     name = channel.name,
@@ -168,66 +166,24 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         )
     }
 
-
-
-
     /**
      * 새로운 메시지가 도착했을 때 채널리스트의 순서 변경.
      * 메시지가 도착한 채널이 제일 상단으로 이동함
      *
-     * @param url 메시지가 도착한 채널 url
+     * @param idx 가장 최근에 활성회된 채널 인덱스
      * @param lastMessage 메시지 내용
      * @param lastMessageTime 메시지 송신 시간
      */
-    //TODO Coroutine ?
-    //TODO 순서는 정상적으로 바뀌나 메시지와 시간 UI 업데이트가 되지 않음
     private fun fetchLatestChannel(idx: Int, lastMessage: String, lastMessageTime: Long) {
-//        아이템에 lastMessage: String, lastMessageTime: Long 가 갱신 안됨
-//        adapter.channelList[idx].lastMessage = lastMessage
-//        adapter.channelList[idx].lastMessageTime = lastMessageTime
-//        adapter.notifyItemMoved(idx, 0)
-
-        adapter.channelList[idx].lastMessage = lastMessage
-        adapter.channelList[idx].lastMessageTime = lastMessageTime
-        //val channel = adapter.channelList[idx]
-        adapter.notifyItemChanged(idx)
-        Log.d(TAG, "fetchLatestChannel: idx : ${adapter.channelList[idx].name} //  idx0 : ${adapter.channelList[0].name}")
+        adapter.channelList.apply {
+            val model = this.removeAt(idx)
+            model.lastMessage = lastMessage
+            model.lastMessageTime = lastMessageTime
+            this.add(0, model)
+        }
         adapter.notifyItemMoved(idx, 0)
-
-        //TODO 옮기고 ItemChanged 하는 것을 시도해 볼것
-        Log.d(TAG, "fetchLatestChannel: idx : ${adapter.channelList[idx].name} //  idx0 : ${adapter.channelList[0].name}")
-        //adapter.notifyItemMoved(idx, 0)
-
-
-
-//        adapter.notifyItemRemoved(idx)
-//
-//        //adapter.channelList.removeAt(idx)
-//        Log.d(TAG, "갱신된 채널 : $channel // 갱신된 채널 원래 인덱스 : $idx ")
-//        adapter.channelList.add(0, channel)
-//        adapter.notifyItemInserted(0)
-//        Log.d(TAG, "${adapter.channelList[idx+1].name} // idx : ${idx+1}")
-//        adapter.notifyItemRemoved(idx+1)
-
-        //adapter.notifyItemRemoved(idx+1)
-
-//        adapter.channelList.removeAt(idx)
-//        for (i in adapter.channelList) {
-//            Log.d(TAG, "목표 아이템이 삭제 되었는가 ? : ${i.name}")
-//        }
-//        adapter.channelList.add(idx, channel)
-//        Log.d(TAG, "------------------------------------------------------------------------")
-//        for (i in adapter.channelList) {
-//            Log.d(TAG, "리스트 원래위치에 목표 채널이 들어감 ?: ${i.name}")
-//        }
-//        adapter.notifyItemMoved(idx, 0)
-        //adapter.notifyItemInserted(0)
-//        adapter.channelList.removeAt(idx)
-//        adapter.channelList.add(idx, channel)
-//        adapter.notifyItemInserted(idx)
-
+        adapter.notifyItemChanged(0)
     }
-
 
     //새롭게 초대받은 채널에 첫 메시지가 도착한 상황 -> 해당 채널을 채널 리스트 최상단에 위치 시킴
     private fun fetchNewChannel(channel: ChannelModel) {
@@ -235,7 +191,6 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         adapter.channelList.add(0, channel)
         adapter.notifyItemInserted(0)
     }
-
 
     //사용자 자신의 디바이스인 경우에만 채널 생성 버튼이 활성화
     private fun showCreateChannelButtonState() {
@@ -303,8 +258,6 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                             )
                         )
                         fetchChannelList()
-                        //TODO TEST Check
-                        //정상적으로 채널과 SharedSecretKey 생성을 마쳤다면 ChannelActivity 로 이동
                         startActivity(
                             Intent(requireContext(), ChannelActivity::class.java).apply {
                                 putExtra(INTENT_NAME_CHANNEL_URL, channel.url)
@@ -319,9 +272,8 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         binding.userIdInputEditText.text = null
     }
 
-    //SharedSecretKey 생성, 채널 메타데이터로 secureRandom 업로드
+    //SharedSecretKey 생성, 센드버드 서버 채널 메타데이터로 secureRandom 업로드
     private suspend fun generateSharedSecreteKey(channel: GroupChannel, friendId: String): String {
-        //SharedSecretKey 만들 때와 KeyId, 채널 메타데이터로 사용됨
         val secureRandom = strongBox.generateRandom(32)
 
         withContext(Dispatchers.IO) {

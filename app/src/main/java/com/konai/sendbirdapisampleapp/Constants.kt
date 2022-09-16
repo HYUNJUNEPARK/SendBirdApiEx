@@ -11,6 +11,8 @@ object Constants {
 
     //intent
     const val CHANNEL_ACTIVITY_INTENT_ACTION ="com.konai.sendbirdapisampleapp.adapter.Action"
+    const val INTENT_ACTION_MY_CHANNEL = "secret.chat.my.channel"
+    const val INTENT_ACTION_GROUP_CHANNEL = "secret.chat.group.channel"
     const val INTENT_NAME_USER_ID = "userId"
     const val INTENT_NAME_USER_NICK = "userNick"
     const val INTENT_NAME_CHANNEL_URL = "channelURL"
@@ -31,8 +33,4 @@ object Constants {
 
     //etc
     const val TAG = "testLog"
-
-    //deprecated
-    //shared preference
-    const val PREFERENCE_NAME_HASH = "hash"
 }

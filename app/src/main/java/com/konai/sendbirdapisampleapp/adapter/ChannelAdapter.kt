@@ -13,7 +13,7 @@ import com.konai.sendbirdapisampleapp.Constants.CHANNEL_ACTIVITY_INTENT_ACTION
 import com.konai.sendbirdapisampleapp.Constants.INTENT_NAME_CHANNEL_URL
 import com.konai.sendbirdapisampleapp.Extension.convertLongToTime
 
-class ChannelListAdapter(val context: Context) : RecyclerView.Adapter<ChannelListAdapter.MyHolder>() {
+class ChannelAdapter(val context: Context) : RecyclerView.Adapter<ChannelAdapter.MyHolder>() {
     var channelList = mutableListOf<ChannelModel>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyHolder {
@@ -26,7 +26,7 @@ class ChannelListAdapter(val context: Context) : RecyclerView.Adapter<ChannelLis
 
         init {
             binding.root.setOnClickListener {
-                //Go to MyChannel
+                //Go to My Channel
                 if (channel.memberSize == 1) {
                     val intent = Intent(context, MyChannelActivity::class.java)
                     intent.putExtra(INTENT_NAME_CHANNEL_URL, "${channel.url}")

@@ -58,9 +58,12 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         try {
             //정상적이지 않은 방법으로 ChannelActivity 에 접근한 경우
-            if(intent.action != CHANNEL_ACTIVITY_INTENT_ACTION) return
+            if(intent.action != CHANNEL_ACTIVITY_INTENT_ACTION) {
+                return
+            }
 
             binding = DataBindingUtil.setContentView(this, R.layout.activity_channel)
             binding.channelActivity = this
