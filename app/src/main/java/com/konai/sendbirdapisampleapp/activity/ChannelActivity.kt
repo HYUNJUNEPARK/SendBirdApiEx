@@ -1,7 +1,7 @@
 package com.konai.sendbirdapisampleapp.activity
 
 import android.os.Bundle
-import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -19,7 +19,6 @@ import com.konai.sendbirdapisampleapp.Constants.INTENT_ACTION_GROUP_CHANNEL
 import com.konai.sendbirdapisampleapp.Constants.INTENT_ACTION_MY_CHANNEL
 import com.konai.sendbirdapisampleapp.Constants.INTENT_NAME_CHANNEL_URL
 import com.konai.sendbirdapisampleapp.Constants.LOGIN_ACCOUNT_MESSAGE_RECEIVE_HANDLER
-import com.konai.sendbirdapisampleapp.Constants.TAG
 import com.konai.sendbirdapisampleapp.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.Constants.USER_NICKNAME
 import com.konai.sendbirdapisampleapp.R
@@ -47,24 +46,30 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
     private var remoteDB: FirebaseFirestore? = null
     private var friendId: String? = null
     private var friendNickname: String? = null
+    private var messageList: MutableList<MessageModel> = mutableListOf()
     private var encryptedMessageList: MutableList<MessageModel> = mutableListOf()
     private var decryptedMessageList: MutableList<MessageModel> = mutableListOf()
-    private var messageList: MutableList<MessageModel> = mutableListOf()
     private lateinit var binding: ActivityChannelBinding
     private lateinit var adapter: MessageAdapter
     private lateinit var channelURL: String
     private lateinit var strongBox: StrongBox
     private lateinit var localDB: KeyIdDatabase
     private lateinit var espm: EncryptedSharedPreferencesManager
-
     override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Main + Job()
+        get() = Dispatchers.Main
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        try {
+            strongBox = StrongBox.getInstance(this)
+            channelURL = intent.getStringExtra(INTENT_NAME_CHANNEL_URL)!!
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return
+        }
+
         //사용자 디바이스가 아닌 경우
-        strongBox = StrongBox.getInstance(this)
         if (!isMyDevice()) {
             AlertDialog.Builder(this)
                 .setTitle("경고")
@@ -77,7 +82,6 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
                 .show()
             return
         }
-        channelURL = intent.getStringExtra(INTENT_NAME_CHANNEL_URL)!!
 
         when (intent.action) {
             INTENT_ACTION_MY_CHANNEL -> {
@@ -181,14 +185,20 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
             }
             //1. 나와의 채팅은 경우
             if (friendId == null) {
-                binding.userIdTextView.text = "$USER_NICKNAME (ID : $USER_ID) [나]" //Activity : 내 정보 ex) userNickname(ID : userId)
-                binding.myIdDetailLayoutTextView.text = "$USER_NICKNAME (ID : $USER_ID) [나]" //MotionLayout : 내 정보
+                binding.secretKeyStateImageView.visibility = View.GONE
+                binding.userIdTextView.text =
+                    "$USER_NICKNAME (ID : $USER_ID) [나]" //Activity : 내 정보 ex) userNickname(ID : userId)
+                binding.myIdDetailLayoutTextView.text =
+                    "$USER_NICKNAME (ID : $USER_ID) [나]" //MotionLayout : 내 정보
             }
             //2. 그룹 채팅인 경우
             else {
-                binding.userIdTextView.text = "$friendNickname (ID : $friendId)" //Activity : 친구 정보
-                binding.partnerIdDetailLayoutTextView.text = "$friendNickname (ID : $friendId)" //MotionLayout : 친구 정보
-                binding.myIdDetailLayoutTextView.text = "$USER_NICKNAME (ID : $USER_ID) [나]" //MotionLayout : 내 정보
+                binding.userIdTextView.text =
+                    "$friendNickname (ID : $friendId)" //Activity : 친구 정보
+                binding.partnerIdDetailLayoutTextView.text =
+                    "$friendNickname (ID : $friendId)" //MotionLayout : 친구 정보
+                binding.myIdDetailLayoutTextView.text =
+                    "$USER_NICKNAME (ID : $USER_ID) [나]" //MotionLayout : 내 정보
             }
         }
     }
@@ -235,7 +245,7 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
                                     return@getMetaData
                                 }
 
-                                var metadata = map!!.get("metadata") ?: ""
+                                val metadata = map!!.get("metadata") ?: ""
                                 if (metadata.isEmpty()) {
                                     return@getMetaData
                                 }
@@ -302,8 +312,8 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
                                 )
                             )
                             adapter.submitList(encryptedMessageList)
-                            adapter.notifyDataSetChanged()
-                            //TODO It will always be more efficient to use more specific change events if you can.
+                            adapter.notifyItemInserted(encryptedMessageList.size-1)
+                            adjustRecyclerViewPosition()
                         }
                     }
                 }
@@ -311,23 +321,23 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
         )
     }
 
-    //TODO 중복코드가 너무 많음
     private suspend fun readAllMessages() = withContext(Dispatchers.IO) {
         when (intent.action) {
+            //나와의 채팅
             INTENT_ACTION_MY_CHANNEL -> {
                 try {
-                    GroupChannel.getChannel(channelURL) { channel, e ->
-                        if (e != null) {
-                            e.printStackTrace()
+                    GroupChannel.getChannel(channelURL) { channel, e1 ->
+                        if (e1 != null) {
+                            e1.printStackTrace()
                             return@getChannel
                         }
 
                         val query = channel!!.createPreviousMessageListQuery(
                             PreviousMessageListQueryParams() //Custom QueryParams if it's needed. use .apply {}
                         )
-                        query.load { messages, e ->
-                            if (e != null) {
-                                e.printStackTrace()
+                        query.load { messages, e2 ->
+                            if (e2 != null) {
+                                e2.printStackTrace()
                                 return@load
                             }
                             if (messages!!.isEmpty()) return@load
@@ -343,9 +353,8 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
                                 )
                             }
                             adapter.submitList(messageList)
-                            adapter.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can.
+                            adapter.notifyDataSetChanged()
                             adjustRecyclerViewPosition()
-
                         }
                     }
                 }
@@ -353,8 +362,8 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
                     e.printStackTrace()
                     Toast.makeText(this@ChannelActivity, "메시지를 읽어오는데 실패했습니다.", Toast.LENGTH_SHORT).show()
                 }
-
             }
+            //그룹 채팅
             INTENT_ACTION_GROUP_CHANNEL -> {
                 try {
                     GroupChannel.getChannel(channelURL) { channel, e1 ->
@@ -390,9 +399,8 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
                                 )
                             }
                             adapter.submitList(encryptedMessageList)
-                            CoroutineScope(Dispatchers.Main).launch {
-                                adapter.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can.
-                            }
+                            adapter.notifyDataSetChanged()
+                            adjustRecyclerViewPosition()
                         }
                     }
                 }
@@ -406,23 +414,24 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
             }
         }
     }
-    //메시지 암호화 버튼 클릭 이벤트
+    //메시지 전송 버튼 클릭 이벤트
     fun sendMessage() {
         when (intent.action) {
+            //나와의 채팅
             INTENT_ACTION_MY_CHANNEL -> {
                 try {
                     val userMessage: String = binding.messageEditText.text.toString()
                     val params = UserMessageCreateParams(userMessage)
                     binding.messageEditText.text = null
 
-                    GroupChannel.getChannel(channelURL) { groupChannel, e ->
-                        if (e != null) {
-                            e.printStackTrace()
+                    GroupChannel.getChannel(channelURL) { groupChannel, e1 ->
+                        if (e1 != null) {
+                            e1.printStackTrace()
                             return@getChannel
                         }
-                        groupChannel?.sendUserMessage(params) { message, e ->
-                            if (e != null) {
-                                e.printStackTrace()
+                        groupChannel?.sendUserMessage(params) { message, e2 ->
+                            if (e2 != null) {
+                                e2.printStackTrace()
                                 return@sendUserMessage
                             }
                             messageList.add(
@@ -438,13 +447,13 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
                             adjustRecyclerViewPosition()
                         }
                     }
-                }
-                catch (e: Exception) {
+                } catch (e: Exception) {
                     e.printStackTrace()
                     Toast.makeText(this, "메시지 전송에 실패했습니다.", Toast.LENGTH_SHORT).show()
                 }
 
             }
+            //그룹 채팅
             INTENT_ACTION_GROUP_CHANNEL -> {
                 try {
                     //Local DB 에서 keyId 꺼내기
@@ -477,16 +486,16 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
                                                 createdAt = message?.createdAt
                                             )
                                         )
+                                        binding.messageEditText.text = null
+                                        adapter.submitList(encryptedMessageList)
+                                        adapter.notifyItemInserted(encryptedMessageList.size-1)
+                                        adjustRecyclerViewPosition()
                                     }
-                                    adapter.submitList(encryptedMessageList)
-                                    adjustRecyclerViewPosition()
-                                    adapter.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can.
                                 }
                             }
                         }
                     }
-                }
-                catch (e: Exception) {
+                } catch (e: Exception) {
                     e.printStackTrace()
                     Toast.makeText(this, "메시지 전송에 실패했습니다.", Toast.LENGTH_SHORT).show()
                 }
@@ -517,8 +526,7 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
                             )
                         }
                     }
-                }
-                catch (e: Exception) {
+                } catch (e: Exception) {
                     e.printStackTrace()
                     CoroutineScope(Dispatchers.Main).launch {
                         Toast.makeText(this@ChannelActivity, "예기치 못한 예러로 메시지를 복호화할 수 없습니다.", Toast.LENGTH_SHORT).show()
@@ -528,7 +536,7 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
             }
             //3. 복호화된 메시지를 UI에 띄움
             adapter.submitList(decryptedMessageList)
-            adapter.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can.
+            adapter.notifyDataSetChanged()
             adjustRecyclerViewPosition()
     }
 
@@ -563,9 +571,10 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
     //리사이클러뷰 위치 조정
     private fun adjustRecyclerViewPosition() {
         binding.recyclerView.run {
-            postDelayed({
-                scrollToPosition(adapter!!.itemCount - 1)
-            }, 300)
+            postDelayed(
+                { scrollToPosition(adapter!!.itemCount - 1) },
+                200
+            )
         }
     }
 }
