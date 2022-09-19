@@ -6,10 +6,10 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.konai.sendbirdapisampleapp.Constants.INTENT_ACTION_GROUP_CHANNEL
+import com.konai.sendbirdapisampleapp.Constants.INTENT_ACTION_MY_CHANNEL
 import com.konai.sendbirdapisampleapp.Constants.INTENT_NAME_CHANNEL_URL
 import com.konai.sendbirdapisampleapp.Extension.convertLongToTime
 import com.konai.sendbirdapisampleapp.activity.ChannelActivity
-import com.konai.sendbirdapisampleapp.activity.MyChannelActivity
 import com.konai.sendbirdapisampleapp.databinding.ItemChatChannelListBinding
 import com.konai.sendbirdapisampleapp.models.ChannelModel
 
@@ -26,18 +26,14 @@ class ChannelAdapter(val context: Context) : RecyclerView.Adapter<ChannelAdapter
 
         init {
             binding.root.setOnClickListener {
-                //Go to My Channel
-                if (channel.memberSize == 1) {
-                    val intent = Intent(context, MyChannelActivity::class.java)
-                    intent.putExtra(INTENT_NAME_CHANNEL_URL, "${channel.url}")
-                    intent.action = INTENT_ACTION_GROUP_CHANNEL
-                    context.startActivity(intent)
-                    return@setOnClickListener
-                }
-                //Go to Group Channel
                 val intent = Intent(context, ChannelActivity::class.java)
                 intent.putExtra(INTENT_NAME_CHANNEL_URL, "${channel.url}")
-                intent.action = INTENT_ACTION_GROUP_CHANNEL
+                if (channel.memberSize == 1) {
+                    intent.action = INTENT_ACTION_MY_CHANNEL
+                }
+                else {
+                    intent.action = INTENT_ACTION_GROUP_CHANNEL
+                }
                 context.startActivity(intent)
             }
         }

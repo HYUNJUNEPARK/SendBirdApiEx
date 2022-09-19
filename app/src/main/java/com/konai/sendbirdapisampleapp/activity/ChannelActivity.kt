@@ -49,11 +49,8 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
     private var friendNickname: String? = null
     private var encryptedMessageList: MutableList<MessageModel> = mutableListOf()
     private var decryptedMessageList: MutableList<MessageModel> = mutableListOf()
-    private lateinit var binding: ActivityChannelBinding
-
     private var messageList: MutableList<MessageModel> = mutableListOf()
-    //private lateinit var myChannelActivityBinding: ActivityMyChannelBinding
-
+    private lateinit var binding: ActivityChannelBinding
     private lateinit var adapter: MessageAdapter
     private lateinit var channelURL: String
     private lateinit var strongBox: StrongBox
@@ -66,17 +63,32 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        //TODO initial 겹치는 게 있음
+        //사용자 디바이스가 아닌 경우
+        strongBox = StrongBox.getInstance(this)
+        if (!isMyDevice()) {
+            AlertDialog.Builder(this)
+                .setTitle("경고")
+                .setCancelable(false)
+                .setMessage("계정에 등록된 기기가 아닙니다. \n채널 생성/메시지 송신/메시지 복호화가 불가능합니다.")
+                .setPositiveButton("확인") { _, _ ->
+                    finish()
+                }
+                .create()
+                .show()
+            return
+        }
+        channelURL = intent.getStringExtra(INTENT_NAME_CHANNEL_URL)!!
+
         when (intent.action) {
             INTENT_ACTION_MY_CHANNEL -> {
-                Log.d(TAG, "onCreate: 개인 채널 활성화")
                 activateMyChannel()
             }
             INTENT_ACTION_GROUP_CHANNEL -> {
-                Log.d(TAG, "onCreate: 그룹 채널 활성화")
                 activateGroupChannel()
             }
-            else -> return
+            else -> {
+                return
+            }
         }
     }
 
@@ -84,14 +96,14 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
         try {
             binding = DataBindingUtil.setContentView(this, R.layout.activity_channel)
             binding.channelActivity = this
-            channelURL = intent.getStringExtra(INTENT_NAME_CHANNEL_URL)!!
 
             initAdapter()
+            displayMembersId()
+
             CoroutineScope(Dispatchers.Main).launch {
                 readAllMessages()
             }
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             e.printStackTrace()
         }
     }
@@ -102,49 +114,31 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
             binding.channelActivity = this
             remoteDB = Firebase.firestore
             localDB = DBProvider.getInstance(this)!!
-            strongBox = StrongBox.getInstance(this)
             espm = EncryptedSharedPreferencesManager.getInstance(this)!!
-            channelURL = intent.getStringExtra(INTENT_NAME_CHANNEL_URL)!!
 
-            //내 디바이스에 로그인한 경우
-            if (isMyDevice()) {
-                initAdapter()
-                displayMembersId()
+            initAdapter()
+            displayMembersId()
 
-                CoroutineScope(Dispatchers.IO).launch {
-                    localDB.keyIdDao().getKeyId(channelURL).let { keyId ->
-                        //1. keyId 이미 있음. 채널 생성자 or 이미 채널에 한번 접근한적이 있는 채널에 초대 받은 사용자
-                        if (keyId != null) {
-                            CoroutineScope(Dispatchers.Main).launch {
-                                binding.decryptionButton.isEnabled = true
-                                binding.secretKeyStateImageView.setImageResource(R.drawable.ic_baseline_check_circle_24)
-                                readAllMessages()
-                            }
+            CoroutineScope(Dispatchers.IO).launch {
+                localDB.keyIdDao().getKeyId(channelURL).let { keyId ->
+                    //1. keyId 이미 있음. 채널 생성자 or 이미 채널에 한번 접근한적이 있는 채널에 초대 받은 사용자
+                    if (keyId != null) {
+                        CoroutineScope(Dispatchers.Main).launch {
+                            binding.decryptionButton.isEnabled = true
+                            binding.secretKeyStateImageView.setImageResource(R.drawable.ic_baseline_check_circle_24)
+                            readAllMessages()
                         }
-                        //2. keyId가 없음.
-                        else {
-                            CoroutineScope(Dispatchers.Main).launch {
-                                generateSharedSecretKey()
-                                readAllMessages()
-                            }
+                    }
+                    //2. keyId가 없음.
+                    else {
+                        CoroutineScope(Dispatchers.Main).launch {
+                            generateSharedSecretKey()
+                            readAllMessages()
                         }
                     }
                 }
             }
-            //다른 사람 디바이스에 로그인한 경우
-            else {
-                AlertDialog.Builder(this)
-                    .setTitle("경고")
-                    .setCancelable(false)
-                    .setMessage("계정에 등록된 기기가 아닙니다. \n채널 생성/메시지 송신/메시지 복호화가 불가능합니다.")
-                    .setPositiveButton("확인") { _, _ ->
-                        finish()
-                    }
-                    .create()
-                    .show()
-            }
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             e.printStackTrace()
         }
     }
@@ -202,14 +196,14 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
     //사용자가 자신의 디바이스에 로그인한지 확인
     private fun isMyDevice(): Boolean {
         //try 블럭이 정상적으로 실행되었다면 내 디바이스에 로그인한 경우
-        try {
+        return try {
             strongBox.getECPublicKey(USER_ID)
-            return true
+            true
         }
         //다른 사람 디바이스에 로그인한 경우 예외 발생 -> 메시지 암호화/복호화 불가
         catch (e: Exception) {
             e.printStackTrace()
-            return false
+            false
         }
     }
 
@@ -245,9 +239,6 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
                                 if (metadata.isEmpty()) {
                                     return@getMetaData
                                 }
-//                                metadata = metadata!!.substring(0 .. metadata.length - 2)
-//                                val metadata = map!!.values.toString()
-//                                    .substring(1 until map.values.toString().length)
 
                                 //1.3 sharedSecretKey 생성
                                 strongBox.generateSharedSecretKey(
@@ -352,8 +343,9 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
                                 )
                             }
                             adapter.submitList(messageList)
-                            adapter.notifyDataSetChanged()
-                            //TODO It will always be more efficient to use more specific change events if you can.
+                            adapter.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can.
+                            adjustRecyclerViewPosition()
+
                         }
                     }
                 }
@@ -413,10 +405,6 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
 
             }
         }
-
-
-
-
     }
     //메시지 암호화 버튼 클릭 이벤트
     fun sendMessage() {
@@ -446,8 +434,7 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
                                 )
                             )
                             adapter.submitList(messageList)
-                            adapter.notifyDataSetChanged()
-                            //TODO It will always be more efficient to use more specific change events if you can.
+                            adapter.notifyItemInserted(messageList.size-1)
                             adjustRecyclerViewPosition()
                         }
                     }
@@ -492,8 +479,8 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
                                         )
                                     }
                                     adapter.submitList(encryptedMessageList)
-                                    adapter.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can.
                                     adjustRecyclerViewPosition()
+                                    adapter.notifyDataSetChanged() //TODO It will always be more efficient to use more specific change events if you can.
                                 }
                             }
                         }
