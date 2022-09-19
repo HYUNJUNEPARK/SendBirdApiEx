@@ -109,6 +109,5 @@ class MainActivity : AppCompatActivity() {
             .setPositiveButton("확인") { _, _ -> }
             .create()
             .show()
-
     }
 }

@@ -143,6 +143,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/div2" />
 
+<!-- 모션레이아웃 : 친구 추가 -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/addFriendLayout"
             android:layout_width="0dp"
@@ -206,6 +207,5 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
-
     </androidx.constraintlayout.motion.widget.MotionLayout>
 </layout>

@@ -83,6 +83,15 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
     fun signIn() {
         binding.progressBarLayout.visibility = View.VISIBLE
         val userId = binding.userIdEditText.text.toString().ifEmpty { return }
+        try {
+            
+        }
+        catch (e: SendbirdException) {
+            if (e.code == 800190) {
+                Toast.makeText(this, "로그인 시간 초과. \n다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+            }
+        }
+        
         SendbirdChat.connect(userId) { user, e ->
             if (e != null) {
                 binding.progressBarLayout.visibility = View.GONE
