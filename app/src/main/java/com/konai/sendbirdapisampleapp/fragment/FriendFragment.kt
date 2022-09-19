@@ -18,6 +18,7 @@ class FriendFragment : BaseFragment<FragmentFriendBinding>(R.layout.fragment_fri
         super.initView()
 
         initUserProfile()
+
         binding.myChannelButton.setOnClickListener {
             createMyChannel()
         }

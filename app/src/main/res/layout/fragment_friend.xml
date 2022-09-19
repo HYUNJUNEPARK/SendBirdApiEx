@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
         <variable
             name="friendFragment"
             type="com.konai.sendbirdapisampleapp.fragment.FriendFragment" />
