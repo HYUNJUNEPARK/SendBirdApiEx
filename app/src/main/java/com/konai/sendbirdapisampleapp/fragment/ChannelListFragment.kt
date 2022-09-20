@@ -126,8 +126,8 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
             for (idx in channels.indices) {
                 adapter.channelList.add(
                     ChannelModel(
-                        name = channels[idx].name,
                         url = channels[idx].url,
+                        name = channels[idx].name,
                         lastMessage = channels[idx].lastMessage?.message,
                         lastMessageTime = channels[idx].lastMessage?.createdAt,
                         memberSize = channels[idx].memberCount
@@ -166,8 +166,8 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                             //2. 새롭게 초대받은 채널에 첫 메시지가 도착한 상황 -> 해당 채널을 채널 리스트 최상단에 위치 시킴
                             fetchNewChannel(
                                 ChannelModel(
-                                    name = channel.name,
                                     url = channel.url,
+                                    name = channel.name,
                                     lastMessage = message.message,
                                     lastMessageTime = message.createdAt,
                                     memberSize = 2

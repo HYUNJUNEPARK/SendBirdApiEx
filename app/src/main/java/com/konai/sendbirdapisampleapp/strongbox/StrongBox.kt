@@ -345,10 +345,12 @@ class StrongBox {
     @Throws(Exception::class)
     fun encrypt(message: String, keyId: String): String {
         var encodedSharedSecretKey: String? =
-            if (espm.getString(keyId, "") == "") null
-            else espm.getString(keyId, "")
-
-        Log.d(TAG, "encodedSharedSecretKey : $encodedSharedSecretKey")
+            if (espm.getString(keyId, "") == "") {
+                null
+            }
+            else {
+                espm.getString(keyId, "")
+            }
 
         val encryptedMessage: String
         Base64.decode(encodedSharedSecretKey, Base64.DEFAULT).let { decodedKey ->
