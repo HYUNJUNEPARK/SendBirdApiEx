@@ -1,33 +1,77 @@
 package com.konai.sendbirdapisampleapp.adapter
 
+import android.content.Context
+import android.content.DialogInterface
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.konai.sendbirdapisampleapp.databinding.ItemMyMessageBinding
-import com.konai.sendbirdapisampleapp.databinding.ItemPartnerMessageBinding
-import com.konai.sendbirdapisampleapp.models.MessageModel
 import com.konai.sendbirdapisampleapp.Constants.MY_MESSAGE
 import com.konai.sendbirdapisampleapp.Constants.PARTNER_MESSAGE
+import com.konai.sendbirdapisampleapp.Constants.TAG
 import com.konai.sendbirdapisampleapp.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.Extension.convertLongToTime
+import com.konai.sendbirdapisampleapp.databinding.ItemMyMessageBinding
+import com.konai.sendbirdapisampleapp.databinding.ItemPartnerMessageBinding
+import com.konai.sendbirdapisampleapp.db.DBProvider
+import com.konai.sendbirdapisampleapp.db.keyid.KeyIdDatabase
+import com.konai.sendbirdapisampleapp.models.MessageModel
+import com.konai.sendbirdapisampleapp.strongbox.StrongBox
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
-class MessageAdapter: ListAdapter<MessageModel, RecyclerView.ViewHolder>(diffUtil) {
+class MessageAdapter(
+    val context: Context,
+    val channelURL: String
+    ) : ListAdapter<MessageModel, RecyclerView.ViewHolder>(diffUtil) {
+    lateinit var localDB: KeyIdDatabase
+    lateinit var strongBox: StrongBox
+
+
+    //대화 상대의 홀더
     inner class PartnerMessageViewHolder(private val binding: ItemPartnerMessageBinding): RecyclerView.ViewHolder(binding.root) {
+        lateinit var messageModel: MessageModel
+
+        init {
+            //롱클릭 이벤트
+            binding.root.setOnLongClickListener {
+                showAlertDialog(messageModel)
+                true
+            }
+        }
+
         fun bind(message: MessageModel){
+            this.messageModel = message
             binding.dateTextView.text = message.createdAt?.convertLongToTime()
             binding.messageTextView.text = message.message
         }
     }
 
+    //로그인 사용자의 홀더
     inner class MyMessageViewHolder(private val binding: ItemMyMessageBinding): RecyclerView.ViewHolder(binding.root) {
+        lateinit var messageModel: MessageModel
+
+        init {
+            //롱클릭 이벤트
+            binding.root.setOnLongClickListener {
+                showAlertDialog(messageModel)
+                true
+            }
+        }
+
         fun bind(message: MessageModel){
+            this.messageModel = message
             binding.dateTextView.text = message.createdAt?.convertLongToTime()
             binding.messageTextView.text = message.message
         }
     }
 
+    //메시지 보낸이에 따라서 뷰올더를 다르게 사용
     override fun getItemViewType(position: Int): Int {
         val message = currentList[position]
         return if(message.sender == USER_ID) {
@@ -37,9 +81,16 @@ class MessageAdapter: ListAdapter<MessageModel, RecyclerView.ViewHolder>(diffUti
             PARTNER_MESSAGE
         }
     }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        val partnerMessageBinding = ItemPartnerMessageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        val myMessageBinding = ItemMyMessageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        localDB = DBProvider.getInstance(context)!!
+        strongBox = StrongBox.getInstance(context)
+
+
+        val partnerMessageBinding =
+            ItemPartnerMessageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val myMessageBinding =
+            ItemMyMessageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
 
         return when(viewType) {
             MY_MESSAGE -> MyMessageViewHolder(myMessageBinding)
@@ -56,6 +107,83 @@ class MessageAdapter: ListAdapter<MessageModel, RecyclerView.ViewHolder>(diffUti
                 (holder as PartnerMessageViewHolder).bind(currentList[position])
             }
         }
+    }
+
+    private fun showAlertDialog(messageModel: MessageModel) {
+        AlertDialog.Builder(context)
+            .setItems(
+                arrayOf(
+                    "복호화",
+                    "복사",
+                    "삭제",
+                    "답장"
+                ),
+                object : DialogInterface.OnClickListener {
+                    override fun onClick(p0: DialogInterface?, position: Int) {
+                        when(position) {
+                            0 -> {
+                                decryptMessage(messageModel)
+                            }
+                            1 -> {
+                                copyMessage()
+                            }
+                            2 -> {
+                                deleteMessage()
+                            }
+                            3 -> {
+                                replyMessage()
+                            }
+                        }
+                    }
+                }
+            )
+            .create()
+            .show()
+    }
+
+    private fun decryptMessage(messageModel: MessageModel) {
+        Toast.makeText(context, "복호화", Toast.LENGTH_SHORT).show()
+        //TODO MessageModel 가져오기
+        //TODO Strongbox decryption() 해당 메시지 전달
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                localDB.keyIdDao().getKeyId(channelURL).let { keyId ->
+                    Log.d(TAG, "keyId: $keyId")
+                }
+            } catch (e: Exception) {
+                //복호화 실패
+                e.printStackTrace()
+            }
+        }
+
+
+//        strongBox.decrypt(
+//            message = messageModel.message!!,
+//            keyId = ""
+//        ).let { decryptedMessage ->
+//            Log.d(TAG, "decryptMessage: $decryptedMessage")
+//        }
+        //TODO 복호화된 메시지를 MessageModel 에 바꿔넣기
+
+        //TODO Adapter 내부 list 갱신
+
+        //TODO notifyItemChange? 호출
+
+
+
+    }
+
+    private fun copyMessage() {
+        Toast.makeText(context, "복사", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun deleteMessage() {
+        Toast.makeText(context, "삭제", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun replyMessage() {
+        Toast.makeText(context, "답장", Toast.LENGTH_SHORT).show()
     }
 
     companion object {

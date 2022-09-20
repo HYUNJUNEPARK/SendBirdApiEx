@@ -10,12 +10,6 @@ object Constants {
     const val SENDBIRD_API_KEY = "D4FCF442-A653-49B3-9D87-6134CD87CA81"
 
     //intent
-
-    //deprecated
-    //const val CHANNEL_ACTIVITY_INTENT_ACTION ="com.konai.sendbirdapisampleapp.adapter.Action"
-
-
-
     const val INTENT_ACTION_MY_CHANNEL = "secret.chat.my.channel"
     const val INTENT_ACTION_GROUP_CHANNEL = "secret.chat.group.channel"
     const val INTENT_NAME_USER_ID = "userId"

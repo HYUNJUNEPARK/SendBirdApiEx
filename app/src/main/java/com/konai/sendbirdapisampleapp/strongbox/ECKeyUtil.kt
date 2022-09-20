@@ -54,17 +54,9 @@ object ECKeyUtil {
         )
         val keyFactory = KeyFactory.getInstance(KeyProperties.KEY_ALGORITHM_EC)
         return keyFactory.generatePublic(keySpec)
-//        return try {
-//
-//        } catch (e: IllegalArgumentException) {
-//            throw IllegalArgumentException("exPoint is point at infinity")
-//            null
-//        }
     }
 
-    /**
-     *  Reference : Elliptic Curve Domain Parameters (https://www.secg.org/sec2-v2.pdf Page9 of 33-34)
-     */
+    //Reference : Elliptic Curve Domain Parameters (https://www.secg.org/sec2-v2.pdf Page9 of 33-34)
     private val ecParameterSpec= with(this) {
         val p = BigInteger("FFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF", 16)
         val a = BigInteger("FFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFC", 16)
@@ -90,6 +82,4 @@ object ECKeyUtil {
         val keyStoreEntry: KeyStore.Entry? = StrongBox.androidKeyStore.getEntry(userId, null)
         return keyStoreEntry != null
     }
-
-
 }

@@ -1,6 +1,6 @@
 package com.konai.sendbirdapisampleapp.adapter
 
-import android.app.AlertDialog
+import androidx.appcompat.app.AlertDialog
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
@@ -28,14 +28,14 @@ class ChannelAdapter(val context: Context) : RecyclerView.Adapter<ChannelAdapter
     }
 
     inner class MyHolder(private val binding: ItemChatChannelListBinding) : RecyclerView.ViewHolder(binding.root) {
-        lateinit var channel: ChannelModel
+        lateinit var channelModel: ChannelModel
 
         init {
             //숏클릭 이벤트
             binding.root.setOnClickListener {
                 val intent = Intent(context, ChannelActivity::class.java)
-                intent.putExtra(INTENT_NAME_CHANNEL_URL, "${channel.url}")
-                if (channel.memberSize == 1) {
+                intent.putExtra(INTENT_NAME_CHANNEL_URL, "${channelModel.url}")
+                if (channelModel.memberSize == 1) {
                     intent.action = INTENT_ACTION_MY_CHANNEL
                 }
                 else {
@@ -47,7 +47,7 @@ class ChannelAdapter(val context: Context) : RecyclerView.Adapter<ChannelAdapter
             //롱클릭 이벤트
             binding.root.setOnLongClickListener {
                 AlertDialog.Builder(context)
-                    .setTitle("${channel.name}")
+                    .setTitle("${channelModel.name}")
                     .setItems(
                         arrayOf(
                             "나가기"
@@ -57,8 +57,8 @@ class ChannelAdapter(val context: Context) : RecyclerView.Adapter<ChannelAdapter
                                 when(position) {
                                     0 -> {
                                         deleteChannel(
-                                            channelURL = channel.url!!,
-                                            targetChannel = channel
+                                            channelURL = channelModel.url!!,
+                                            targetChannel = channelModel
                                         )
                                     }
                                 }
@@ -70,8 +70,8 @@ class ChannelAdapter(val context: Context) : RecyclerView.Adapter<ChannelAdapter
                 true
             }
         }
-        fun setContents (channel: ChannelModel) {
-            this.channel = channel
+        fun bind(channel: ChannelModel) {
+            this.channelModel = channel
             binding.channelNameTextView.text = "${channel.name}"
             binding.lastMessageTextView.text = "${channel.lastMessage}"
             binding.timeTextView.text = "${channel.lastMessageTime?.convertLongToTime()}"
@@ -79,7 +79,7 @@ class ChannelAdapter(val context: Context) : RecyclerView.Adapter<ChannelAdapter
     }
 
     override fun onBindViewHolder(myHolder: MyHolder, position: Int) {
-        myHolder.setContents(channelList[position])
+        myHolder.bind(channelList[position])
     }
 
     override fun getItemCount(): Int = channelList.size

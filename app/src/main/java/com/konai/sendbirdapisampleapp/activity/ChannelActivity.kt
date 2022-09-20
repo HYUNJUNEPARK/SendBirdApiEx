@@ -163,7 +163,10 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
     }
 
     private fun initAdapter() {
-        adapter = MessageAdapter()
+        adapter = MessageAdapter(
+            this,
+            channelURL
+        )
         binding.recyclerView.adapter = adapter
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
     }
