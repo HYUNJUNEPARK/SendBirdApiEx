@@ -24,14 +24,13 @@ import com.konai.sendbirdapisampleapp.strongbox.StrongBox
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-class MessageAdapter(
-    val context: Context,
-    val channelURL: String
-    ) : ListAdapter<MessageModel, RecyclerView.ViewHolder>(diffUtil) {
+class MessageAdapter(val context: Context, val channelURL: String) : ListAdapter<MessageModel, RecyclerView.ViewHolder>(diffUtil) {
     lateinit var localDB: KeyIdDatabase
     lateinit var strongBox: StrongBox
-
+//    private val context = context
+//    private val channelURL = channelURL
 
     //대화 상대의 홀더
     inner class PartnerMessageViewHolder(private val binding: ItemPartnerMessageBinding): RecyclerView.ViewHolder(binding.root) {
@@ -42,6 +41,11 @@ class MessageAdapter(
             binding.root.setOnLongClickListener {
                 showAlertDialog(messageModel)
                 true
+            }
+
+            //숏클릭 이벤트
+            binding.root.setOnClickListener {
+                decryptMessage(messageModel)
             }
         }
 
@@ -61,6 +65,11 @@ class MessageAdapter(
             binding.root.setOnLongClickListener {
                 showAlertDialog(messageModel)
                 true
+            }
+
+            //숏클릭 이벤트
+            binding.root.setOnClickListener {
+                decryptMessage(messageModel)
             }
         }
 
@@ -85,7 +94,6 @@ class MessageAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         localDB = DBProvider.getInstance(context)!!
         strongBox = StrongBox.getInstance(context)
-
 
         val partnerMessageBinding =
             ItemPartnerMessageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -149,29 +157,33 @@ class MessageAdapter(
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 localDB.keyIdDao().getKeyId(channelURL).let { keyId ->
-                    Log.d(TAG, "keyId: $keyId")
+                    strongBox.decrypt(
+                        message = messageModel.message!!,
+                        keyId = keyId
+                    ).let { decryptedMessage ->
+                        Log.d(TAG, "IDX: ${currentList.indexOf(messageModel)}")
+                        val decryptedMessageModel = MessageModel(
+                            message = decryptedMessage,
+                            sender = messageModel.sender,
+                            messageId = messageModel.messageId,
+                            createdAt = messageModel.createdAt,
+                        )
+
+                        //TODO 더 생각해볼것 ....
+                        val list: MutableList<MessageModel> = currentList.toMutableList()
+                        list[currentList.indexOf(messageModel)] = decryptedMessageModel
+
+                        withContext(Dispatchers.Main) {
+                            submitList(list)
+                            notifyItemChanged(currentList.indexOf(messageModel))
+                        }
+                    }
                 }
             } catch (e: Exception) {
-                //복호화 실패
                 e.printStackTrace()
+                Log.e(TAG, "$e", )
             }
         }
-
-
-//        strongBox.decrypt(
-//            message = messageModel.message!!,
-//            keyId = ""
-//        ).let { decryptedMessage ->
-//            Log.d(TAG, "decryptMessage: $decryptedMessage")
-//        }
-        //TODO 복호화된 메시지를 MessageModel 에 바꿔넣기
-
-        //TODO Adapter 내부 list 갱신
-
-        //TODO notifyItemChange? 호출
-
-
-
     }
 
     private fun copyMessage() {
