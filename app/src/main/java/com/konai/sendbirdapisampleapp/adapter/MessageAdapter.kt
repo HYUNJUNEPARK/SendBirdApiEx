@@ -151,9 +151,6 @@ class MessageAdapter(val context: Context, val channelURL: String) : ListAdapter
 
     private fun decryptMessage(messageModel: MessageModel) {
         Toast.makeText(context, "복호화", Toast.LENGTH_SHORT).show()
-        //TODO MessageModel 가져오기
-        //TODO Strongbox decryption() 해당 메시지 전달
-
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 localDB.keyIdDao().getKeyId(channelURL).let { keyId ->
@@ -161,7 +158,6 @@ class MessageAdapter(val context: Context, val channelURL: String) : ListAdapter
                         message = messageModel.message!!,
                         keyId = keyId
                     ).let { decryptedMessage ->
-                        Log.d(TAG, "IDX: ${currentList.indexOf(messageModel)}")
                         val decryptedMessageModel = MessageModel(
                             message = decryptedMessage,
                             sender = messageModel.sender,

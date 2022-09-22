@@ -21,8 +21,8 @@ import kotlin.coroutines.CoroutineContext
 
 class KeyFragment : BaseFragment<FragmentKeyBinding>(R.layout.fragment_key), CoroutineScope {
     lateinit var strongBox: StrongBox
-    lateinit var encryptedSharedPreferencesManager: EncryptedSharedPreferencesManager
-    lateinit var localDB: KeyIdDatabase
+    private lateinit var encryptedSharedPreferencesManager: EncryptedSharedPreferencesManager
+    private lateinit var localDB: KeyIdDatabase
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + Job()
 
@@ -43,7 +43,7 @@ class KeyFragment : BaseFragment<FragmentKeyBinding>(R.layout.fragment_key), Cor
             displayKeyIdInESP()
             launch {
                 showServerKeyState()
-                displayAvailableKeyIds()
+                //displayAvailableKeyIds()
                 displayUrlInLocalDB()
             }
         }
@@ -104,33 +104,9 @@ class KeyFragment : BaseFragment<FragmentKeyBinding>(R.layout.fragment_key), Cor
     }
 
     private suspend fun displayUrlInLocalDB() = withContext(Dispatchers.IO) {
-        localDB.keyIdDao().getAll().let { urlList ->
-            val urls = StringBuffer("")
-            for (url in urlList) {
-                urls.append("url: ${url.urlHash}\nkeyId:\n${url.keyId}\n")
-            }
-            //Log.d(TAG, "localDB $urls")
+        //로그인한 유저가 참여하고 있는 채널 리스트
+        val userChannelList: MutableList<String> = mutableListOf()
 
-            withContext(Dispatchers.Main) {
-                binding.localDBUrlCountTextView.text = urlList.size.toString()
-                binding.localDBUrlTextView.text = urls
-            }
-        }
-    }
-
-
-    /**
-     * 로컬 DB 에 저장되어 있는 키와 로그인한 사용자가 사용할 수 있는 키를 UI 로 보여주는 함수
-     *
-     * 1. 로그인한 계정이 참여하고 있는 채널의 모든 URL 주소를 가져옴
-     * 2. 로컬 DB 에 저장된 데이터 중 참여하고 있는 URL 과 같은 일치하는 Key 를 확인
-     */
-    private suspend fun displayAvailableKeyIds()= withContext(Dispatchers.IO) {
-        localDB.keyIdDao().getAll().let {
-            //Log.d(TAG, "Local DB: $it")
-        }
-
-        //TODO 1 센드버드에서 로그인한 사용자가 참여하고 있는 채널의 URL 주소 로드
         val query = GroupChannel.createMyGroupChannelListQuery(
             GroupChannelListQueryParams().apply {
                 includeEmpty = true
@@ -138,70 +114,33 @@ class KeyFragment : BaseFragment<FragmentKeyBinding>(R.layout.fragment_key), Cor
                 order = GroupChannelListQueryOrder.LATEST_LAST_MESSAGE
             }
         )
-        query.next { channel, e ->
+        query.next { channelList, e ->
             if (e != null) {
                 e.printStackTrace()
                 return@next
             }
-            if (channel!!.isEmpty()) {
-                return@next
+            for (channel in channelList!!) {
+                userChannelList.add(channel.url)
             }
 
-            for (idx in channel.indices) {
+            CoroutineScope(Dispatchers.IO).launch {
+                localDB.keyIdDao().getAll().let { urlList ->
+                    val urls = StringBuffer("")
+                    for (url in urlList) {
 
-//                for (url in allChannelUrlList) {
-//                    if (channel[idx].url == url) {
-//                        availableHashSb.append("${channel[idx].url}\n\n")
-//                        availableHashNumber++
-//                    }
-//                }
-
+                        if (userChannelList.contains(url.urlHash)) {
+                            urls.append("\n[* 로그인한 계정 사용 가능]\nurl: ${url.urlHash}\nkeyId:\n${url.keyId}\n")
+                        }
+                        else {
+                            urls.append("url: ${url.urlHash}\nkeyId:\n${url.keyId}\n")
+                        }
+                    }
+                    withContext(Dispatchers.Main) {
+                        binding.localDBUrlCountTextView.text = urlList.size.toString()
+                        binding.localDBUrlTextView.text = urls
+                    }
+                }
             }
-
-//            binding.availableHashNumberTextView.text = availableHashNumber.toString()
-//            binding.availableHashTextView.text = availableHashSb
         }
-
-
-        //TODO 2 Local DB 에 있는 KeyId를 로드
-        localDB.keyIdDao().getAll().let {
-            Log.d(TAG, "local DB Key List : $it")
-        }
-
-        //TODO 3 1,2 를 비교해서 일치하는 URL 주소를 카운팅
-
-//        var allChannelUrlList: MutableList<String> = mutableListOf()
-//        val allHashSb = StringBuffer("")
-//        val availableHashSb = StringBuffer("")
-//        var availableHashNumber = 0
-        //기기에 저장된 모든 해시
-
-        //        //로그인 계정이 사용할 수 있는 해시 -> 로그인 채널의 url == 기기에 저장된 hash 비교
-//        val query = GroupChannel.createMyGroupChannelListQuery(
-//            GroupChannelListQueryParams().apply {
-//                includeEmpty = true
-//                myMemberStateFilter = MyMemberStateFilter.JOINED
-//                order = GroupChannelListQueryOrder.LATEST_LAST_MESSAGE
-//            }
-//        )
-//        query.next { channels, e ->
-//            if (e != null) {
-//                showToast("$e")
-//                return@next
-//            }
-//
-//            if (channels!!.isEmpty()) return@next
-//
-//            for (idx in channels.indices) {
-//                for (url in allChannelUrlList) {
-//                    if (channels[idx].url == url) {
-//                        availableHashSb.append("${channels[idx].url}\n\n")
-//                        availableHashNumber++
-//                    }
-//                }
-//            }
-//            binding.availableHashNumberTextView.text = availableHashNumber.toString()
-//            binding.availableHashTextView.text = availableHashSb
-//        }
     }
 }

@@ -413,7 +413,7 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
                 }
             }
             else -> {
-
+                //INTENT_ACTION_MY_CHANNEL, INTENT_ACTION_GROUP_CHANNEL 가 아닌 예외
             }
         }
     }

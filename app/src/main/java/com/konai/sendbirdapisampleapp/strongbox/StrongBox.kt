@@ -199,7 +199,7 @@ class StrongBox {
         return ByteArray(size).apply {
             SecureRandom().nextBytes(this)
         }.let { randomBytes ->
-            Base64.encodeToString(randomBytes, Base64.DEFAULT)
+            Base64.encodeToString(randomBytes, Base64.NO_WRAP)
         }
     }
 
@@ -225,7 +225,7 @@ class StrongBox {
     @Throws(Exception::class)
     fun generateSharedSecretKey(publicKey: PublicKey, nonce: String): String {
         val keyId: String = nonce
-        val random: ByteArray = Base64.decode(nonce, Base64.DEFAULT)
+        val random: ByteArray = Base64.decode(nonce, Base64.NO_WRAP)
 
         val privateKey: PrivateKey
         androidKeyStore.getEntry(ecKeyPairAlias, null).let { keyStoreEntry ->
@@ -245,7 +245,7 @@ class StrongBox {
                 hash,
                 KeyProperties.KEY_ALGORITHM_AES
             ).let { secretKeySpec ->
-                sharedSecretKey = Base64.encodeToString(secretKeySpec.encoded, Base64.DEFAULT)
+                sharedSecretKey = Base64.encodeToString(secretKeySpec.encoded, Base64.NO_WRAP)
             }
             //TODO 메모리 초기화
             //hash
@@ -268,7 +268,7 @@ class StrongBox {
         nonce: String
     ): String {
         val keyId: String = nonce
-        val random: ByteArray = Base64.decode(nonce, Base64.DEFAULT)
+        val random: ByteArray = Base64.decode(nonce, Base64.NO_WRAP)
 
         val privateKey: PrivateKey
         androidKeyStore.getEntry(userId, null).let { keyStoreEntry ->
@@ -288,7 +288,7 @@ class StrongBox {
                 hash,
                 KeyProperties.KEY_ALGORITHM_AES
             ).let { secretKeySpec ->
-                sharedSecretKey = Base64.encodeToString(secretKeySpec.encoded, Base64.DEFAULT)
+                sharedSecretKey = Base64.encodeToString(secretKeySpec.encoded, Base64.NO_WRAP)
             }
             //TODO 메모리 초기화
             //hash
@@ -351,7 +351,7 @@ class StrongBox {
             }
 
         val encryptedMessage: String
-        Base64.decode(encodedSharedSecretKey, Base64.DEFAULT).let { decodedKey ->
+        Base64.decode(encodedSharedSecretKey, Base64.NO_WRAP).let { decodedKey ->
             SecretKeySpec(
                 decodedKey,
                 0,
@@ -365,7 +365,7 @@ class StrongBox {
                     IvParameterSpec(iv)
                 )
                 cipher.doFinal(message.toByteArray()).let { _encryptedMessage ->
-                    encryptedMessage = Base64.encodeToString(_encryptedMessage, Base64.DEFAULT)
+                    encryptedMessage = Base64.encodeToString(_encryptedMessage, Base64.NO_WRAP)
                 }
             }
         }
@@ -386,11 +386,9 @@ class StrongBox {
      */
     @Throws(Exception::class)
     fun decrypt(message: String, keyId: String): String {
-        var encodedSharedSecretKey: String? =
-            if (espm.getString(keyId, "") == "") null
-            else espm.getString(keyId, "")
+        var encodedSharedSecretKey: String? = espm.getString(keyId, "").ifEmpty { null }
         var decryptedMessage: ByteArray
-        Base64.decode(encodedSharedSecretKey, Base64.DEFAULT).let { decodedKey ->
+        Base64.decode(encodedSharedSecretKey, Base64.NO_WRAP).let { decodedKey ->
             SecretKeySpec(
                 decodedKey,
                 0,
@@ -403,7 +401,7 @@ class StrongBox {
                     secretKeySpec,
                     IvParameterSpec(iv)
                 )
-                Base64.decode(message, Base64.DEFAULT).let { decryption ->
+                Base64.decode(message, Base64.NO_WRAP).let { decryption ->
                     decryptedMessage = cipher.doFinal(decryption)
                 }
             }
