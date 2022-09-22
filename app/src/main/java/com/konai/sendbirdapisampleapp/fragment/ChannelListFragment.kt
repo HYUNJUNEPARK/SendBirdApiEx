@@ -1,8 +1,10 @@
 package com.konai.sendbirdapisampleapp.fragment
 
 import android.content.Intent
+import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.konai.sendbirdapisampleapp.Constants.ALL_MESSAGE_RECEIVE_HANDLER
 import com.konai.sendbirdapisampleapp.Constants.CHANNEL_META_DATA
@@ -96,11 +98,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
     private suspend fun fetchChannelList() = withContext(Dispatchers.IO) {
         withContext(Dispatchers.Main) {
             launch {
-                try {
-                    binding.progressBarLayout.visibility = View.VISIBLE
-                } catch(e: NullPointerException) {
-
-                }
+                binding.progressBarLayout.visibility = View.VISIBLE
             }
         }
 
@@ -117,7 +115,16 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                 return@next
             }
 
+            //해당 계정이 참여하고 있는 채널이 없을 때
             if (channels!!.isEmpty()) {
+                binding.progressBarLayout.visibility = View.GONE
+
+                AlertDialog.Builder(requireContext())
+                    .setTitle("알림")
+                    .setMessage("참여중인 채널이 없습니다.")
+                    .setPositiveButton("확인") { _, _ -> }
+                    .create()
+                    .show()
                 return@next
             }
 
@@ -134,11 +141,7 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                     )
                 )
             }
-            try {
-                binding.progressBarLayout.visibility = View.GONE
-            } catch(e: NullPointerException) {
-
-            }
+            binding.progressBarLayout.visibility = View.GONE
             adapter.notifyDataSetChanged()
         }
     }
@@ -279,7 +282,6 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                                 action = INTENT_ACTION_GROUP_CHANNEL
                             }
                         )
-
                     }
                 }
             }
