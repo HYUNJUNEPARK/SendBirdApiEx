@@ -51,15 +51,15 @@
             android:layout_marginLeft="5dp"
             android:layout_marginRight="5dp"
             android:orientation="vertical"
-            app:layout_constraintBottom_toTopOf="@id/availableHashLayout"
+            app:layout_constraintBottom_toTopOf="@id/localDBUrlLayout"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/div1">
 
             <TextView
-                android:background="@color/gray"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@color/gray"
                 android:text="키스토어 키 상태"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -109,9 +109,9 @@
                 android:background="@color/gray" />
 
             <TextView
-                android:background="@color/gray"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@color/gray"
                 android:text="서버 키 상태"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -143,9 +143,9 @@
 
 
             <LinearLayout
-                android:background="@color/gray"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@color/gray"
                 android:orientation="horizontal">
 
                 <TextView
@@ -188,21 +188,24 @@
 
 
         <LinearLayout
-            android:id="@+id/availableHashLayout"
+            android:id="@+id/localDBUrlLayout"
             android:layout_width="match_parent"
-            android:background="@color/gray"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
+            android:background="@color/gray"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toTopOf="@id/localDBUrlScrollView"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/availableHashScrollView"
-            android:orientation="horizontal">
+            app:layout_constraintStart_toStartOf="parent">
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="로그인 계정한 사용할 수 있는 키"
+                android:text="LocalDB 에 저장되어 있는 URL"
                 android:textSize="18sp"
                 android:textStyle="bold" />
-            <TextView android:id="@+id/availableHashNumberTextView"
+
+            <TextView
+                android:id="@+id/localDBUrlCountTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="10dp"
@@ -212,15 +215,15 @@
         </LinearLayout>
 
         <ScrollView
-            android:id="@+id/availableHashScrollView"
+            android:id="@+id/localDBUrlScrollView"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
+            android:layout_height="300dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent">
 
             <TextView
-                android:id="@+id/availableHashTextView"
+                android:id="@+id/localDBUrlTextView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
         </ScrollView>

@@ -5,8 +5,6 @@ import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
-import android.util.Log
-import com.konai.sendbirdapisampleapp.Constants.TAG
 import java.security.*
 import java.security.spec.*
 import javax.crypto.Cipher
@@ -334,7 +332,7 @@ class StrongBox {
     }
 
     /**
-     * 메시지를 암호화
+     * 메시지 암호화
      *
      * @param message 암호화 전 원본 메시지
      * @param keyId 비밀키를 가져오기 위해 필요한 식별자
@@ -378,7 +376,7 @@ class StrongBox {
     }
 
     /**
-     * 메시지를 복호화
+     * 메시지 복호화
      *
      * @param message 암호화된 메시지
      * @param keyId 비밀키를 가져오기 위해 필요한 식별자

@@ -419,6 +419,9 @@ class ChannelActivity : AppCompatActivity(), CoroutineScope {
     }
     //메시지 전송 버튼 클릭 이벤트
     fun sendMessage() {
+        if (binding.messageEditText.text.isEmpty()) {
+            return
+        }
         when (intent.action) {
             //나와의 채팅
             INTENT_ACTION_MY_CHANNEL -> {

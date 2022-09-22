@@ -3,7 +3,6 @@ package com.konai.sendbirdapisampleapp.fragment
 import android.util.Log
 import android.widget.Toast
 import com.konai.sendbirdapisampleapp.R
-import com.konai.sendbirdapisampleapp.databinding.FragmentBlankBinding
 import com.konai.sendbirdapisampleapp.db.DBProvider
 import com.konai.sendbirdapisampleapp.db.keyid.KeyIdDatabase
 import com.konai.sendbirdapisampleapp.strongbox.EncryptedSharedPreferencesManager
@@ -12,6 +11,7 @@ import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_DOCUMENT_PUBLIC_KEY
 import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_FIELD_USER_ID
 import com.konai.sendbirdapisampleapp.Constants.TAG
 import com.konai.sendbirdapisampleapp.Constants.USER_ID
+import com.konai.sendbirdapisampleapp.databinding.FragmentKeyBinding
 import com.sendbird.android.channel.GroupChannel
 import com.sendbird.android.channel.query.GroupChannelListQueryOrder
 import com.sendbird.android.channel.query.MyMemberStateFilter
@@ -19,12 +19,12 @@ import com.sendbird.android.params.GroupChannelListQueryParams
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
 
-class KeyFragment : BaseFragment<FragmentBlankBinding>(R.layout.fragment_blank), CoroutineScope {
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Main + Job()
+class KeyFragment : BaseFragment<FragmentKeyBinding>(R.layout.fragment_key), CoroutineScope {
     lateinit var strongBox: StrongBox
     lateinit var encryptedSharedPreferencesManager: EncryptedSharedPreferencesManager
     lateinit var localDB: KeyIdDatabase
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.Main + Job()
 
     override fun initView() {
         super.initView()
@@ -39,12 +39,12 @@ class KeyFragment : BaseFragment<FragmentBlankBinding>(R.layout.fragment_blank),
             encryptedSharedPreferencesManager =
                 EncryptedSharedPreferencesManager.getInstance(requireContext())!!
             localDB = DBProvider.getInstance(requireContext())!!
-
             displayECKeyPairState()
-            displayKeyIds()
+            displayKeyIdInESP()
             launch {
                 showServerKeyState()
                 displayAvailableKeyIds()
+                displayUrlInLocalDB()
             }
         }
         catch (e: Exception) {
@@ -91,7 +91,7 @@ class KeyFragment : BaseFragment<FragmentBlankBinding>(R.layout.fragment_blank),
     }
 
     //encryptedSharedPreferences(ESP)에 저장된 모든 키Id 를 UI로 보여줌
-    private fun displayKeyIds() {
+    private fun displayKeyIdInESP() {
         encryptedSharedPreferencesManager.getKeyIdList().let { keyIdList ->
             binding.devicePublicKeyCountTextView.text = keyIdList!!.size.toString()
 
@@ -102,6 +102,22 @@ class KeyFragment : BaseFragment<FragmentBlankBinding>(R.layout.fragment_blank),
             binding.allESPKeysTextView.text = keyIds.toString()
         }
     }
+
+    private suspend fun displayUrlInLocalDB() = withContext(Dispatchers.IO) {
+        localDB.keyIdDao().getAll().let { urlList ->
+            val urls = StringBuffer("")
+            for (url in urlList) {
+                urls.append("url: ${url.urlHash}\nkeyId:\n${url.keyId}\n")
+            }
+            //Log.d(TAG, "localDB $urls")
+
+            withContext(Dispatchers.Main) {
+                binding.localDBUrlCountTextView.text = urlList.size.toString()
+                binding.localDBUrlTextView.text = urls
+            }
+        }
+    }
+
 
     /**
      * 로컬 DB 에 저장되어 있는 키와 로그인한 사용자가 사용할 수 있는 키를 UI 로 보여주는 함수
@@ -127,7 +143,9 @@ class KeyFragment : BaseFragment<FragmentBlankBinding>(R.layout.fragment_blank),
                 e.printStackTrace()
                 return@next
             }
-            if (channel!!.isEmpty()) return@next
+            if (channel!!.isEmpty()) {
+                return@next
+            }
 
             for (idx in channel.indices) {
 
