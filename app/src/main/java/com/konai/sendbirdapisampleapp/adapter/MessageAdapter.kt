@@ -1,6 +1,9 @@
 package com.konai.sendbirdapisampleapp.adapter
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
+import android.content.Context.CLIPBOARD_SERVICE
 import android.content.DialogInterface
 import android.util.Log
 import android.view.LayoutInflater
@@ -133,7 +136,7 @@ class MessageAdapter(val context: Context, val channelURL: String) : ListAdapter
                                 decryptMessage(messageModel)
                             }
                             1 -> {
-                                copyMessage()
+                                copyMessage(messageModel)
                             }
                             2 -> {
                                 deleteMessage()
@@ -182,8 +185,21 @@ class MessageAdapter(val context: Context, val channelURL: String) : ListAdapter
         }
     }
 
-    private fun copyMessage() {
-        Toast.makeText(context, "복사", Toast.LENGTH_SHORT).show()
+    private fun copyMessage(messageModel: MessageModel) {
+        try {
+            val clipboard = context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+            val clipData = ClipData.newPlainText(
+                "decrypted message",
+                messageModel.message
+            )
+            clipboard.setPrimaryClip(clipData)
+            Toast.makeText(context, "텍스트 복사", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(context, "텍스트 복사 실패", Toast.LENGTH_SHORT).show()
+            return
+        }
+
     }
 
     private fun deleteMessage() {

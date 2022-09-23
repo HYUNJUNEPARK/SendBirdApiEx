@@ -84,26 +84,24 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
         binding.progressBarLayout.visibility = View.VISIBLE
         val userId = binding.userIdEditText.text.toString().ifEmpty { return }
         try {
-            
+            SendbirdChat.connect(userId) { user, e ->
+                if (e != null) {
+                    binding.progressBarLayout.visibility = View.GONE
+                    e.printStackTrace()
+                    return@connect
+                }
+
+                USER_NICKNAME = binding.nickNameEditText.text.toString().ifEmpty { userId }
+                USER_ID = user?.userId.toString()
+
+                launch {
+                    signInAlgorithm(USER_ID)
+                }
+            }
         }
         catch (e: SendbirdException) {
             if (e.code == 800190) {
                 Toast.makeText(this, "로그인 시간 초과. \n다시 시도해주세요.", Toast.LENGTH_SHORT).show()
-            }
-        }
-        
-        SendbirdChat.connect(userId) { user, e ->
-            if (e != null) {
-                binding.progressBarLayout.visibility = View.GONE
-                e.printStackTrace()
-                return@connect
-            }
-
-            USER_NICKNAME = binding.nickNameEditText.text.toString().ifEmpty { userId }
-            USER_ID = user?.userId.toString()
-
-            launch {
-                signInAlgorithm(USER_ID)
             }
         }
     }

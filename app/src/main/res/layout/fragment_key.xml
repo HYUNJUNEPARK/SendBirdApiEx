@@ -5,6 +5,9 @@
 
     <data>
 
+        <variable
+            name="keyFragment"
+            type="com.konai.sendbirdapisampleapp.fragment.KeyFragment" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -164,6 +167,15 @@
                     android:textStyle="bold"
                     tools:text="[ 10개 ]" />
 
+                <ImageView
+                    android:id="@+id/espRefreshButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="20dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:onClick="@{()->keyFragment.displayKeyIdInESP()}"
+                    android:src="@drawable/ic_baseline_refresh_24" />
+
             </LinearLayout>
 
             <ScrollView
@@ -212,6 +224,14 @@
                 android:textSize="18sp"
                 android:textStyle="bold"
                 tools:text="[ 10개 ]" />
+
+            <androidx.constraintlayout.utils.widget.ImageFilterView
+                android:id="@+id/localDBRefreshButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:background="?attr/selectableItemBackground"
+                android:src="@drawable/ic_baseline_refresh_24" />
         </LinearLayout>
 
         <ScrollView

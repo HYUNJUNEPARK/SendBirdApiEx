@@ -14,6 +14,7 @@ import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_FIELD_AFFINE_Y
 import com.konai.sendbirdapisampleapp.Constants.FIRESTORE_FIELD_USER_ID
 import com.konai.sendbirdapisampleapp.Constants.INTENT_ACTION_GROUP_CHANNEL
 import com.konai.sendbirdapisampleapp.Constants.INTENT_NAME_CHANNEL_URL
+import com.konai.sendbirdapisampleapp.Constants.TAG
 import com.konai.sendbirdapisampleapp.Constants.USER_ID
 import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.activity.ChannelActivity
@@ -275,7 +276,6 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                                 keyId = keyId
                             )
                         )
-                        fetchChannelList()
                         startActivity(
                             Intent(requireContext(), ChannelActivity::class.java).apply {
                                 putExtra(INTENT_NAME_CHANNEL_URL, channel.url)

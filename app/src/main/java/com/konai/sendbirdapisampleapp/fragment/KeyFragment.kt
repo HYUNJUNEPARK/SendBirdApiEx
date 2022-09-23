@@ -1,6 +1,7 @@
 package com.konai.sendbirdapisampleapp.fragment
 
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import com.konai.sendbirdapisampleapp.R
 import com.konai.sendbirdapisampleapp.db.DBProvider
@@ -35,6 +36,7 @@ class KeyFragment : BaseFragment<FragmentKeyBinding>(R.layout.fragment_key), Cor
         }
 
         try {
+            binding.keyFragment = this
             strongBox = StrongBox.getInstance(requireContext())
             encryptedSharedPreferencesManager =
                 EncryptedSharedPreferencesManager.getInstance(requireContext())!!
@@ -45,6 +47,12 @@ class KeyFragment : BaseFragment<FragmentKeyBinding>(R.layout.fragment_key), Cor
                 showServerKeyState()
                 //displayAvailableKeyIds()
                 displayUrlInLocalDB()
+            }
+            //suspend 함수 databinding 으로 처리 못함 ?
+            binding.localDBRefreshButton.setOnClickListener {
+                launch {
+                    displayUrlInLocalDB()
+                }
             }
         }
         catch (e: Exception) {
@@ -91,7 +99,7 @@ class KeyFragment : BaseFragment<FragmentKeyBinding>(R.layout.fragment_key), Cor
     }
 
     //encryptedSharedPreferences(ESP)에 저장된 모든 키Id 를 UI로 보여줌
-    private fun displayKeyIdInESP() {
+    fun displayKeyIdInESP() {
         encryptedSharedPreferencesManager.getKeyIdList().let { keyIdList ->
             binding.devicePublicKeyCountTextView.text = keyIdList!!.size.toString()
 

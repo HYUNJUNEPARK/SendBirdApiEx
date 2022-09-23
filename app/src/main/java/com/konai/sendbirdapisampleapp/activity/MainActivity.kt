@@ -56,12 +56,15 @@ class MainActivity : AppCompatActivity() {
                             .add(R.id.fragmentContainer, friendFragment!!)
                             .commit()
                     }
-                    if (friendFragment != null)
+                    if (friendFragment != null){
                         fragmentManager.beginTransaction().show(friendFragment!!).commit()
-                    if (channelListFragment != null)
+                    }
+                    if (channelListFragment != null){
                         fragmentManager.beginTransaction().hide(channelListFragment!!).commit()
-                    if (blankFragment != null)
+                    }
+                    if (blankFragment != null){
                         fragmentManager.beginTransaction().hide(blankFragment!!).commit()
+                    }
                 }
                 R.id.channel -> {
                     if (channelListFragment == null) {
