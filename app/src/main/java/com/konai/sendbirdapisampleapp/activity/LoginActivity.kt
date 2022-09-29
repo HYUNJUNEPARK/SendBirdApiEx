@@ -2,6 +2,7 @@ package com.konai.sendbirdapisampleapp.activity
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -90,7 +91,7 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
                     e.printStackTrace()
                     return@connect
                 }
-
+                Log.e("testLog", "\n====================\n", )
                 USER_NICKNAME = binding.nickNameEditText.text.toString().ifEmpty { userId }
                 USER_ID = user?.userId.toString()
 

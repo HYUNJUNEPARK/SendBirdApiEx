@@ -1,18 +1,16 @@
 package com.konai.sendbirdapisampleapp.adapter
 
-import androidx.appcompat.app.AlertDialog
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
 import com.konai.sendbirdapisampleapp.Constants.INTENT_ACTION_GROUP_CHANNEL
 import com.konai.sendbirdapisampleapp.Constants.INTENT_ACTION_MY_CHANNEL
 import com.konai.sendbirdapisampleapp.Constants.INTENT_NAME_CHANNEL_URL
-import com.konai.sendbirdapisampleapp.Constants.TAG
 import com.konai.sendbirdapisampleapp.Extension.convertLongToTime
 import com.konai.sendbirdapisampleapp.activity.ChannelActivity
 import com.konai.sendbirdapisampleapp.databinding.ItemChatChannelListBinding
@@ -105,14 +103,8 @@ class ChannelAdapter(val context: Context) : RecyclerView.Adapter<ChannelAdapter
                             e2.printStackTrace()
                             return@delete
                         }
-
                         val idx = channelList.indexOf(targetChannel)
                         channelList.removeAt(idx)
-
-                        for (i in channelList) {
-                            Log.d(TAG, "삭제 후 채널 : ${i.name} ")
-                        }
-
                         notifyItemRemoved(idx)
                         Toast.makeText(context, "채널이 삭제되었습니다.", Toast.LENGTH_SHORT).show()
                     }

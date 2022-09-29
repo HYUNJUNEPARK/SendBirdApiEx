@@ -32,8 +32,6 @@ import kotlinx.coroutines.withContext
 class MessageAdapter(val context: Context, val channelURL: String) : ListAdapter<MessageModel, RecyclerView.ViewHolder>(diffUtil) {
     lateinit var localDB: KeyIdDatabase
     lateinit var strongBox: StrongBox
-//    private val context = context
-//    private val channelURL = channelURL
 
     //대화 상대의 홀더
     inner class PartnerMessageViewHolder(private val binding: ItemPartnerMessageBinding): RecyclerView.ViewHolder(binding.root) {
