@@ -7,7 +7,7 @@ object Constants {
 
     //sendbird
     const val CHANNEL_META_DATA = "metadata"
-    const val SENDBIRD_API_KEY = "D4FCF442-A653-49B3-9D87-6134CD87CA81"
+    const val SENDBIRD_API_KEY = ""
 
     //intent
     const val INTENT_ACTION_MY_CHANNEL = "secret.chat.my.channel"
