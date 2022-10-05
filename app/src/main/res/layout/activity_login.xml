@@ -6,7 +6,7 @@
     <data>
         <variable
             name="loginActivity"
-            type="com.konai.sendbirdapisampleapp.activity.LoginActivity" />
+            type="com.konai.sendbirdapisampleapp.activity.ConnectionActivity" />
     </data>
 
     <FrameLayout
@@ -18,7 +18,7 @@
             android:layout_height="match_parent"
             android:gravity="center"
             android:orientation="vertical"
-            tools:context=".activity.LoginActivity">
+            tools:context=".activity.ConnectionActivity">
 
             <EditText
                 android:id="@+id/userIdEditText"

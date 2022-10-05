@@ -98,11 +98,6 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
 
     //사용자가 참여하고 있는 채널 데이터를 센드버드 서버로부터 받아와 채널 리스트를 생성
     private suspend fun fetchChannelList() = withContext(Dispatchers.IO) {
-//        withContext(Dispatchers.Main) {
-//            launch {
-//
-//            }
-//        }
         val query = GroupChannel.createMyGroupChannelListQuery(
             GroupChannelListQueryParams().apply {
                 includeEmpty = false //비어있는 채팅방은 허용 안함
@@ -184,10 +179,11 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
         )
     }
 
-    //TODO DiffUtil 사용하는 방법도 있음
     /**
      * 새로운 메시지가 도착했을 때 채널리스트의 순서 변경.
      * 메시지가 도착한 채널이 제일 상단으로 이동함
+     *
+     * DiffUtil 사용하는 방법도 있음
      *
      * @param idx 가장 최근에 활성회된 채널 인덱스
      * @param lastMessage 메시지 내용
@@ -241,6 +237,33 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
             name = "$USER_ID, $invitedUserId"
             isSuper = false
         }
+
+        //서버에 사용자들이 참여하고 있는 채널이 있는지 체크
+        //체크 안해주면 localDB에 KeyId가 덮어써져 복호화 진행이 되지 않음
+        val query = GroupChannel.createMyGroupChannelListQuery(
+            GroupChannelListQueryParams().apply {
+                includeEmpty = true
+                userIdsExactFilter = listOf(USER_ID, invitedUserId)
+            }
+        )
+        query.next { channels, e ->
+            if (e != null) {
+                e.printStackTrace()
+                return@next
+            }
+            //기존 채널이 있는 경우
+            if (!channels.isNullOrEmpty()) {
+                startActivity(
+                    Intent(requireContext(), ChannelActivity::class.java).apply {
+                        putExtra(INTENT_NAME_CHANNEL_URL, channels[0].url)
+                        action = INTENT_ACTION_GROUP_CHANNEL
+                    }
+                )
+                return@next
+            }
+        }
+
+        //기존 채널이 없는 경우
         GroupChannel.createChannel(params) { channel, e ->
             if (e != null) {
                 e.printStackTrace()
@@ -266,7 +289,6 @@ class ChannelListFragment : BaseFragment<FragmentChannelBinding>(R.layout.fragme
                 }
                 return@createChannel
             }
-
             launch {
                 generateSharedSecreteKey(channel, invitedUserId).let { keyId ->
                     withContext(Dispatchers.IO) {

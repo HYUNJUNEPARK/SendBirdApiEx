@@ -30,7 +30,7 @@ import kotlinx.coroutines.withContext
 import java.security.PublicKey
 import kotlin.coroutines.CoroutineContext
 
-class LoginActivity : AppCompatActivity(), CoroutineScope {
+class ConnectionActivity : AppCompatActivity(), CoroutineScope {
     private lateinit var strongBox: StrongBox
     private lateinit var binding: ActivityLoginBinding
     private var remoteDB: FirebaseFirestore? = null
@@ -65,7 +65,7 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
         SendbirdChat.init(
             InitParams(
                 SENDBIRD_API_KEY,
-                this@LoginActivity,
+                this@ConnectionActivity,
                 useCaching = true
             ),
             object : InitResultHandler {
@@ -126,7 +126,7 @@ class LoginActivity : AppCompatActivity(), CoroutineScope {
                     if (document.data[FIRESTORE_FIELD_USER_ID] == userId) {
                         binding.progressBarLayout.visibility = View.GONE
                         startActivity(
-                            Intent(this@LoginActivity, MainActivity::class.java)
+                            Intent(this@ConnectionActivity, MainActivity::class.java)
                         )
                         return@addOnSuccessListener
                     }
