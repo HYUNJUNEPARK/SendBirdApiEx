@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Gradle: com.sendbird.sdk:uikit:3.0.0@aar">
+    <CLASSES>
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/87453140c7058f2801e6467fce535b01/transformed/uikit-3.0.0/res" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/87453140c7058f2801e6467fce535b01/transformed/uikit-3.0.0/AndroidManifest.xml" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-3/87453140c7058f2801e6467fce535b01/transformed/uikit-3.0.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.sendbird.sdk/uikit/3.0.0/386d28ba270fc656d6525dcce5e883adf52cabfc/uikit-3.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

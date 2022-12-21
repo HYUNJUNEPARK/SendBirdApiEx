@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="loginActivity"
+            type="com.konai.sendbirdapisampleapp.activity.ConnectionActivity" />
+    </data>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            tools:context=".activity.ConnectionActivity">
+
+            <EditText
+                android:id="@+id/userIdEditText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="사용자 아이디 입력(필수)"
+                android:minWidth="48dp"
+                android:minHeight="48dp" />
+
+            <EditText
+                android:id="@+id/nickNameEditText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="사용자 닉네임 입력(옵션)"
+                android:minWidth="48dp"
+                android:minHeight="48dp" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/loginButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:onClick="@{()->loginActivity.signIn()}"
+                android:text="로그인" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:visibility="gone"
+            android:orientation="vertical"
+            android:id="@+id/progressBarLayout"
+            android:gravity="center"
+            android:background="@color/gray"
+            android:alpha="0.6"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ProgressBar
+                android:layout_width="100dp"
+                android:layout_height="100dp"/>
+
+            <TextView
+                android:text="로그인 중입니다..."
+                android:textColor="@color/black"
+                android:textStyle="bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+    </FrameLayout>
+
+
+</layout>
